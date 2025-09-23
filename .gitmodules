@@ -1,0 +1,18 @@
+[submodule "ext/assimp"]
+	path = ext/assimp
+	url = https://github.com/assimp/assimp
+[submodule "ext/enet"]
+	path = ext/enet
+	url = https://github.com/lsalzman/enet
+[submodule "ext/freetype"]
+	path = ext/freetype
+	url = https://github.com/freetype/freetype
+[submodule "ext/glfw"]
+	path = ext/glfw
+	url = https://github.com/glfw/glfw
+[submodule "ext/glm"]
+	path = ext/glm
+	url = https://github.com/g-truc/glm
+[submodule "ext/tmxlite"]
+	path = ext/tmxlite
+	url = https://github.com/fallahn/tmxlite
