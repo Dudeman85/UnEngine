@@ -1,5 +1,7 @@
-#include <Font.h>
-#include <Constants.h>
+#include "Font.h"
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 using namespace std;
 using namespace engine;
@@ -12,9 +14,9 @@ Font::Font(std::string filepathname, FT_Long face_index, FT_UInt pixel_width, FT
 		{
 			throw runtime_error("Could not init FreeType Library");
 		}
-		if (FT_New_Face(ft, (assetPath + filepathname).c_str(), face_index, &face))
+		if (FT_New_Face(ft, (filepathname).c_str(), face_index, &face))
 		{
-			throw runtime_error("Failed to load font from: " + assetPath + filepathname);
+			throw runtime_error("Failed to load font from: " + filepathname);
 		}
 
 		else

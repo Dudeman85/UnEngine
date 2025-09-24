@@ -8,8 +8,10 @@
 #include <list>
 #include <cmath>
 
+#include <GLFW/glfw3.h>
+
 #include "Vector.h"
-#include "Application.h"
+#include "utils/Timing.h"
 
 namespace input
 { 

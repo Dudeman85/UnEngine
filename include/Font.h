@@ -1,14 +1,13 @@
 #pragma once
 
-// FreeType includes
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
 #include <string>
+#include <map>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <GL/Shader.h>
-#include <map>
+#include <freetype/freetype.h>
+
+#include "renderer/gl/Shader.h"
 
 ///Struct to store data about the characters
 struct Character

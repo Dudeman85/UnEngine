@@ -12,9 +12,11 @@ set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 set(ASSIMP_NO_EXPORT ON)
 set(ASSIMP_INSTALL OFF)
 set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_ASSIMP_VIEW OFF)
 
 include_directories("ext")
+include_directories("ext/enet/include")
 include_directories("include")
 
 add_subdirectory("ext/enet")
@@ -28,7 +30,7 @@ set(GLAD_GL "ext/glad/gl.h" "ext/glad/gl.c")
 
 # engine -library
 file(GLOB_RECURSE ENGINE_SOURCE_FILES "./src/*.cpp")
-file(GLOB_RECURSE ENGINE_HEADER_FILES "./include/*.h" "./include/GL/*.h")
+file(GLOB_RECURSE ENGINE_HEADER_FILES "./include/*.h")
 add_library(UnEngine ${ENGINE_SOURCE_FILES} ${ENGINE_HEADER_FILES} ${GLAD_GL})
 
 target_link_libraries(UnEngine glfw glm assimp tmxlite freetype enet)

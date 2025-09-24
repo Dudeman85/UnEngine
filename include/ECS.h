@@ -25,15 +25,14 @@
 //Macro to register a component outside main
 #define ECS_REGISTER_COMPONENT(COMPONENT) \
 struct COMPONENT; \
-inline bool COMPONENT##Registered = ( engine::ecs::RegisterComponent<COMPONENT>(), true );
+inline bool COMPONENT##Registered = ( ecs::RegisterComponent<COMPONENT>(), true );
 
 //Macro to register a system and its components outside main
 #define ECS_REGISTER_SYSTEM(SYSTEM, ...) \
 class SYSTEM; \
-inline bool SYSTEM##Registered = ( engine::ecs::RegisterSystem<SYSTEM, __VA_ARGS__>(), true );
+inline bool SYSTEM##Registered = ( ecs::RegisterSystem<SYSTEM, __VA_ARGS__>(), true );
 
-
-namespace engine::ecs
+namespace ecs
 {
 	//Define colors for errors and warnings
 	constexpr const char* errorFormat = "\033[31m";
@@ -49,12 +48,12 @@ namespace engine::ecs
 	template<typename T>
 	inline uint16_t GetComponentID();
 	inline std::vector<std::string> GetTags(Entity);
-	bool EntityExists(Entity);
-	inline void LogWarning(std::string message)
+	inline bool EntityExists(Entity);
+	inline void LogWarning(const std::string& message)
 	{
 		std::cout << warningFormat << message << normalFormat << std::endl;
 	}
-	inline void LogError(std::string message)
+	inline void LogError(const std::string& message)
 	{
 		std::cout << errorFormat << message << normalFormat << std::endl;
 	}
@@ -145,11 +144,11 @@ namespace engine::ecs
 				++(*this);
 				return ret;
 			}
-			bool operator==(const Iterator& rhs)
+			bool operator==(const Iterator& rhs) const
 			{
 				return currentPtr == rhs.currentPtr;
 			}
-			bool operator!=(const Iterator& rhs)
+			bool operator!=(const Iterator& rhs) const
 			{
 				return currentPtr != rhs.currentPtr;
 			}
@@ -182,13 +181,13 @@ namespace engine::ecs
 		}
 
 		//Getters
-		int Size()
+		uint32_t Size() const
 		{
 			return size;
 		}
 
 		//Debug function, will print all entities
-		void PrintEntities()
+		void PrintEntities() const
 		{
 			std::cout << size << ": [";
 			for (uint32_t i = 0; i < size; i++)
@@ -203,7 +202,7 @@ namespace engine::ecs
 		{
 			//Add 100 or double capacity to the list, whichever is less
 			if (size >= maxSize)
-				Resize(maxSize + std::min(maxSize, (uint32_t)100));
+				Resize(maxSize + std::min(maxSize, static_cast<uint32_t>(100)));
 
 			//Look through the array and make sure the entity is not in it
 			for (uint32_t i = 0; i < size; i++)
@@ -281,13 +280,13 @@ namespace engine::ecs
 	};
 
 	//All currently available and used Entity IDs
-	std::stack<Entity> availableEntities;
-	std::set<Entity> usedEntities;
+	inline std::stack<Entity> availableEntities;
+	inline std::set<Entity> usedEntities;
 	//A map of an Entity's ID to its signature
-	std::unordered_map<Entity, Signature> entitySignatures;
-	std::unordered_map<Entity, std::vector<std::string>> entityTags;
+	inline std::unordered_map<Entity, Signature> entitySignatures;
+	inline std::unordered_map<Entity, std::vector<std::string>> entityTags;
 	//How many entities are currently reserved
-	uint32_t entityCount = 0;
+	inline uint32_t entityCount = 0;
 
 	//COMPONENT MANAGEMENT DATA
 
@@ -298,12 +297,12 @@ namespace engine::ecs
 		virtual void RemoveComponent(Entity entity) = 0;
 	};
 	//A map of every components name to it's corresponding component array
-	std::unordered_map<const char*, IComponentArray*> componentArrays;
+	inline std::unordered_map<const char*, IComponentArray*> componentArrays;
 	//Maps from a components type name to its ID
-	std::unordered_map<const char*, uint16_t> componentTypeToID;
-	std::unordered_map<uint16_t, const char*> componentIDToType;
+	inline std::unordered_map<const char*, uint16_t> componentTypeToID;
+	inline std::unordered_map<uint16_t, const char*> componentIDToType;
 	//The amount of components registered. Also the next available component ID
-	uint16_t componentCount = 0;
+	inline uint16_t componentCount = 0;
 	constexpr uint16_t componentArraySegmentSize = 100;
 
 	//SYSTEM MANAGEMENT DATA
@@ -316,9 +315,9 @@ namespace engine::ecs
 		EntityList entities;
 	};
 	//Map of each system accessible by its type name
-	std::unordered_map<const char*, std::shared_ptr<System>> systems;
+	inline std::unordered_map<const char*, std::shared_ptr<System>> systems;
 	//Map of each system's signature accessible by their type name
-	std::unordered_map<const char*, Signature> systemSignatures;
+	inline std::unordered_map<const char*, Signature> systemSignatures;
 
 
 	//INTERNAL FUNCTIONS
@@ -343,9 +342,9 @@ namespace engine::ecs
 		}
 
 		//Return true if the entity has a component of type T
-		bool HasComponent(Entity entity)
+		bool HasComponent(Entity entity) const
 		{
-			return entityToIndex.count(entity);
+			return entityToIndex.contains(entity);
 		}
 
 		//Get a component from an entity
@@ -388,7 +387,7 @@ namespace engine::ecs
 	};
 
 	//Implementation internal function. Called whenever an entity's signature changes
-	void _OnEntitySignatureChanged(Entity entity)
+	inline void _OnEntitySignatureChanged(Entity entity)
 	{
 		const Signature& signature = entitySignatures[entity];
 
@@ -424,7 +423,7 @@ namespace engine::ecs
 
 	//Implementation internal function. Get a component array of type T
 	template<typename T>
-	inline ComponentArray<T>* _GetComponentArray()
+	ComponentArray<T>* _GetComponentArray()
 	{
 		return static_cast<ComponentArray<T>*>(componentArrays[typeid(T).name()]);
 	}
@@ -432,16 +431,16 @@ namespace engine::ecs
 	//DEBUG FUNCTIONS
 
 	//Print all entities to log
-	void LogEntities()
+	inline void LogEntities()
 	{
 		std::cout << "Entities: ";
-		for (Entity entity : usedEntities)
+		for (const Entity entity : usedEntities)
 		{
 			std::cout << entity << ", ";
 		}
 	}
 	//Log the signature and component list of an entity as a string
-	void LogEntityInfo(Entity entity)
+	inline void LogEntityInfo(Entity entity)
 	{
 		//Print id
 		if (EntityExists(entity))
@@ -455,7 +454,7 @@ namespace engine::ecs
 		{
 			std::cout << tag << ", ";
 		}
-		if (GetTags(entity).size() == 0)
+		if (GetTags(entity).empty())
 			std::cout << "none";
 
 		//Print components
@@ -473,7 +472,7 @@ namespace engine::ecs
 	//PUBLIC FUNCTIONS
 
 	//Updates entity arrays and maybe some other things, call this at the very end of a frame
-	void Update()
+	inline void Update()
 	{
 		for (auto& system : systems)
 		{
@@ -484,11 +483,11 @@ namespace engine::ecs
 	//Checks if an entity exists
 	inline bool EntityExists(Entity entity)
 	{
-		return usedEntities.find(entity) != usedEntities.end();
+		return usedEntities.contains(entity);
 	}
 
 	//Set a list of tags to an entity
-	inline void SetTags(Entity entity, std::vector<std::string> tags)
+	inline void SetTags(Entity entity, const std::vector<std::string>& tags)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
@@ -503,7 +502,7 @@ namespace engine::ecs
 	}
 
 	//Add a tag to an entity
-	inline void AddTag(Entity entity, std::string tag)
+	inline void AddTag(Entity entity, const std::string& tag)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
@@ -514,14 +513,14 @@ namespace engine::ecs
 		}
 #endif
 
-		if (entityTags.count(entity) != 0)
+		if (entityTags.contains(entity))
 			entityTags[entity].push_back(tag);
 		else
 			SetTags(entity, { tag });
 	}
 
 	//Remove a tag from an entity
-	inline void RemoveTag(Entity entity, std::string tag)
+	inline void RemoveTag(Entity entity, const std::string& tag)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
@@ -573,7 +572,7 @@ namespace engine::ecs
 	}
 
 	//Returns true if entity has the specified tag
-	inline bool HasTag(Entity entity, std::string tag)
+	inline bool HasTag(Entity entity, const std::string& tag)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
@@ -618,7 +617,7 @@ namespace engine::ecs
 
 	//Add a destructor function to be called when a component is deleted
 	template<typename T>
-	inline void SetComponentDestructor(std::function<void(Entity, T)> destructor)
+	void SetComponentDestructor(std::function<void(Entity, T)> destructor)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the component has been registered
@@ -634,7 +633,7 @@ namespace engine::ecs
 
 	//Check if the entity has a component
 	template<typename T>
-	inline bool HasComponent(Entity entity)
+	bool HasComponent(Entity entity)
 	{
 		//Call HasComponent of the relevant component array
 		return _GetComponentArray<T>()->HasComponent(entity);
@@ -642,10 +641,8 @@ namespace engine::ecs
 
 	//Get a reference to entity's component of type T
 	template<typename T>
-	inline T& GetComponent(Entity entity)
+	T& GetComponent(Entity entity)
 	{
-		const char* componentType = typeid(T).name();
-
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
@@ -666,7 +663,7 @@ namespace engine::ecs
 
 	//Get the ID of a component
 	template<typename T>
-	inline uint16_t GetComponentID()
+	uint16_t GetComponentID()
 	{
 		const char* componentType = typeid(T).name();
 
@@ -686,8 +683,6 @@ namespace engine::ecs
 	template<typename T>
 	void AddComponent(Entity entity, T component)
 	{
-		const char* componentType = typeid(T).name();
-
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
@@ -712,7 +707,7 @@ namespace engine::ecs
 
 	//Remove a component of type T from entity
 	template<typename T>
-	inline void RemoveComponent(Entity entity)
+	void RemoveComponent(Entity entity)
 	{
 		const char* componentType = typeid(T).name();
 
@@ -739,7 +734,7 @@ namespace engine::ecs
 	}
 
 	//Returns a new entity with no components
-	Entity NewEntity()
+	inline Entity NewEntity()
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure there are not too many entities
@@ -753,7 +748,7 @@ namespace engine::ecs
 		entityCount++;
 
 		//Make more entity IDs available in batches of 100
-		if (availableEntities.size() == 0)
+		if (availableEntities.empty())
 		{
 			for (uint32_t i = entityCount + 99; i >= entityCount; i--)
 			{
@@ -771,7 +766,7 @@ namespace engine::ecs
 	}
 
 	//Delete an entity and all of its components
-	void DestroyEntity(Entity entity)
+	inline void DestroyEntity(Entity entity)
 	{
 #ifdef ECS_ENABLE_CHECKS
 		//Make sure the entity exists
@@ -805,7 +800,7 @@ namespace engine::ecs
 
 	//Destroys all entities without the "persistent" tag along with all their components.
 	//If ignorePersistent is set to true, will also delete "persistent" entities.
-	void DestroyAllEntities(bool ignorePersistent = false)
+	inline void DestroyAllEntities(bool ignorePersistent = false)
 	{
 		//Make a copy of the entities set to prevent iterator breaking
 		std::set<Entity> usedEntitiesCopy = usedEntities;
@@ -829,7 +824,7 @@ namespace engine::ecs
 
 	//Returns a reference to the desired system
 	template<typename T>
-	inline std::shared_ptr<T> GetSystem()
+	std::shared_ptr<T> GetSystem()
 	{
 		const char* systemType = typeid(T).name();
 

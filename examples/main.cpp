@@ -1,5 +1,5 @@
-#include <Application.h>
-#include <Vector.h>
+#include "UnEngine.h"
+#include "Vector.h"
 
 int main()
 {
@@ -8,6 +8,7 @@ int main()
     engine::EngineInit();
     engine::Camera cam = engine::Camera(800, 600);
     engine::physicsSystem->gravity = Vector2(0, -400);
+    engine::SpriteRenderSystem::SetBackgroundColor(100, 20, 150);
 
     while (!glfwWindowShouldClose(window))
     {
