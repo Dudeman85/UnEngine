@@ -26,40 +26,42 @@ For Debian you need to install a few libraries:
 - [x] Move to new repo
 - [x] Add linux build compatibility
 - [x] Update all dependencies
-- [ ] Refactor to h + cpp
+- [x] Refactor to h + cpp
 - [ ] Update the vector library
 - [ ] ~~Update to CMake 4~~
 ### Improvements
-- [ ] Rethink the transform hierarchy
+- [ ] Better integrate tilemap with ecs
+- [ ] Redo camera
 - [ ] Add an option to change the transform pivot
+- [ ] Rethink the transform hierarchy
 - [ ] Improve resource loading and management
 - [ ] Improve sound loading
 - [ ] Better integrate sounds with ecs
-- [ ] Better integrate tilemap with ecs
-- [ ] Redo camera
+- [ ] Fix physics fps bugs
+- [ ] Update documentation
 ### Renderer
 - [ ] Unify model, sprite, and primitive renderers
 - [ ] Fix the sprite scaling
-- [ ] Add multi camera support
-- [ ] Redo lighting system
 - [ ] Finally fix the damn transparency
 - [ ] Fix primitive rendering
+- [ ] Rethink UI rendering
+- [ ] Redo lighting system
+- [ ] Add multi camera support
 ### New features
-- [ ] Add quaternion support
-- [ ] Add extrapolation functions
-- [ ] More robust logging system
-- [ ] Implement enet
-- [ ] Copy entity function
-- [ ] Component serialization support
-- [ ] Serialization of all engine components
-- [ ] Add raycasting
 - [ ] Add angular momentum
 - [ ] Add restraints
-- [ ] Add joints
-- [ ] Add TOML or similar config support
+- [ ] Component serialization support
+- [ ] Serialization of all engine components
+- [ ] More robust logging system
 - [ ] Add debug tools
   - Camera
   - Frame advance
   - Logging
   - Info
-
+- [ ] Implement enet
+- [ ] Add raycasting
+- [ ] Add quaternion support
+- [ ] Add extrapolation functions
+- [ ] Copy entity function
+- [ ] Add TOML or similar config support
+- [ ] Add joints
