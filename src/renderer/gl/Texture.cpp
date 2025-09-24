@@ -6,6 +6,7 @@
 
 namespace engine
 {
+	//Make a texture from raw pixel data
     Texture::Texture(int sx, int sy, const std::vector<std::uint16_t>& data)
 	{
 		//Generate and bind texture
@@ -13,15 +14,14 @@ namespace engine
 		glBindTexture(GL_TEXTURE_2D, id);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16UI, sx, sy, 0, GL_RG_INTEGER, GL_UNSIGNED_SHORT, &data[0]);
-		float aniso = 0.0f;
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
-	///Load a texture from path
-	Texture::Texture(std::string path, unsigned int filteringType, bool flip)
+	//Load a texture from path
+	Texture::Texture(const std::string& path, unsigned int filteringType, bool flip)
 	{
 		//Flip the image when loading into an OpenGL texture
 		stbi_set_flip_vertically_on_load(flip);
@@ -36,6 +36,15 @@ namespace engine
 			if (nrChannels == 4)
 			{
 				colorFormat = GL_RGBA;
+				//Check for semi-transparency
+				for (int i = 3; i < width * height; i+=4)
+				{
+					if (imageData[i] > 5 && imageData[i] < 250)
+					{
+						isSemiTransparent = true;
+						break;
+					}
+				}
 			}
 			else if (nrChannels == 3)
 			{
@@ -73,7 +82,7 @@ namespace engine
 	}
 
 	//Create a texture from an image
-	Texture::Texture(Image image, unsigned int filteringType)
+	Texture::Texture(const Image& image, unsigned int filteringType)
 	{
 		//Convert the image to a 1D char array for OpenGL
 		unsigned char* imageData = new unsigned char[image.width * image.height * 4];
@@ -87,6 +96,8 @@ namespace engine
 				imageData[i++] = image[x][y].g;
 				imageData[i++] = image[x][y].b;
 				imageData[i++] = image[x][y].a;
+				if (image[x][y].a > 5 && image[x][y].a < 250)
+					isSemiTransparent = true;
 			}
 		}
 
@@ -111,26 +122,26 @@ namespace engine
 		glDeleteTextures(1, &id);
 	}
 
-	///Sets the OpenGL sampling type when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.
-	void Texture::SetScalingFilter(unsigned int type)
+	//Sets the OpenGL sampling type when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.
+	void Texture::SetScalingFilter(unsigned int filter)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 
 		//Set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, type);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, type);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
 		//Unbind texture
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	///Get this textures OpenGL ID
+	//Get this textures OpenGL ID
 	unsigned int Texture::ID()
 	{
 		return id;
 	}
 
-	///Use this texture to draw the next sprite
+	//Use this texture to draw the next sprite
 	void Texture::Use()
 	{
 		glBindTexture(GL_TEXTURE_2D, id);

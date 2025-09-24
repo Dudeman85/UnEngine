@@ -21,6 +21,7 @@ namespace engine
 		explicit Image(std::vector<std::vector<Pixel>> pixels);
 
 		std::vector<Pixel> operator[](int i);
+		const std::vector<Pixel> operator[](int i) const;
 
 		///Returns the data of this imge in stbimage friendly format
 		unsigned char* data();

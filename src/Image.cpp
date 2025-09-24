@@ -57,6 +57,10 @@ namespace engine
 	{
 		return pixmap[i];
 	}
+	const std::vector<Pixel> Image::operator[](int i) const
+	{
+		return pixmap[i];
+	}
 
 	///Returns the data of this imge in stbimage friendly format
 	unsigned char* Image::data()
