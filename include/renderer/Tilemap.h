@@ -37,7 +37,7 @@ source distribution.
 #include "renderer/gl/Camera.h"
 #include "Vector.h"
 
-namespace engine
+namespace une
 {
 	///A class to load a tilemap using the tmxlite library
 	class Tilemap final

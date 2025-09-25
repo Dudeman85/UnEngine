@@ -4,7 +4,7 @@
 
 #include <assimp/postprocess.h>
 
-namespace engine
+namespace une
 {
 	void Model::LoadModel(std::string path)
 	{

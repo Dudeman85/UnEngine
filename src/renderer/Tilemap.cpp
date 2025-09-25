@@ -41,11 +41,11 @@ source distribution.
 #include "renderer/gl/Texture.h"
 #include "renderer/MapLayer.h"
 
-namespace engine
+namespace une
 {
-	Tilemap::Tilemap(engine::Camera* cam)
+	Tilemap::Tilemap(une::Camera* cam)
 	{
-		m_shader = new engine::Shader(
+		m_shader = new une::Shader(
 			R"(
 		#version 460 core
 		in vec3 a_position;
@@ -380,6 +380,6 @@ namespace engine
 
 	std::shared_ptr<Texture> Tilemap::loadTexture(const std::string& path)
 	{
-		return std::make_shared<engine::Texture>(path.c_str(), GL_NEAREST, false);
+		return std::make_shared<une::Texture>(path.c_str(), GL_NEAREST, false);
 	}
 }

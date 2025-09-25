@@ -6,7 +6,7 @@
 
 #include "utils/Timing.h"
 
-namespace engine
+namespace une
 {
 	Animation::Animation(const std::vector<Texture*>& animationTextures, const std::vector<int>& animationDelays)
 	{

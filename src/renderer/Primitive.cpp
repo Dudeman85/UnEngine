@@ -1,8 +1,12 @@
 #include "renderer/Primitive.h"
 
+#include <algorithm>
+#include <ranges>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace engine
+#include "assimp/code/AssetLib/3MF/3MFXmlTags.h"
+
+namespace une
 {
 	Primitive::Primitive(const std::vector<float>& vertices, const std::vector<unsigned int>& indices)
 	{
@@ -41,52 +45,7 @@ namespace engine
 		glDeleteBuffers(1, &EBO);
 	}
 
-	///A primitive can be drawn without being an entity
-	void Primitive::Draw(Camera* cam, Vector3 color, const Transform& transform)
-	{
-		//Primitives should be drawn above everything
-		glDisable(GL_DEPTH_BUFFER_BIT);
-
-		defaultShader->use();
-
-		glBindVertexArray(VAO);
-
-		//Create the model matrix
-		glm::mat4 model = glm::mat4(1.0f);
-		//Position
-		model = glm::translate(model, transform.position.ToGlm());
-		//X, Y, Z euler rotations
-		model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		//Scale
-		model = glm::scale(model, transform.scale.ToGlm());
-
-		//Give the shader the model matrix
-		unsigned int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-		//Give the shader the primitive's color
-		unsigned int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
-		glUniform4f(colorLoc, color.x / 255, color.y / 255, color.z / 255, 1);
-
-		//Get the view and projection locations
-		unsigned int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
-		unsigned int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
-
-		//Give the shader the camera's view matrix
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-		//Give the shader the camera's projection matrix
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
-
-
-		glDrawElements(GL_LINE_LOOP, numVertices, GL_UNSIGNED_INT, 0);
-
-		glEnable(GL_DEPTH_BUFFER_BIT);
-		glBindVertexArray(0);
-	}
-
-	///Create a line starting at p1 and ending at p2
+	//Create a line starting at p1 and ending at p2
 	Primitive Primitive::Line(Vector3 p1, Vector3 p2)
 	{
 		//Rectangle vertices start at top left and go clockwise to bottom left
@@ -187,7 +146,7 @@ namespace engine
 		return Primitive(vertices, indices);
 	}
 
-	///Initialize the shaders
+	//Initialize the default shader
 	void PrimitiveRenderSystem::Init()
 	{
 		//The default 3D model shader
@@ -220,11 +179,8 @@ namespace engine
 				FragColor = vertexColor;
 			}
 			)", false);
-
-		Primitive::defaultShader = defaultShader;
 	}
 
-	///Call this every frame
 	void PrimitiveRenderSystem::Update(Camera* cam)
 	{
 		//For each entity
@@ -239,7 +195,7 @@ namespace engine
 
 			defaultShader->use();
 
-			//Bind the right VAO after tilemap
+			//Bind the right VAO
 			glBindVertexArray(primitiveRenderer.primitive->VAO);
 
 			//Create the model matrix
@@ -247,26 +203,23 @@ namespace engine
 			//Position
 			model = glm::translate(model, transform.position.ToGlm());
 			//X, Y, Z euler rotations
-			if (!primitiveRenderer.lockXYRotation)
-			{
-				model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-				model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			//Scale
 			model = glm::scale(model, transform.scale.ToGlm());
 
 			//Give the shader the model matrix
-			unsigned int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
+			int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 			//Give the shader the primitive's color
-			unsigned int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
+			int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
 			glUniform4f(colorLoc, primitiveRenderer.color.x / 255, primitiveRenderer.color.y / 255, primitiveRenderer.color.z / 255, 1);
 
 			//Get the view and projection locations
-			unsigned int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
-			unsigned int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
+			int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
+			int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
 
 			if (!primitiveRenderer.uiElement)
 			{
@@ -278,9 +231,6 @@ namespace engine
 			}
 			else
 			{
-				//Clear the depth buffer to always draw UI elements on top
-				glClear(GL_DEPTH_BUFFER_BIT);
-
 				//Give the shader a constant view matrix
 				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
@@ -299,5 +249,53 @@ namespace engine
 		glBindVertexArray(0);
 	}
 
-	Shader* Primitive::defaultShader = nullptr;
+	//Draw a primitive to the screen, does not require an entity
+	void PrimitiveRenderSystem::DrawEntity(const Primitive& primitive, Camera* cam, Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color)
+	{
+		defaultShader->use();
+
+		glBindVertexArray(primitive.VAO);
+
+		//Create the model matrix
+		glm::mat4 model = glm::mat4(1.0f);
+		//Position
+		model = glm::translate(model, position.ToGlm());
+		//X, Y, Z euler rotations
+		model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		//Scale
+		model = glm::scale(model, scale.ToGlm());
+
+		//Give the shader the model matrix
+		int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		//Give the shader the primitive's color
+		int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
+		glUniform4f(colorLoc, color.x / 255, color.y / 255, color.z / 255, 1);
+
+		//Get the view and projection locations
+		int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
+		int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
+
+		//Give the shader the camera's view matrix
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+		//Give the shader the camera's projection matrix
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+
+		glDrawElements(GL_LINE_LOOP, primitive.numVertices, GL_UNSIGNED_INT, 0);
+
+		glEnable(GL_DEPTH_BUFFER_BIT);
+		glBindVertexArray(0);
+	}
+
+	const std::vector<ecs::Entity>& PrimitiveRenderSystem::GetTransparentWorldEntities()
+	{
+		return transparentWorldEntities;
+	}
+	const std::vector<ecs::Entity>& PrimitiveRenderSystem::GetTransparentUIEntities()
+	{
+		return transparentUIEntities;
+	}
 }

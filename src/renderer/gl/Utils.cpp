@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace engine
+namespace une
 {
     //Better check gl error function
     GLenum CheckGLError()

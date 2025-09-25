@@ -21,7 +21,7 @@ struct Character
 	unsigned int Advance;
 };
 
-namespace engine
+namespace une
 {
 	///Class to create and store data for the font
 	class Font

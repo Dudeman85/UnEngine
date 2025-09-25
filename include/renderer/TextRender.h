@@ -4,7 +4,7 @@
 #include "Font.h"
 #include "Transform.h"
 
-namespace engine
+namespace une
 {
 	/// TextRenderer component
 	ECS_REGISTER_COMPONENT(TextRenderer)

@@ -5,7 +5,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Model.h"
 
-namespace engine
+namespace une
 {
     //Recursively loads all textures 
     std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);

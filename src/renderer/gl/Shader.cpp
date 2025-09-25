@@ -1,7 +1,7 @@
 #include "renderer/gl/Shader.h"
 
 
-namespace engine
+namespace une
 {
 	///Give the vertex and fragment shader sources directly or if fromFile = true load them from given directories.
 	Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath, bool fromFile)

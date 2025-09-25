@@ -6,7 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace engine
+namespace une
 {
 	///Load the image data from a path
 	Image::Image(const std::string& path)

@@ -8,7 +8,7 @@
 #include "renderer/Tilemap.h"
 #include "utils/Timing.h"
 
-namespace engine
+namespace une
 {
 	///Update the physics system, call this every frame
 	void PhysicsSystem::Update()
@@ -173,7 +173,7 @@ namespace engine
 	inline void PhysicsSystem::AddForce(ecs::Entity entity, Vector3 velocity)
 	{
 		//Physics dt is capped at 20 fps, less than that will slow down physics to stop impercision
-		float cappedDt = std::min(engine::deltaTime, 1.0 / 20.0);
+		float cappedDt = std::min(une::deltaTime, 1.0 / 20.0);
 
 		Rigidbody& rigidbody = ecs::GetComponent<Rigidbody>(entity);
 		rigidbody.velocity += velocity * cappedDt * rigidbody.mass;

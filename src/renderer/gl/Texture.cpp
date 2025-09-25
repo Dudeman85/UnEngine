@@ -4,7 +4,7 @@
 
 #include <stb_image.h>
 
-namespace engine
+namespace une
 {
 	//Make a texture from raw pixel data
     Texture::Texture(int sx, int sy, const std::vector<std::uint16_t>& data)

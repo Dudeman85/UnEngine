@@ -59,19 +59,19 @@ namespace input
 		{
 			// First sample is 0, we assume the value is not changed
 			inputSamples.push_back({ 0,startingValue });
-			lastUpdatedTime = engine::deltaTime;
+			lastUpdatedTime = une::deltaTime;
 		}
 
 		void update()
 		{
 			clearInputSamples();
-			lastUpdatedTime = engine::deltaTime;
+			lastUpdatedTime = une::deltaTime;
 		}
 
 		// Called from a callback function
 		void addInputSample(float addValue)
 		{
-			inputSamples.push_back((engine::deltaTime - lastUpdatedTime, addValue));
+			inputSamples.push_back((une::deltaTime - lastUpdatedTime, addValue));
 		};
 
 		void clearInputSamples()
@@ -83,7 +83,7 @@ namespace input
 			// Keep the latest sample
 			InputSample latestSample = *inputSamples.end();
 			// Set the latest sample to be before our 0 time, as it's from the last update iteration
-			latestSample.x = (engine::deltaTime - lastUpdatedTime) - latestSample.x;
+			latestSample.x = (une::deltaTime - lastUpdatedTime) - latestSample.x;
 
 			inputSamples.clear();
 

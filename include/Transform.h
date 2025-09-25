@@ -7,7 +7,7 @@
 #include <set>
 
 
-namespace engine
+namespace une
 {
 	enum RotationOrder { XYZ, XZY, YXZ, ZXY, YZX, ZYX };
 
@@ -385,32 +385,32 @@ namespace engine
 		{
 			switch (order)
 			{
-			case engine::XYZ:
+			case une::XYZ:
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				break;
-			case engine::XZY:
+			case une::XZY:
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				break;
-			case engine::YXZ:
+			case une::YXZ:
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				break;
-			case engine::ZXY:
+			case une::ZXY:
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				break;
-			case engine::YZX:
+			case une::YZX:
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				break;
-			case engine::ZYX:
+			case une::ZYX:
 				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));

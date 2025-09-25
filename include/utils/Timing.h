@@ -7,7 +7,7 @@
 #include "ECS.h"
 #include "utils/Callback.h"
 
-namespace engine
+namespace une
 {
 	// All CallbackWrappers binded by ScheduleFunction
 	inline std::vector<CallbackWrapper*> _CallbackWrappers;

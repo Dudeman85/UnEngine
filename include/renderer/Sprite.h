@@ -7,48 +7,46 @@
 #include "renderer/gl/Camera.h"
 #include "renderer/Tilemap.h"
 
-namespace engine
+namespace une
 {
-	///2D Sprite Renderer component
+	//2D Sprite Renderer component
 	ECS_REGISTER_COMPONENT(SpriteRenderer)
 	struct SpriteRenderer
 	{
-		///Abstraction class for textures
 		Texture* texture = nullptr;
-		///Abstraction class for shaders
 		Shader* shader = nullptr;
-		///Bool to turn on the sprite renderer
-		bool enabled = true;
-		///Bool to turn on the ui elements
+		//Should this sprite be treated as a UI element, see doc/UserInterface.md
 		bool uiElement = false;
+		bool enabled = true;
 	};
 
-	///2D Sprite Render system, Requires SpriteRenderer and Transform
+	//2D Sprite Render system, Requires SpriteRenderer and Transform
 	ECS_REGISTER_SYSTEM(SpriteRenderSystem, SpriteRenderer, Transform)
 	class SpriteRenderSystem : public ecs::System
 	{
 	public:
 		~SpriteRenderSystem();
-		///Initialize the shaders and clear the screen
+		//Initialize the shaders and shared buffers
 		void Init();
-
-		///Renders everything. Call this every frame
-		void Update(Camera* cam);
-
-		///Draw an entity to the screen
+		//Sorts the sprites into their draw layers
+		void Prepass();
+		//Draws all entities in the opaqueWorldEntities list
+		void DrawOpaqueWorldEntities(Camera* cam);
+		//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+		void DrawOpaqueUIEntities(Camera* cam);
+		//Draw a sprite to the screen, expects bound VAO
 		void DrawEntity(ecs::Entity entity, Camera* cam);
 
-		///Set the screens clear color to given rgb
-		static void SetBackgroundColor(float r, float g, float b);
-
-		//Set a tilemap to render
-		void SetTilemap(Tilemap* map);
-		//Remove a tilemap from rendering
-		void RemoveTilemap();
+		const std::vector<ecs::Entity>& GetTransparentWorldEntities();
+		const std::vector<ecs::Entity>& GetTransparentUIEntities();
 
 	private:
 		unsigned int VAO, VBO, EBO;
 		Shader* defaultShader = nullptr;
-		Tilemap* tilemap = nullptr;
+
+		std::vector<ecs::Entity> opaqueWorldEntities;
+		std::vector<ecs::Entity> transparentWorldEntities;
+		std::vector<ecs::Entity> opaqueUIEntities;
+		std::vector<ecs::Entity> transparentUIEntities;
 	};
 }

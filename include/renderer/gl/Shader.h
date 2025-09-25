@@ -7,7 +7,7 @@
 
 #include <glad/gl.h>
 
-namespace engine
+namespace une
 {
 	///Abstraction class for OpenGL shaders
 	class Shader

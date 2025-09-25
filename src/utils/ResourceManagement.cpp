@@ -8,7 +8,7 @@
 #include "renderer/gl/Model.h"
 #include "audio/AudioEngine.h"
 
-namespace engine
+namespace une
 {
     //Recursively loads all textures
     std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories, unsigned int filteringType)

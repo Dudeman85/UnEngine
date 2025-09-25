@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace engine
+namespace une
 {
 	///Struct representing a pixel's Red, Green, Blue, and Alpha values
 	struct Pixel

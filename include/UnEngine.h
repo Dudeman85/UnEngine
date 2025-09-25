@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "ECS.h"
+#include "renderer/UnifiedRenderer.h"
 #include "renderer/Sprite.h"
 #include "renderer/ModelSystem.h"
 #include "renderer/gl/Window.h"
@@ -16,7 +17,7 @@
 #include "Collision.h"
 #include "utils/Timing.h"
 
-namespace engine
+namespace une
 {
 	//If true updates physics and collision systems
 	inline bool enablePhysics = true;

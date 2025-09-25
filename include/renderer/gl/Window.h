@@ -5,7 +5,7 @@
 #include <Vector.h>
 #include <iostream>
 
-namespace engine
+namespace une
 {
 	static bool OPENGL_INITIALIZED = false;
 

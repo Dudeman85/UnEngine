@@ -10,7 +10,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Camera.h"
 
-namespace engine
+namespace une
 {
 	//3D Model Renderer component
 	ECS_REGISTER_COMPONENT(ModelRenderer)

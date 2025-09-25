@@ -8,7 +8,7 @@
 #include "renderer/Tilemap.h"
 #include "utils/Timing.h"
 
-namespace engine
+namespace une
 {
 	enum Direction { up = 0, right = 1, down = 2, left = 3 };
 

@@ -1,6 +1,6 @@
 #include "renderer/gl/Window.h"
 
-namespace engine
+namespace une
 {
 	//Return the monitor with greatest window overlap
 	//https://stackoverflow.com/questions/21421074/how-to-create-a-full-screen-window-on-the-current-monitor-with-glfw

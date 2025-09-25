@@ -7,7 +7,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/Sprite.h"
 
-namespace engine
+namespace une
 {
     //Animation struct. Not a component
     struct Animation

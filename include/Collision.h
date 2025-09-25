@@ -9,7 +9,7 @@
 #include "Transform.h"
 #include "renderer/Tilemap.h"
 
-namespace engine
+namespace une
 {
 	///Collision Event struct, not a component
 	struct Collision

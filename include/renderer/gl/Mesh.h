@@ -7,7 +7,7 @@
 
 #include "renderer/gl/Texture.h"
 
-namespace engine
+namespace une
 {
 	///Class for creating and storing meshes
 	class Mesh

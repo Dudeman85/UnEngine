@@ -1,4 +1,5 @@
 build
+cmake-build-debug
 CMakeLists.txt.user
 *.lnk
 .idea

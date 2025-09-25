@@ -7,7 +7,7 @@
 #include "Transform.h"
 #include "audio/AudioEngine.h"
 
-namespace engine
+namespace une
 {
 	ECS_REGISTER_COMPONENT(SoundComponent)
 	struct SoundComponent

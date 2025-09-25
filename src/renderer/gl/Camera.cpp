@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace engine
+namespace une
 {
 	Camera::Camera(float w, float h, glm::vec3 pos, glm::vec3 rot)
 	{

@@ -37,7 +37,7 @@ source distribution.
 #include "renderer/gl/Utils.h"
 
 //MapLayer::MapLayer(const tmx::Map& map, std::size_t layerIdx, const std::vector<std::shared_ptr<engine::Texture>>& textures, unsigned int tileSize) : m_allTextures(textures), tileSize(tileSize)
-MapLayer::MapLayer(const tmx::Map& map, std::size_t layerIdx, const std::vector<std::shared_ptr<engine::Texture>>& textures) : m_allTextures(textures)
+MapLayer::MapLayer(const tmx::Map& map, std::size_t layerIdx, const std::vector<std::shared_ptr<une::Texture>>& textures) : m_allTextures(textures)
 {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -171,7 +171,7 @@ void MapLayer::createSubsets(const tmx::Map& map, std::size_t layerIdx)
             m_subsets.back().sx = numCols;
             m_subsets.back().sy = numRows;
             m_subsets.back().texture = m_allTextures[i];
-            m_subsets.back().lookup = std::make_shared<engine::Texture>(mapSize.x, mapSize.y, pixelData);
+            m_subsets.back().lookup = std::make_shared<une::Texture>(mapSize.x, mapSize.y, pixelData);
      
             glGenBuffers(1, &m_subsets.back().vbo);
             glBindBuffer(GL_ARRAY_BUFFER, m_subsets.back().vbo);

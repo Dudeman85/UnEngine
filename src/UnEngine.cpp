@@ -1,34 +1,29 @@
-#include <UnEngine.h>
+#include "UnEngine.h"
 
-namespace engine
+namespace une
 {
 	void EngineInit()
 	{
 		//Get the engine systems
 		timerSystem = ecs::GetSystem<TimerSystem>();
 		timerSystem->Init();
-		collisionSystem = ecs::GetSystem<CollisionSystem>();
-		physicsSystem = ecs::GetSystem<PhysicsSystem>();
-		modelRenderSystem = ecs::GetSystem<ModelRenderSystem>();
-		modelRenderSystem->Init();
-		animationSystem = ecs::GetSystem<AnimationSystem>();
-		spriteRenderSystem = ecs::GetSystem<SpriteRenderSystem>();
-		spriteRenderSystem->Init();
-		textRenderSystem = ecs::GetSystem<TextRenderSystem>();
-		textRenderSystem->Init();
-		primitiveRenderSystem = ecs::GetSystem<PrimitiveRenderSystem>();
-		primitiveRenderSystem->Init();
-		soundSystem = ecs::GetSystem<SoundSystem>();
 		transformSystem = ecs::GetSystem<TransformSystem>();
 		ecs::SetComponentDestructor<Transform>(TransformSystem::OnTransformRemoved);
+		collisionSystem = ecs::GetSystem<CollisionSystem>();
+		physicsSystem = ecs::GetSystem<PhysicsSystem>();
+		soundSystem = ecs::GetSystem<SoundSystem>();
+		animationSystem = ecs::GetSystem<AnimationSystem>();
+		primitiveRenderSystem = ecs::GetSystem<PrimitiveRenderSystem>();
+		spriteRenderSystem = ecs::GetSystem<SpriteRenderSystem>();
+		modelRenderSystem = ecs::GetSystem<ModelRenderSystem>();
+		textRenderSystem = ecs::GetSystem<TextRenderSystem>();
+		renderer::Init();
 	}
 
 	//Updates all default engine systems, returns delta time
 	double Update(Camera* cam)
 	{
-		//Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		renderer::UnifiedRenderPrepass();
 		//Update engine systems
 		//Physics must be before collision
 		if (enablePhysics)
@@ -38,12 +33,7 @@ namespace engine
 			animationSystem->Update();
 		if (enableRendering)
 		{
-			//ModelRenderer must be before SpriteRenderer
-			modelRenderSystem->Update(cam);
-			spriteRenderSystem->Update(cam);
-			modelRenderSystem->DrawUIElements(cam); //This is a bandaid patch for UI models
-			textRenderSystem->Update(cam);
-			primitiveRenderSystem->Update(cam);
+			renderer::UnifiedRenderPass(cam);
 		}
 		soundSystem->Update();
 		//Collision system should be after rendering

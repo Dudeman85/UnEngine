@@ -40,7 +40,7 @@ class MapLayer final
 {
 public:
 	///Constructor
-	MapLayer(const tmx::Map&, std::size_t, const std::vector <std::shared_ptr<engine::Texture>>& textures);
+	MapLayer(const tmx::Map&, std::size_t, const std::vector <std::shared_ptr<une::Texture>>& textures);
 	~MapLayer();
 	
 	MapLayer(const MapLayer&) = delete;
@@ -54,7 +54,7 @@ public:
 	///The size of the tiles
 	glm::vec2 tileSize;
 private:
-	std::vector < std::shared_ptr<engine::Texture> > m_allTextures;
+	std::vector < std::shared_ptr<une::Texture> > m_allTextures;
 
 	unsigned int VAO;
 	//unsigned int tileSize;
@@ -64,8 +64,8 @@ private:
 		float sx;
 		float sy;
 		unsigned vbo = 0;
-		std::shared_ptr<engine::Texture> texture = 0;
-		std::shared_ptr<engine::Texture> lookup = 0;
+		std::shared_ptr<une::Texture> texture = 0;
+		std::shared_ptr<une::Texture> lookup = 0;
 	};
 	std::vector<Subset> m_subsets;
 

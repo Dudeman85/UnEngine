@@ -7,7 +7,7 @@
 
 #include "Image.h"
 
-namespace engine
+namespace une
 {
 	//Abstraction class for OpenGL textures
 	class Texture

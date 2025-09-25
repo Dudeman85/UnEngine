@@ -4,7 +4,7 @@
 
 #include "Vector.h"
 
-namespace engine
+namespace une
 {
 	///Class for creating and storing data for the camera
 	class Camera

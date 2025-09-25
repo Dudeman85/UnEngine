@@ -2,7 +2,7 @@
 
 #include "renderer/Primitive.h"
 
-namespace engine
+namespace une
 {
 	///Called every frame
 	void CollisionSystem::Update(Camera* camera)

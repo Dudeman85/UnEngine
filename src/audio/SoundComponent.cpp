@@ -1,6 +1,6 @@
 #include "audio/SoundComponent.h"
 
-namespace engine
+namespace une
 {
     void SoundSystem::Update()
     {
@@ -107,7 +107,7 @@ namespace engine
 
     Audio* AddAudio(std::string AudioEngineName, std::string AudioFile, bool loop, float volume, DistanceModel model, float maxDist, float refDist, float rolloff)
     {
-        auto* audio = ecs::GetSystem<engine::SoundSystem>()->FindAudioEngine(AudioEngineName)->createAudio(AudioFile, loop, volume);
+        auto* audio = ecs::GetSystem<une::SoundSystem>()->FindAudioEngine(AudioEngineName)->createAudio(AudioFile, loop, volume);
 
         if (audio)
         {

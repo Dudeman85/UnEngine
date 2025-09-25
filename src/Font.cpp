@@ -4,7 +4,7 @@
 #include FT_FREETYPE_H
 
 using namespace std;
-using namespace engine;
+using namespace une;
 
 Font::Font(std::string filepathname, FT_Long face_index, FT_UInt pixel_width, FT_UInt pixel_height)
 {

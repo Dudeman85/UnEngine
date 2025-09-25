@@ -9,7 +9,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Mesh.h"
 
-namespace engine
+namespace une
 {
 	///A class to store 3D model vertex and texture data, as well as handle model loading
 	class Model

@@ -16,7 +16,7 @@
 #include "renderer/gl/Camera.h"
 #include "renderer/Tilemap.h"
 
-namespace engine
+namespace une
 {
 	SpriteRenderSystem::~SpriteRenderSystem()
 	{
@@ -24,19 +24,10 @@ namespace engine
 		glDeleteVertexArrays(1, &VBO);
 		glDeleteVertexArrays(1, &EBO);
 	}
-	///Initialize the shaders and clear the screen
+
+	//Initialize the shaders and shared buffers
 	void SpriteRenderSystem::Init()
 	{
-		//Set the screen clear color to black
-		glClearColor(0, 0, 0, 1.0f);
-
-		//Enable transparency
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-		//Enable Depth buffering
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-
 		//Create the default sprite shader
 		defaultShader = new Shader(
 			R"(
@@ -68,7 +59,7 @@ namespace engine
 			)", false);
 
 		//Rectangle vertices start at top left and go clockwise to bottom left
-		float vertices[] = {
+		const float vertices[] = {
 			//Positions		  Texture Coords
 			 1.f,  1.f, 0.0f, 1.0f, 1.0f, // top right
 			 1.f, -1.f, 0.0f, 1.0f, 0.0f, // bottom right
@@ -76,7 +67,7 @@ namespace engine
 			-1.f,  1.f, 0.0f, 0.0f, 1.0f, // top left
 		};
 		//Indices to draw a rectangle from two triangles
-		unsigned int indices[] = {
+		const unsigned int indices[] = {
 			0, 1, 2, //1st trangle
 			0, 2, 3, //2nd triangle
 		};
@@ -111,81 +102,72 @@ namespace engine
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	///Renders everything. Call this every frame
-	void SpriteRenderSystem::Update(Camera* cam)
+	//Sorts the sprites into their draw layers
+	void SpriteRenderSystem::Prepass()
 	{
-		//Sort the entities and tilemap by Z
-		std::set<float> layersToDraw;
-		std::map<float, std::vector<ecs::Entity>> sortedEntities;
-		if (tilemap)
-			layersToDraw.insert(tilemap->zLayers.begin(), tilemap->zLayers.end());
+		opaqueWorldEntities.clear();
+		transparentWorldEntities.clear();
+		opaqueUIEntities.clear();
+		transparentUIEntities.clear();
 
-		//UI elements are sorted seperately
-		std::set<float> uiLayersToDraw;
-		std::map<float, std::vector<ecs::Entity>> sortedUIElements;
-
-		//Sort the entities into sprite and UI layers
+		//Sort all entities into their draw orders
 		for (ecs::Entity entity : entities)
 		{
-			Transform transform = TransformSystem::GetGlobalTransform(entity);
-			SpriteRenderer& renderer = ecs::GetComponent<SpriteRenderer>(entity);
-
-			//Seperate sprites and UI elements
-			if (!renderer.uiElement)
+			SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
+			if (!sprite.enabled)
+				continue;
+			if (sprite.uiElement)
 			{
-				sortedEntities[transform.position.z].push_back(entity);
-				layersToDraw.insert(transform.position.z);
+				if (sprite.texture->isSemiTransparent)
+					transparentUIEntities.push_back(entity);
+				else
+					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
-				sortedUIElements[transform.position.z].push_back(entity);
-				uiLayersToDraw.insert(transform.position.z);
+				if (sprite.texture->isSemiTransparent)
+					transparentWorldEntities.push_back(entity);
+				else
+					opaqueWorldEntities.push_back(entity);
 			}
 		}
+	}
 
-		//Draw all sprites and tilemap by layer
-		for (const float& layer : layersToDraw)
+	//Draws all entities in the opaqueWorldEntities list
+	void SpriteRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
+	{
+		//Use the same VAO for every sprite
+		glBindVertexArray(VAO);
+
+		for (ecs::Entity entity : opaqueWorldEntities)
 		{
-			if (tilemap)
-				tilemap->draw(layer);
-
-			//Bind the right VAO after tilemap
-			glBindVertexArray(VAO);
-
-			//Draw entities for this layer
-			for (const ecs::Entity& entity : sortedEntities[layer])
-			{
-				DrawEntity(entity, cam);
-			}
+			DrawEntity(entity, cam);
 		}
 
-		//Draw all UI elements by layer
-		glDisable(GL_DEPTH_BUFFER_BIT);
-		for (const float& layer : uiLayersToDraw)
-		{
-			//Bind the right VAO after tilemap
-			glBindVertexArray(VAO);
-
-			//Draw entities for this layer
-			for (const ecs::Entity& entity : sortedUIElements[layer])
-			{
-				DrawEntity(entity, cam);
-			}
-		}
-		glEnable(GL_DEPTH_BUFFER_BIT);
-
-		//Unbind vertex array
+		//Unbind the VAO
 		glBindVertexArray(0);
 	}
 
-	///Draw an entity to the screen
+	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+	void SpriteRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+	{
+		//Use the same VAO for every sprite
+		glBindVertexArray(VAO);
+
+		for (ecs::Entity entity : opaqueUIEntities)
+		{
+			DrawEntity(entity, cam);
+		}
+
+		//Unbind the VAO
+		glBindVertexArray(0);
+	}
+
+	//Draw a sprite to the screen, expects bound VAO
 	void SpriteRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
 	{
 		//Get relevant components
 		SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
-
-		if (!sprite.enabled)
-			return;
 
 		//If a shader has been specified for this sprite use it, else use the default
 		Shader* shader = defaultShader;
@@ -203,24 +185,17 @@ namespace engine
 		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
 		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
 
-		if (!sprite.uiElement)
+		if (sprite.uiElement)
 		{
-			//Give the shader the camera's view matrix
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-
-			//Give the shader the camera's projection matrix
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			//Render UI elements independent of camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
 		}
 		else
 		{
-			//Clear the depth buffer to always draw UI elements on top
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			//Give the shader a constant view matrix
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-
-			//Give the shader a constant projection matrix
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			//Render World entities based on camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 		}
 
 		//Bind the texture
@@ -235,20 +210,12 @@ namespace engine
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	///Set the screens clear color to given rgb
-	void SpriteRenderSystem::SetBackgroundColor(float r, float g, float b)
+	const std::vector<ecs::Entity>& SpriteRenderSystem::GetTransparentWorldEntities()
 	{
-		glClearColor(r / 255, g / 255, b / 255, 1.0f);
+		return transparentWorldEntities;
 	}
-
-	///Set a tilemap to render
-	void SpriteRenderSystem::SetTilemap(Tilemap* map)
+	const std::vector<ecs::Entity>& SpriteRenderSystem::GetTransparentUIEntities()
 	{
-		tilemap = map;
-	}
-	//Remove a tilemap from rendering
-	void SpriteRenderSystem::RemoveTilemap()
-	{
-		tilemap = nullptr;
+		return transparentUIEntities;
 	}
 }

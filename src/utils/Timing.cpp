@@ -7,7 +7,7 @@
 #include "ECS.h"
 #include "utils/Callback.h"
 
-namespace engine
+namespace une
 {
 	//Get the time since last call in seconds
 	double CalculateDeltaTime()
