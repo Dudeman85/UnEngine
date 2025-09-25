@@ -150,7 +150,7 @@ namespace une
 	void PrimitiveRenderSystem::Init()
 	{
 		//The default 3D model shader
-		defaultShader = new Shader(
+		shader = new Shader(
 			R"(
 			#version 330 core
 			layout(location = 0) in vec3 aPos;
@@ -176,6 +176,8 @@ namespace une
 
 			void main()
 			{
+				if(vertexColor.a < 0.02)
+					discard;
 				FragColor = vertexColor;
 			}
 			)", false);
@@ -186,75 +188,32 @@ namespace une
 		//For each entity
 		for (ecs::Entity entity : entities)
 		{
-			//Get relevant components
-			Transform& transform = ecs::GetComponent<Transform>(entity);
 			PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
 
 			if (!primitiveRenderer.enabled)
 				continue;
 
-			defaultShader->use();
-
-			//Bind the right VAO
-			glBindVertexArray(primitiveRenderer.primitive->VAO);
-
-			//Create the model matrix
-			glm::mat4 model = glm::mat4(1.0f);
-			//Position
-			model = glm::translate(model, transform.position.ToGlm());
-			//X, Y, Z euler rotations
-			model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-			//Scale
-			model = glm::scale(model, transform.scale.ToGlm());
-
-			//Give the shader the model matrix
-			int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-			//Give the shader the primitive's color
-			int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
-			glUniform4f(colorLoc, primitiveRenderer.color.x / 255, primitiveRenderer.color.y / 255, primitiveRenderer.color.z / 255, 1);
-
-			//Get the view and projection locations
-			int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
-			int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
-
-			if (!primitiveRenderer.uiElement)
-			{
-				//Give the shader the camera's view matrix
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-
-				//Give the shader the camera's projection matrix
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
-			}
-			else
-			{
-				//Give the shader a constant view matrix
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-				//Give the shader a constant projection matrix
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-			}
-
-			//Render either as lines or triangles
-			if (primitiveRenderer.wireframe || primitiveRenderer.primitive->numVertices < 3)
-				glDrawElements(GL_LINE_LOOP, primitiveRenderer.primitive->numVertices, GL_UNSIGNED_INT, 0);
-			else
-				glDrawElements(GL_TRIANGLES, primitiveRenderer.primitive->numVertices, GL_UNSIGNED_INT, 0);
+			DrawEntity(entity, cam);
 		}
+	}
 
-		//Unbind vertex array
-		glBindVertexArray(0);
+	//Draw a primitive to the screen
+	void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+	{
+		Transform transform = TransformSystem::GetGlobalTransform(entity);
+		PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
+
+		DrawPrimitive(primitiveRenderer.primitive, cam, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
+			transform.position, transform.rotation, transform.scale);
 	}
 
 	//Draw a primitive to the screen, does not require an entity
-	void PrimitiveRenderSystem::DrawEntity(const Primitive& primitive, Camera* cam, Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color)
+	void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio,
+		Vector3 position, Vector3 rotation, Vector3 scale)
 	{
-		defaultShader->use();
+		shader->use();
 
-		glBindVertexArray(primitive.VAO);
+		glBindVertexArray(primitive->VAO);
 
 		//Create the model matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -268,23 +227,35 @@ namespace une
 		model = glm::scale(model, scale.ToGlm());
 
 		//Give the shader the model matrix
-		int modelLoc = glGetUniformLocation(defaultShader->ID, "model");
+		int modelLoc = glGetUniformLocation(shader->ID, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		//Give the shader the primitive's color
-		int colorLoc = glGetUniformLocation(defaultShader->ID, "color");
-		glUniform4f(colorLoc, color.x / 255, color.y / 255, color.z / 255, 1);
+		int colorLoc = glGetUniformLocation(shader->ID, "color");
+		const Color sRGB = color.AsSRGB();
+		glUniform4f(colorLoc, sRGB.r, sRGB.g, sRGB.b, sRGB.a);
 
 		//Get the view and projection locations
-		int viewLoc = glGetUniformLocation(defaultShader->ID, "view");
-		int projLoc = glGetUniformLocation(defaultShader->ID, "projection");
+		int viewLoc = glGetUniformLocation(shader->ID, "view");
+		int projLoc = glGetUniformLocation(shader->ID, "projection");
 
-		//Give the shader the camera's view matrix
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-		//Give the shader the camera's projection matrix
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+		if (prio == DrawPriority::ui)
+		{
+			//Render UI elements independent of camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+		}
+		else
+		{
+			if (prio == DrawPriority::aboveAll)
+				glDisable(GL_DEPTH_BUFFER_BIT);
+			//Render World entities based on camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+		}
 
-		glDrawElements(GL_LINE_LOOP, primitive.numVertices, GL_UNSIGNED_INT, 0);
+		//TODO: Fix filled draw
+		glDrawElements(GL_LINE_LOOP, primitive->numVertices, GL_UNSIGNED_INT, 0);
 
 		glEnable(GL_DEPTH_BUFFER_BIT);
 		glBindVertexArray(0);

@@ -4,6 +4,7 @@
 
 #include "ECS.h"
 #include "Transform.h"
+#include "Color.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Camera.h"
 
@@ -18,9 +19,6 @@ namespace une
 	public:
 		Primitive() = delete;
 		~Primitive();
-
-		//A primitive can be drawn without being an entity
-		void Draw(Camera* cam, Vector3 color = Vector3(100.0f), const Transform& transform = Transform()) const;
 
 		//Create a line starting at p1 and ending at p2
 		static Primitive Line(Vector3 p1 = Vector3(-1, 0, 0), Vector3 p2 = Vector3(1, 0, 0));
@@ -42,7 +40,7 @@ namespace une
 	struct PrimitiveRenderer
 	{
 		Primitive* primitive = nullptr;
-		Vector3 color;
+		Color color;
 		//Draw wireframe only
 		bool wireframe = true;
 		//Should this sprite be treated as a UI element, see doc/UserInterface.md
@@ -55,6 +53,8 @@ namespace une
 	class PrimitiveRenderSystem : public ecs::System
 	{
 	public:
+		enum DrawPriority{ normal = 0, ui = 1, aboveAll = 2 };
+
 		//Initialize the default shader
 		void Init();
 
@@ -64,13 +64,13 @@ namespace une
 		//Draw a primitive to the screen
 		void DrawEntity(ecs::Entity entity, Camera* cam);
 		//Draw a primitive to the screen, does not require an entity
-		void DrawEntity(const Primitive& primitive, Camera* cam, Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color);
+		void DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
 
 		const std::vector<ecs::Entity>& GetTransparentWorldEntities();
 		const std::vector<ecs::Entity>& GetTransparentUIEntities();
 
 	private:
-		Shader* defaultShader = nullptr;
+		Shader* shader = nullptr;
 
 		std::vector<ecs::Entity> opaqueWorldEntities;
 		std::vector<ecs::Entity> transparentWorldEntities;
