@@ -6,6 +6,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Camera.h"
 #include "renderer/Tilemap.h"
+#include "renderer/gl/Utils.h"
 
 namespace une
 {
@@ -20,33 +21,39 @@ namespace une
 		bool enabled = true;
 	};
 
-	//2D Sprite Render system, Requires SpriteRenderer and Transform
-	ECS_REGISTER_SYSTEM(SpriteRenderSystem, SpriteRenderer, Transform)
-	class SpriteRenderSystem : public ecs::System
+	namespace renderer
 	{
-	public:
-		~SpriteRenderSystem();
-		//Initialize the shaders and shared buffers
-		void Init();
-		//Sorts the sprites into their draw layers
-		void Prepass();
-		//Draws all entities in the opaqueWorldEntities list
-		void DrawOpaqueWorldEntities(Camera* cam);
-		//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-		void DrawOpaqueUIEntities(Camera* cam);
-		//Draw a sprite to the screen, expects bound VAO
-		void DrawEntity(ecs::Entity entity, Camera* cam);
+		//2D Sprite Render system, Requires SpriteRenderer and Transform
+		ECS_REGISTER_SYSTEM(SpriteRenderSystem, SpriteRenderer, Transform)
+		class SpriteRenderSystem : public ecs::System
+		{
+		public:
+			~SpriteRenderSystem();
+			//Initialize the shaders and shared buffers
+			void Init();
+			//Sorts the sprites into their draw layers
+			void Prepass();
+			//Draws all entities in the opaqueWorldEntities list
+			void DrawOpaqueWorldEntities(Camera* cam);
+			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+			void DrawOpaqueUIEntities(Camera* cam);
+			//Draw a sprite to the screen, expects bound VAO
+			void DrawEntity(ecs::Entity entity, Camera* cam);
+			//Static version of DrawEntity for renderer
+			static void DrawEntityStatic(ecs::Entity entity, Camera* cam);
 
-		const std::vector<ecs::Entity>& GetTransparentWorldEntities();
-		const std::vector<ecs::Entity>& GetTransparentUIEntities();
+			const std::vector<Renderable>& GetTransparentWorldEntities();
+			const std::vector<Renderable>& GetTransparentUIEntities();
 
-	private:
-		unsigned int VAO, VBO, EBO;
-		Shader* defaultShader = nullptr;
+			unsigned int VAO;
+		private:
+			unsigned int VBO, EBO;
+			Shader* defaultShader = nullptr;
 
-		std::vector<ecs::Entity> opaqueWorldEntities;
-		std::vector<ecs::Entity> transparentWorldEntities;
-		std::vector<ecs::Entity> opaqueUIEntities;
-		std::vector<ecs::Entity> transparentUIEntities;
-	};
+			std::vector<ecs::Entity> opaqueWorldEntities;
+			std::vector<ecs::Entity> opaqueUIEntities;
+			std::vector<Renderable> transparentWorldEntities;
+			std::vector<Renderable> transparentUIEntities;
+		};
+	}
 }

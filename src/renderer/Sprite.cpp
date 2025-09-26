@@ -14,9 +14,8 @@
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Camera.h"
-#include "renderer/Tilemap.h"
 
-namespace une
+namespace une::renderer
 {
 	SpriteRenderSystem::~SpriteRenderSystem()
 	{
@@ -52,7 +51,7 @@ namespace une
 			void main()
 			{
 				vec4 texColor = texture(texture1, TexCoord);
-				if(texColor.a < 0.02)
+				if(texColor.a <= 0.02)
 					discard;
 				FragColor = texColor;
 			}
@@ -119,14 +118,14 @@ namespace une
 			if (sprite.uiElement)
 			{
 				if (sprite.texture->isSemiTransparent)
-					transparentUIEntities.push_back(entity);
+					transparentUIEntities.push_back({entity, DrawEntityStatic});
 				else
 					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
 				if (sprite.texture->isSemiTransparent)
-					transparentWorldEntities.push_back(entity);
+					transparentWorldEntities.push_back({entity, DrawEntityStatic});
 				else
 					opaqueWorldEntities.push_back(entity);
 			}
@@ -160,6 +159,15 @@ namespace une
 		}
 
 		//Unbind the VAO
+		glBindVertexArray(0);
+	}
+
+	//Static version of DrawEntity for renderer
+	void SpriteRenderSystem::DrawEntityStatic(ecs::Entity entity, Camera* cam)
+	{
+		auto srs = ecs::GetSystem<SpriteRenderSystem>();
+		glBindVertexArray(srs->VAO);
+		srs->DrawEntity(entity, cam);
 		glBindVertexArray(0);
 	}
 
@@ -202,6 +210,8 @@ namespace une
 		glActiveTexture(GL_TEXTURE0);
 		if (sprite.texture)
 			sprite.texture->Use();
+		else
+			std::cout << "Warning: no texture given for sprite of entity " << entity << std::endl;
 
 		//Draw the sprite
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -210,11 +220,11 @@ namespace une
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	const std::vector<ecs::Entity>& SpriteRenderSystem::GetTransparentWorldEntities()
+	const std::vector<Renderable>& SpriteRenderSystem::GetTransparentWorldEntities()
 	{
 		return transparentWorldEntities;
 	}
-	const std::vector<ecs::Entity>& SpriteRenderSystem::GetTransparentUIEntities()
+	const std::vector<Renderable>& SpriteRenderSystem::GetTransparentUIEntities()
 	{
 		return transparentUIEntities;
 	}

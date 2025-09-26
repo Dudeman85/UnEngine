@@ -7,6 +7,7 @@
 #include "Color.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Camera.h"
+#include "renderer/gl/Utils.h"
 
 namespace une
 {
@@ -48,33 +49,40 @@ namespace une
 		bool enabled = true;
 	};
 
-	//Primitive Render system, Requires PrimitiveRenderer and Transform
-	ECS_REGISTER_SYSTEM(PrimitiveRenderSystem, Transform, PrimitiveRenderer)
-	class PrimitiveRenderSystem : public ecs::System
+	namespace renderer
 	{
-	public:
-		enum DrawPriority{ normal = 0, ui = 1, aboveAll = 2 };
+		//Primitive Render system, Requires PrimitiveRenderer and Transform
+		ECS_REGISTER_SYSTEM(PrimitiveRenderSystem, Transform, PrimitiveRenderer)
+		class PrimitiveRenderSystem : public ecs::System
+		{
+		public:
+			enum DrawPriority{ normal = 0, ui = 1, aboveAll = 2 };
 
-		//Initialize the default shader
-		void Init();
+			//Initialize the default shader
+			void Init();
 
-		//Call this every frame
-		void Update(Camera* cam);
+			//Sorts the primitives into their draw layers
+			void Prepass();
 
-		//Draw a primitive to the screen
-		void DrawEntity(ecs::Entity entity, Camera* cam);
-		//Draw a primitive to the screen, does not require an entity
-		void DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
+			//Draws all entities in the opaqueWorldEntities list
+			void DrawOpaqueWorldEntities(Camera* cam);
+			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+			void DrawOpaqueUIEntities(Camera* cam);
+			//Draw a primitive to the screen
+			static void DrawEntity(ecs::Entity entity, Camera* cam);
+			//Draw a primitive to the screen, does not require an entity
+			static void DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
 
-		const std::vector<ecs::Entity>& GetTransparentWorldEntities();
-		const std::vector<ecs::Entity>& GetTransparentUIEntities();
+			const std::vector<Renderable>& GetTransparentWorldEntities();
+			const std::vector<Renderable>& GetTransparentUIEntities();
 
-	private:
-		Shader* shader = nullptr;
+		private:
+			static Shader* shader;
 
-		std::vector<ecs::Entity> opaqueWorldEntities;
-		std::vector<ecs::Entity> transparentWorldEntities;
-		std::vector<ecs::Entity> opaqueUIEntities;
-		std::vector<ecs::Entity> transparentUIEntities;
-	};
+			std::vector<ecs::Entity> opaqueWorldEntities;
+			std::vector<ecs::Entity> opaqueUIEntities;
+			std::vector<Renderable> transparentWorldEntities;
+			std::vector<Renderable> transparentUIEntities;
+		};
+	}
 }

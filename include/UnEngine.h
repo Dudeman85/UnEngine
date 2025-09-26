@@ -30,11 +30,11 @@ namespace une
 	inline std::shared_ptr<TimerSystem> timerSystem;
 	inline std::shared_ptr<CollisionSystem> collisionSystem;
 	inline std::shared_ptr<PhysicsSystem> physicsSystem;
-	inline std::shared_ptr<ModelRenderSystem> modelRenderSystem;
 	inline std::shared_ptr<AnimationSystem> animationSystem;
-	inline std::shared_ptr<SpriteRenderSystem> spriteRenderSystem;
+	inline std::shared_ptr<ModelRenderSystem> modelRenderSystem;
+	inline std::shared_ptr<renderer::SpriteRenderSystem> spriteRenderSystem;
 	inline std::shared_ptr<TextRenderSystem> textRenderSystem;
-	inline std::shared_ptr<PrimitiveRenderSystem> primitiveRenderSystem;
+	inline std::shared_ptr<renderer::PrimitiveRenderSystem> primitiveRenderSystem;
 	inline std::shared_ptr<TransformSystem> transformSystem;
 	inline std::shared_ptr<SoundSystem> soundSystem;
 

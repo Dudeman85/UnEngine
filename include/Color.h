@@ -7,7 +7,7 @@ namespace une
     class Color
     {
     public:
-        explicit Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255);
+        explicit Color(int red, int green, int blue, int alpha = 255);
         explicit Color(float red, float green, float blue, float alpha = 1.0f);
 
         //TODO: implementations

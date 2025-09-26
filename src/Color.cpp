@@ -2,7 +2,7 @@
 
 namespace une
 {
-    Color::Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+    Color::Color(int red, int green, int blue, int alpha)
     {
         isSRGB = false;
         r = red;

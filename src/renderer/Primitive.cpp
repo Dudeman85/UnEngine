@@ -146,12 +146,14 @@ namespace une
 		return Primitive(vertices, indices);
 	}
 
-	//Initialize the default shader
-	void PrimitiveRenderSystem::Init()
+	namespace renderer
 	{
-		//The default 3D model shader
-		shader = new Shader(
-			R"(
+		//Initialize the default shader
+		void PrimitiveRenderSystem::Init()
+		{
+			//The default 3D model shader
+			shader = new Shader(
+				R"(
 			#version 330 core
 			layout(location = 0) in vec3 aPos;
 
@@ -168,7 +170,7 @@ namespace une
 				gl_Position = projection * view * model * vec4(aPos, 1.0);
 			}
 			)",
-			R"(
+				R"(
 			#version 330 core
 			out vec4 FragColor;
 
@@ -176,97 +178,136 @@ namespace une
 
 			void main()
 			{
-				if(vertexColor.a < 0.02)
+				if(vertexColor.a <= 0.02)
 					discard;
 				FragColor = vertexColor;
 			}
 			)", false);
-	}
+		}
 
-	void PrimitiveRenderSystem::Update(Camera* cam)
-	{
-		//For each entity
-		for (ecs::Entity entity : entities)
+		//Sorts the primitives into their draw layers
+		void PrimitiveRenderSystem::Prepass()
 		{
+			opaqueWorldEntities.clear();
+			transparentWorldEntities.clear();
+			opaqueUIEntities.clear();
+			transparentUIEntities.clear();
+
+			//Sort all entities into their draw orders
+			for (ecs::Entity entity : entities)
+			{
+				PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
+				Color srgb = primitiveRenderer.color.AsSRGB();
+				if (!primitiveRenderer.enabled)
+					continue;
+				if (primitiveRenderer.uiElement)
+				{
+					if (srgb.a > 0.02 && srgb.a < 0.98)
+						transparentUIEntities.push_back({entity, DrawEntity});
+					else
+						opaqueUIEntities.push_back(entity);
+				}
+				else
+				{
+					if (srgb.a > 0.02 && srgb.a < 0.98)
+						transparentWorldEntities.push_back({entity, DrawEntity});
+					else
+						opaqueWorldEntities.push_back(entity);
+				}
+			}
+		}
+
+		//Draws all entities in the opaqueWorldEntities list
+		void PrimitiveRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
+		{
+			for (ecs::Entity entity : opaqueWorldEntities)
+			{
+				DrawEntity(entity, cam);
+			}
+		}
+
+		//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+		void PrimitiveRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+		{
+			for (ecs::Entity entity : opaqueUIEntities)
+			{
+				DrawEntity(entity, cam);
+			}
+		}
+
+		//Draw a primitive to the screen
+		void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+		{
+			Transform transform = TransformSystem::GetGlobalTransform(entity);
 			PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
 
-			if (!primitiveRenderer.enabled)
-				continue;
-
-			DrawEntity(entity, cam);
+			DrawPrimitive(primitiveRenderer.primitive, cam, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
+				transform.position, transform.rotation, transform.scale);
 		}
-	}
 
-	//Draw a primitive to the screen
-	void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
-	{
-		Transform transform = TransformSystem::GetGlobalTransform(entity);
-		PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
-
-		DrawPrimitive(primitiveRenderer.primitive, cam, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
-			transform.position, transform.rotation, transform.scale);
-	}
-
-	//Draw a primitive to the screen, does not require an entity
-	void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio,
-		Vector3 position, Vector3 rotation, Vector3 scale)
-	{
-		shader->use();
-
-		glBindVertexArray(primitive->VAO);
-
-		//Create the model matrix
-		glm::mat4 model = glm::mat4(1.0f);
-		//Position
-		model = glm::translate(model, position.ToGlm());
-		//X, Y, Z euler rotations
-		model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		//Scale
-		model = glm::scale(model, scale.ToGlm());
-
-		//Give the shader the model matrix
-		int modelLoc = glGetUniformLocation(shader->ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-		//Give the shader the primitive's color
-		int colorLoc = glGetUniformLocation(shader->ID, "color");
-		const Color sRGB = color.AsSRGB();
-		glUniform4f(colorLoc, sRGB.r, sRGB.g, sRGB.b, sRGB.a);
-
-		//Get the view and projection locations
-		int viewLoc = glGetUniformLocation(shader->ID, "view");
-		int projLoc = glGetUniformLocation(shader->ID, "projection");
-
-		if (prio == DrawPriority::ui)
+		//Draw a primitive to the screen, does not require an entity
+		void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio,
+			Vector3 position, Vector3 rotation, Vector3 scale)
 		{
-			//Render UI elements independent of camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			shader->use();
+
+			glBindVertexArray(primitive->VAO);
+
+			//Create the model matrix
+			glm::mat4 model = glm::mat4(1.0f);
+			//Position
+			model = glm::translate(model, position.ToGlm());
+			//X, Y, Z euler rotations
+			model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			//Scale
+			model = glm::scale(model, scale.ToGlm());
+
+			//Give the shader the model matrix
+			int modelLoc = glGetUniformLocation(shader->ID, "model");
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+			//Give the shader the primitive's color
+			int colorLoc = glGetUniformLocation(shader->ID, "color");
+			const Color srgb = color.AsSRGB();
+			glUniform4f(colorLoc, srgb.r, srgb.g, srgb.b, srgb.a);
+
+			//Get the view and projection locations
+			int viewLoc = glGetUniformLocation(shader->ID, "view");
+			int projLoc = glGetUniformLocation(shader->ID, "projection");
+
+			if (prio == DrawPriority::ui)
+			{
+				//Render UI elements independent of camera's view and projection
+				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			}
+			else
+			{
+				if (prio == DrawPriority::aboveAll)
+					glDisable(GL_DEPTH_BUFFER_BIT);
+				//Render World entities based on camera's view and projection
+				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			}
+
+			//TODO: Fix filled draw
+			glDrawElements(GL_LINE_LOOP, primitive->numVertices, GL_UNSIGNED_INT, 0);
+
+			glEnable(GL_DEPTH_BUFFER_BIT);
+			glBindVertexArray(0);
 		}
-		else
+
+		const std::vector<Renderable>& PrimitiveRenderSystem::GetTransparentWorldEntities()
 		{
-			if (prio == DrawPriority::aboveAll)
-				glDisable(GL_DEPTH_BUFFER_BIT);
-			//Render World entities based on camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			return transparentWorldEntities;
+		}
+		const std::vector<Renderable>& PrimitiveRenderSystem::GetTransparentUIEntities()
+		{
+			return transparentUIEntities;
 		}
 
-		//TODO: Fix filled draw
-		glDrawElements(GL_LINE_LOOP, primitive->numVertices, GL_UNSIGNED_INT, 0);
-
-		glEnable(GL_DEPTH_BUFFER_BIT);
-		glBindVertexArray(0);
-	}
-
-	const std::vector<ecs::Entity>& PrimitiveRenderSystem::GetTransparentWorldEntities()
-	{
-		return transparentWorldEntities;
-	}
-	const std::vector<ecs::Entity>& PrimitiveRenderSystem::GetTransparentUIEntities()
-	{
-		return transparentUIEntities;
+		Shader* PrimitiveRenderSystem::shader = nullptr;
 	}
 }

@@ -13,8 +13,8 @@ namespace une
 		physicsSystem = ecs::GetSystem<PhysicsSystem>();
 		soundSystem = ecs::GetSystem<SoundSystem>();
 		animationSystem = ecs::GetSystem<AnimationSystem>();
-		primitiveRenderSystem = ecs::GetSystem<PrimitiveRenderSystem>();
-		spriteRenderSystem = ecs::GetSystem<SpriteRenderSystem>();
+		primitiveRenderSystem = ecs::GetSystem<renderer::PrimitiveRenderSystem>();
+		spriteRenderSystem = ecs::GetSystem<renderer::SpriteRenderSystem>();
 		modelRenderSystem = ecs::GetSystem<ModelRenderSystem>();
 		textRenderSystem = ecs::GetSystem<TextRenderSystem>();
 		renderer::Init();
