@@ -46,7 +46,7 @@ namespace une
 				printf("ERROR: No font given!");
 				continue;
 			}
-			m_shader->use();
+			m_shader->Use();
 
 			//Create the model matrix, this is the same for each mesh so it only needs to be done once
 			glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);

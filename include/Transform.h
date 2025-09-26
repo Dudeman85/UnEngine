@@ -13,7 +13,7 @@ namespace une
 
 	///Transform component
 	ECS_REGISTER_COMPONENT(Transform)
-		struct Transform
+	struct Transform
 	{
 		///The local position, relative to parent
 		Vector3 position;
@@ -36,7 +36,7 @@ namespace une
 
 	///Transform system, Requires Transform component
 	ECS_REGISTER_SYSTEM(TransformSystem, Transform)
-		class TransformSystem : public ecs::System
+	class TransformSystem : public ecs::System
 	{
 	public:
 		///Call this every frame

@@ -17,7 +17,7 @@ namespace une
 		Shader(std::string vertexShaderPath, std::string fragmentShaderPath, bool fromFile = true);
 
 		///Use this shader program
-		void use();
+		void Use();
 
 		///the id num of the shaders
 		unsigned int ID;

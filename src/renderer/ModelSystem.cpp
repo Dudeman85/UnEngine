@@ -1,6 +1,6 @@
 #include "renderer/ModelSystem.h"
 
-namespace une
+namespace une::renderer
 {
 	void ModelRenderSystem::Init()
 	{
@@ -59,81 +59,77 @@ namespace une
                 float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
                 vec3 specular = specularStrength * spec * lightColor;
 
-               vec3 result = (ambient + diffuse + specular ) * objectColor;
-               FragColor = vec4(result, 1.0);
+				vec3 result = (ambient + diffuse + specular ) * objectColor;
+				FragColor = vec4(result, 1.0);
 			}
 			)", false);
 	}
 
-	///Call this every frame
-	void ModelRenderSystem::Update(Camera* cam)
+	//Sorts the models into their draw layers
+	void ModelRenderSystem::Prepass()
 	{
-		uiLayersToDraw.clear();
-		sortedUIElements.clear();
+		opaqueWorldEntities.clear();
+		transparentWorldEntities.clear();
+		opaqueUIEntities.clear();
+		transparentUIEntities.clear();
 
-		//Sort the entities and tilemap by Z
-		std::set<float> layersToDraw;
-		std::map<float, std::vector<ecs::Entity>> sortedEntities;
-
-		//Sort the entities into sprite and UI layers
+		//Sort all entities into their draw orders
 		for (ecs::Entity entity : entities)
 		{
-			Transform& transform = ecs::GetComponent<Transform>(entity);
-			ModelRenderer& renderer = ecs::GetComponent<ModelRenderer>(entity);
-
-			//Seperate sprites and UI elements
-			if (!renderer.uiElement)
+			ModelRenderer& model = ecs::GetComponent<ModelRenderer>(entity);
+			if (!model.enabled)
+				continue;
+			if (model.uiElement)
 			{
-				sortedEntities[transform.position.z].push_back(entity);
-				layersToDraw.insert(transform.position.z);
+				//TODO: Implement transparency
+				if (false)
+					transparentUIEntities.push_back({entity, DrawEntity});
+				else
+					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
-				sortedUIElements[transform.position.z].push_back(entity);
-				uiLayersToDraw.insert(transform.position.z);
-			}
-		}
-
-		//Draw all models by layer
-		for (const float& layer : layersToDraw)
-		{
-			//Draw entities for this layer
-			for (const ecs::Entity& entity : sortedEntities[layer])
-			{
-				DrawEntity(entity, cam);
+				//TODO: Implement transparency
+				if (false)
+					transparentWorldEntities.push_back({entity, DrawEntity});
+				else
+					opaqueWorldEntities.push_back(entity);
 			}
 		}
 	}
 
-	//This whole UI thing is becomming a disaster
-	void ModelRenderSystem::DrawUIElements(Camera* cam)
+	//Draws all entities in the opaqueWorldEntities list
+	void ModelRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
 	{
-		//Disable the depth buffer to always draw UI elements on top
-		glDisable(GL_DEPTH_BUFFER_BIT);
-		//Draw all UI elements by layer
-		for (const float& layer : uiLayersToDraw)
+		for (ecs::Entity entity : opaqueWorldEntities)
 		{
-			//Draw entities for this layer
-			for (const ecs::Entity& entity : sortedUIElements[layer])
-			{
-				DrawEntity(entity, cam);
-			}
+			DrawEntity(entity, cam);
 		}
-		glEnable(GL_DEPTH_BUFFER_BIT);
 	}
 
-	///Draw an entity to the screen
+	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+	void ModelRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+	{
+		for (ecs::Entity entity : opaqueUIEntities)
+		{
+			DrawEntity(entity, cam);
+		}
+	}
+
+	//Draw an entity to the screen
 	void ModelRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
 	{
+		//TODO:remake lighting system
+		Vector3 lightPos;
+		Vector3 lightColor = Vector3(255);
+
+
 		//Get relevant components
 		ModelRenderer& modelRenderer = ecs::GetComponent<ModelRenderer>(entity);
 
-		if (!modelRenderer.enabled)
-			return;
-
 		if (!modelRenderer.model)
 		{
-			std::cout << "WARNING: No Model set!" << std::endl;
+			std::cout << "Warning: no model given for ModelRenderer of entity " << entity << std::endl;
 			return;
 		}
 
@@ -141,7 +137,7 @@ namespace une
 		Shader* shader = defaultShader;
 		if (modelRenderer.shader)
 			shader = modelRenderer.shader;
-		shader->use();
+		shader->Use();
 
 		//Create the model matrix, this is the same for each mesh so it only needs to be done once
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
@@ -150,21 +146,17 @@ namespace une
 		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
 		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
 
-		if (!modelRenderer.uiElement)
+		if (modelRenderer.uiElement)
 		{
-			//Give the shader the camera's view matrix
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-
-			//Give the shader the camera's projection matrix
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			//Render UI elements independent of camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
 		}
 		else
 		{
-			//Give the shader a constant view matrix
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-
-			//Give the shader a constant projection matrix
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			//Render World entities based on camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 		}
 
 		//Model matrix
@@ -234,10 +226,14 @@ namespace une
 		}
 	}
 
-	///Set light position and color
-	void ModelRenderSystem::SetLight(Vector3 _lightPos, Vector3 _lightColor)
+	const std::vector<Renderable>& ModelRenderSystem::GetTransparentWorldEntities()
 	{
-		lightPos = _lightPos;
-		lightColor = _lightColor;
+		return transparentWorldEntities;
 	}
+	const std::vector<Renderable>& ModelRenderSystem::GetTransparentUIEntities()
+	{
+		return transparentUIEntities;
+	}
+
+	Shader* ModelRenderSystem::defaultShader = nullptr;
 }

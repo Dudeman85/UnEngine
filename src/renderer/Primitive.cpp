@@ -249,7 +249,7 @@ namespace une
 		void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio,
 			Vector3 position, Vector3 rotation, Vector3 scale)
 		{
-			shader->use();
+			shader->Use();
 
 			glBindVertexArray(primitive->VAO);
 

@@ -40,11 +40,14 @@ For Debian you need to install a few libraries:
 - [ ] Fix physics fps bugs
 - [ ] Update documentation
 ### Renderer
-- [ ] Unify model, sprite, and primitive renderers
+- [ ] Redo tilemap rendering
+- [ ] Unify model, sprite, text, tilemap, and primitive renderers
 - [ ] Fix the sprite scaling
+- [ ] Improve model loading and rendering
+- [ ] Add transparency to model rendering
 - [ ] Finally fix the damn transparency
 - [ ] Fix primitive rendering
-- [ ] Rethink UI rendering
+- [x] Rethink UI rendering
 - [ ] Redo lighting system
 - [ ] Add multi camera support
 ### New features

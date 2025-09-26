@@ -12,6 +12,7 @@ int main()
 
     une::Texture texture("../../../examples/assets/strawberry.png");
     une::Texture transparentTexture("../../../examples/assets/Transparent.png");
+    une::Model model("../../../examples/assets/Achelous.obj");
     une::Primitive square = une::Primitive::Rectangle();
 
     ecs::Entity e0 = ecs::NewEntity();
@@ -21,9 +22,10 @@ int main()
     ecs::AddComponent(e1, une::SpriteRenderer{.texture = &transparentTexture});
     ecs::AddComponent(e1, une::Transform{.position = {0, 0, -20}, .scale = 100});
     ecs::Entity e2 = ecs::NewEntity();
-    ecs::AddComponent(e2, une::SpriteRenderer{.texture = &transparentTexture});
-    ecs::AddComponent(e2, une::Transform{.position = {10, 10, -10}, .scale = 100});
-    ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
+    //ecs::AddComponent(e2, une::SpriteRenderer{.texture = &texture});
+    ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
+    ecs::AddComponent(e2, une::Transform{.position = {10, 10, -10}, .rotation = {45, 45, 0}, .scale = 100});
+    //ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 
     while (!glfwWindowShouldClose(window))
     {

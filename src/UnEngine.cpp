@@ -15,7 +15,7 @@ namespace une
 		animationSystem = ecs::GetSystem<AnimationSystem>();
 		primitiveRenderSystem = ecs::GetSystem<renderer::PrimitiveRenderSystem>();
 		spriteRenderSystem = ecs::GetSystem<renderer::SpriteRenderSystem>();
-		modelRenderSystem = ecs::GetSystem<ModelRenderSystem>();
+		modelRenderSystem = ecs::GetSystem<renderer::ModelRenderSystem>();
 		textRenderSystem = ecs::GetSystem<TextRenderSystem>();
 		renderer::Init();
 	}

@@ -177,11 +177,17 @@ namespace une::renderer
 		//Get relevant components
 		SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
 
+		if (!sprite.texture)
+		{
+			std::cout << "Warning: no texture given for sprite of entity " << entity << std::endl;
+			return;
+		}
+
 		//If a shader has been specified for this sprite use it, else use the default
 		Shader* shader = defaultShader;
 		if (sprite.shader)
 			shader = sprite.shader;
-		shader->use();
+		shader->Use();
 
 		//Create the model matrix
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
@@ -208,10 +214,7 @@ namespace une::renderer
 
 		//Bind the texture
 		glActiveTexture(GL_TEXTURE0);
-		if (sprite.texture)
-			sprite.texture->Use();
-		else
-			std::cout << "Warning: no texture given for sprite of entity " << entity << std::endl;
+		sprite.texture->Use();
 
 		//Draw the sprite
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

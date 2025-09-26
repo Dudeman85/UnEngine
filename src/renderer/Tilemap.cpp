@@ -150,7 +150,7 @@ namespace une
 		if (!enabledLayers[layer])
 			return;
 
-		m_shader->use();
+		m_shader->Use();
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
 
@@ -356,7 +356,7 @@ namespace une
 
 	void Tilemap::initGLStuff(const tmx::Map& map)
 	{
-		m_shader->use();
+		m_shader->Use();
 
 		//we'll make sure the current tile texture is active in 0,
 		//and lookup texture is active in 1 in MapLayer::draw()

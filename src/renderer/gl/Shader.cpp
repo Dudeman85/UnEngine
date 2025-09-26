@@ -97,7 +97,7 @@ namespace une
 	}
 
 	///Use this shader program
-	void Shader::use()
+	void Shader::Use()
 	{
 		glUseProgram(ID);
 	}

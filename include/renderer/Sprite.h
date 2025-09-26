@@ -10,12 +10,13 @@
 
 namespace une
 {
-	//2D Sprite Renderer component
+	//2D SpriteRenderer component
 	ECS_REGISTER_COMPONENT(SpriteRenderer)
 	struct SpriteRenderer
 	{
 		Texture* texture = nullptr;
 		Shader* shader = nullptr;
+
 		//Should this sprite be treated as a UI element, see doc/UserInterface.md
 		bool uiElement = false;
 		bool enabled = true;
@@ -23,7 +24,7 @@ namespace une
 
 	namespace renderer
 	{
-		//2D Sprite Render system, Requires SpriteRenderer and Transform
+		//2D SpriteRenderSystem, Requires SpriteRenderer and Transform
 		ECS_REGISTER_SYSTEM(SpriteRenderSystem, SpriteRenderer, Transform)
 		class SpriteRenderSystem : public ecs::System
 		{
