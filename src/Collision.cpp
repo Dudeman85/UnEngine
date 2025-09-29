@@ -1,6 +1,6 @@
 #include "Collision.h"
 
-#include "renderer/Primitive.h"
+#include "renderer/PrimitiveRenderer.h"
 
 namespace une
 {

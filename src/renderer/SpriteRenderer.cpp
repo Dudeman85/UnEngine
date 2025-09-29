@@ -1,7 +1,6 @@
-#include "renderer/Sprite.h"
+#include "renderer/SpriteRenderer.h"
 
 #include <vector>
-#include <set>
 #include <functional>
 
 #include <glad/gl.h>

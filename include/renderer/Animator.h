@@ -5,7 +5,7 @@
 
 #include "ECS.h"
 #include "renderer/gl/Texture.h"
-#include "renderer/Sprite.h"
+#include "renderer/SpriteRenderer.h"
 
 namespace une
 {

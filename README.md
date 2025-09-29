@@ -47,8 +47,9 @@ For Debian you need to install a few libraries:
 - [ ] Add transparency to model rendering
 - [ ] Finally fix the damn transparency
 - [ ] Fix primitive rendering
-- [x] Rethink UI rendering
+- [ ] Rethink UI rendering
 - [ ] Redo lighting system
+- [ ] Add anti-aliasing
 - [ ] Add multi camera support
 ### New features
 - [ ] Add angular momentum

@@ -1,4 +1,4 @@
-#include "renderer/Primitive.h"
+#include "renderer/PrimitiveRenderer.h"
 
 #include <algorithm>
 #include <ranges>

@@ -39,7 +39,7 @@ source distribution.
 #include "renderer/Tilemap.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
-#include "renderer/MapLayer.h"
+#include "renderer/gl/MapLayer.h"
 
 namespace une
 {

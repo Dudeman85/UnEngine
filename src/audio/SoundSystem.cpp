@@ -1,4 +1,4 @@
-#include "audio/SoundComponent.h"
+#include "audio/SoundSystem.h"
 
 namespace une
 {

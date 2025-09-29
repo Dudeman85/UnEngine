@@ -31,7 +31,7 @@ source distribution.
 #include <map>
 #include <string>
 
-#include "renderer/MapLayer.h"
+#include "renderer/gl/MapLayer.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Camera.h"

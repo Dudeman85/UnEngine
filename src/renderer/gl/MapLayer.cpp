@@ -32,7 +32,7 @@ source distribution.
 #include <tmxlite/Map.hpp>
 #include <tmxlite/TileLayer.hpp>
 
-#include "renderer/MapLayer.h"
+#include "renderer/gl/MapLayer.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Utils.h"
 
