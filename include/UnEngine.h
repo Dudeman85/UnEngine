@@ -36,7 +36,7 @@ namespace une
 	inline std::shared_ptr<renderer::PrimitiveRenderSystem> primitiveRenderSystem;
 	inline std::shared_ptr<renderer::SpriteRenderSystem> spriteRenderSystem;
 	inline std::shared_ptr<renderer::ModelRenderSystem> modelRenderSystem;
-	inline std::shared_ptr<TextRenderSystem> textRenderSystem;
+	inline std::shared_ptr<renderer::TextRenderSystem> textRenderSystem;
 
 	void EngineInit();
 

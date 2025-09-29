@@ -49,6 +49,7 @@ For Debian you need to install a few libraries:
 - [ ] Fix primitive rendering
 - [ ] Rethink UI rendering
 - [ ] Redo lighting system
+- [ ] Add animation support to tilemap
 - [ ] Add anti-aliasing
 - [ ] Add multi camera support
 ### New features

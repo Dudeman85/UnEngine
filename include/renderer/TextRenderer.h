@@ -1,45 +1,59 @@
 #pragma once
 
 #include "renderer/gl/Camera.h"
+#include "Color.h"
 #include "Font.h"
 #include "Transform.h"
+#include "gl/Utils.h"
 
 namespace une
 {
-	/// TextRenderer component
+	//TextRenderer component
 	ECS_REGISTER_COMPONENT(TextRenderer)
 	struct TextRenderer
 	{
-		///The font of the text
+		//The font of the text
 		Font* font;
-		///The text that is printed
-		std::string text = "";
-		///Location of the text on the screen
-		Vector3 offset;
-		///Rotation of the text
-		Vector3 rotation;
-		///Size of the text
-		//Vector2 charRes;
-		// Old
-		Vector3 scale = Vector3(1);
-		///Color of the text
-		Vector3 color = Vector3(0);
-		///Bool to turn on the ui elements
+		//The text that is printed
+		std::string text;
+		//Font size
+		int size = 12;
+		//Color of the text
+		Color color = Color(0, 0, 0, 255);
+		//Should this text be treated as a UI element, see doc/UserInterface.md
 		bool uiElement = false;
+		bool enabled = true;
 	};
 
-	/// TextRenderSystem requires components TextRenderer component and transform component
-	ECS_REGISTER_SYSTEM(TextRenderSystem, Transform, TextRenderer)
-	class TextRenderSystem : public ecs::System
+	namespace renderer
 	{
-	public:
-		///Initialize the shaders
-		void Init();
+		//TextRenderSystem requires components TextRenderer and Transform
+		ECS_REGISTER_SYSTEM(TextRenderSystem, Transform, TextRenderer)
+		class TextRenderSystem : public ecs::System
+		{
+		public:
+			//Initialize the shaders
+			void Init();
 
-		///Call this every frame
-		void Update(Camera* cam);
+			//Sorts the text into their draw layers
+			void Prepass();
+			//Draws all entities in the opaqueWorldEntities list
+			void DrawOpaqueWorldEntities(Camera* cam);
+			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
+			void DrawOpaqueUIEntities(Camera* cam);
+			//Draw a sprite to the screen, expects bound VAO
+			static void DrawEntity(ecs::Entity entity, Camera* cam);
 
-	private:
-		Shader* m_shader = nullptr;
-	};
+			const std::vector<Renderable>& GetTransparentWorldEntities();
+			const std::vector<Renderable>& GetTransparentUIEntities();
+
+		private:
+			static Shader* shader;
+
+			std::vector<ecs::Entity> opaqueWorldEntities;
+			std::vector<ecs::Entity> opaqueUIEntities;
+			std::vector<Renderable> transparentWorldEntities;
+			std::vector<Renderable> transparentUIEntities;
+		};
+	}
 }

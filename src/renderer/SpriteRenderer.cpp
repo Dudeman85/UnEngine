@@ -192,11 +192,11 @@ namespace une::renderer
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
 
 		//Give the shader the model matrix
-		unsigned int modelLoc = glGetUniformLocation(shader->ID, "model");
+		int modelLoc = glGetUniformLocation(shader->ID, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		//Get the view and projection locations
-		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
-		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
+		int viewLoc = glGetUniformLocation(shader->ID, "view");
+		int projLoc = glGetUniformLocation(shader->ID, "projection");
 
 		if (sprite.uiElement)
 		{

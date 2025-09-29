@@ -24,6 +24,7 @@ namespace une::renderer
         primitiveRenderSystem->Init();
         spriteRenderSystem->Init();
         modelRenderSystem->Init();
+        textRenderSystem->Init();
     }
 
     void UnifiedRenderPrepass()
@@ -34,29 +35,30 @@ namespace une::renderer
         primitiveRenderSystem->Prepass();
         spriteRenderSystem->Prepass();
         modelRenderSystem->Prepass();
+        textRenderSystem->Prepass();
     }
 
     void UnifiedRenderPass(Camera* cam)
     {
 		glEnable(GL_DEPTH_BUFFER_BIT);
 
-        //TODO
-        textRenderSystem->Update(cam);
-
         //First render all opaque world entities (non semi-transparent & non UI)
         primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
         spriteRenderSystem->DrawOpaqueWorldEntities(cam);
         modelRenderSystem->DrawOpaqueWorldEntities(cam);
+        textRenderSystem->DrawOpaqueWorldEntities(cam);
 
         //Then sort all semi-transparent world entities and render them
         std::vector<Renderable> transparentPrimitives = primitiveRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentSprites = spriteRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentModels = modelRenderSystem->GetTransparentWorldEntities();
+        std::vector<Renderable> transparentText = textRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentEntites;
-        transparentEntites.reserve(transparentPrimitives.size() + transparentSprites.size() + transparentModels.size());
+        transparentEntites.reserve(transparentPrimitives.size() + transparentSprites.size() + transparentModels.size() + transparentText.size());
         transparentEntites.insert(transparentEntites.end(), transparentPrimitives.begin(), transparentPrimitives.end());
         transparentEntites.insert(transparentEntites.end(), transparentSprites.begin(), transparentSprites.end());
         transparentEntites.insert(transparentEntites.end(), transparentModels.begin(), transparentModels.end());
+        transparentEntites.insert(transparentEntites.end(), transparentText.begin(), transparentText.end());
         DrawOrderedEntities(transparentEntites, cam);
 
         //Clear depth buffer to always render UI above world
@@ -66,16 +68,19 @@ namespace une::renderer
         primitiveRenderSystem->DrawOpaqueUIEntities(cam);
         spriteRenderSystem->DrawOpaqueUIEntities(cam);
         modelRenderSystem->DrawOpaqueUIEntities(cam);
+        textRenderSystem->DrawOpaqueUIEntities(cam);
 
         //Then sort all semi-transparent UI entities and render them
         std::vector<Renderable> transparentUIPrimitives = primitiveRenderSystem->GetTransparentUIEntities();
         std::vector<Renderable> transparentUISprites = spriteRenderSystem->GetTransparentUIEntities();
         std::vector<Renderable> transparentUIModels = modelRenderSystem->GetTransparentUIEntities();
+        std::vector<Renderable> transparentUIText = textRenderSystem->GetTransparentUIEntities();
         std::vector<Renderable> transparentUIEntites;
-        transparentUIEntites.reserve(transparentUIPrimitives.size() + transparentUISprites.size() + transparentUIModels.size());
+        transparentUIEntites.reserve(transparentUIPrimitives.size() + transparentUISprites.size() + transparentUIModels.size() + transparentUIText.size());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIPrimitives.begin(), transparentUIPrimitives.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUISprites.begin(), transparentUISprites.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIModels.begin(), transparentUIModels.end());
+        transparentUIEntites.insert(transparentUIEntites.end(), transparentUIText.begin(), transparentUIText.end());
         DrawOrderedEntities(transparentUIEntites, cam);
     }
 
