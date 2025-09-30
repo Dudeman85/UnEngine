@@ -1,6 +1,5 @@
 #include "renderer/gl/Font.h"
 
-#include "assimp/code/AssetLib/3MF/3MFXmlTags.h"
 #include "renderer/TextRenderer.h"
 
 namespace une

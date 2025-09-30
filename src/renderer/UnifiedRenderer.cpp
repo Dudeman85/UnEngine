@@ -15,8 +15,9 @@ namespace une::renderer
         glClearColor(0, 0, 0, 1.0f);
 
         //Enable transparency
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendEquation(GL_FUNC_ADD);
         //Enable Depth buffering
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);

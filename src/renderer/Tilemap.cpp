@@ -1,5 +1,3 @@
-#define _USE_MATH_DEFINES
-
 #include <algorithm>
 #include <cmath>
 #include <cassert>
@@ -17,214 +15,84 @@
 
 namespace une
 {
-	Tilemap::Tilemap(une::Camera* cam)
-	{
-		m_shader = new une::Shader(
-			R"(
-		#version 460 core
-		in vec3 a_position;
-		in vec2 a_texCoord;
-
-		uniform mat4 u_projectionMatrix;
-		uniform mat4 u_viewMatrix;
-		uniform mat4 u_modelMatrix;
-
-		out vec2 v_texCoord;
-
-		void main()
-		{
-		gl_Position =  u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(a_position, 1.0);
-
-		v_texCoord = a_texCoord;
-		}
-		)", R"(
-		#version 460 core
-		#define FLIP_HORIZONTAL 8u
-		#define FLIP_VERTICAL 4u
-		#define FLIP_DIAGONAL 2u
-
-		in vec2 v_texCoord;
-
-		uniform usampler2D u_lookupMap;
-		uniform sampler2D u_tileMap;
-
-		uniform vec2 u_tileSize;
-		uniform vec2 u_tilesetCount;
-		uniform vec2 u_tilesetScale = vec2(1.0);
-
-		uniform float u_opacity = 1.0;
-
-		out vec4 colour;
-		/*fixes rounding imprecision on AMD cards*/
-		const float epsilon = 0.000005;
-
-		void main()
-		{
-			uvec2 values = texture(u_lookupMap, v_texCoord).rg;
-			float tileID = float(values.r);
-			if (tileID > 0u)
-			{
-				float index = float(tileID) - 1.0;
-				vec2 position = vec2(mod(index + epsilon, u_tilesetCount.x), floor((index / u_tilesetCount.x) + epsilon)) / u_tilesetCount;
-				vec2 offsetCoord = (v_texCoord * (textureSize(u_lookupMap, 0) * u_tilesetScale)) / u_tileSize;
-
-				vec2 texelSize = vec2(1.0) / textureSize(u_lookupMap, 0);
-				vec2 offset = mod(v_texCoord, texelSize);
-				vec2 ratio = offset / texelSize;
-				offset = ratio * (1.0 / u_tileSize);
-				offset *= u_tileSize / u_tilesetCount;
-
-				if (values.g != 0u)
-				{
-					vec2 tileSize = vec2(1.0) / u_tilesetCount;
-					if ((values.g & FLIP_DIAGONAL) != 0u)
-					{
-						float temp = offset.x;
-						offset.x = offset.y;
-						offset.y = temp;
-						temp = tileSize.x / tileSize.y;
-						offset.x *= temp;
-						offset.y /= temp;
-						offset.x = tileSize.x - offset.x;
-						offset.y = tileSize.y - offset.y;
-					}
-					if ((values.g & FLIP_VERTICAL) != 0u)
-					{
-						offset.y = tileSize.y - offset.y;
-					}
-					if ((values.g & FLIP_HORIZONTAL) != 0u)
-					{
-						offset.x = tileSize.x - offset.x;
-					}
-				}
-				colour = texture(u_tileMap, position + offset);
-				colour.a = min(colour.a, u_opacity);
-			}
-			else
-			{
-				colour = vec4(0.0);
-			}
-		}
-		)", false);
-
-		camera = cam;
-		collisionLayer = std::vector<std::vector<unsigned int>>();
-		position = glm::vec3(0);
-	}
-
-	Tilemap::~Tilemap()
-	{
-	}
-
-	void Tilemap::draw(float layer)
-	{
-		if (mapLayers.contains(layer))
-			return;
-
-		if (!enabledLayers[layer])
-			return;
-
-		m_shader->Use();
-
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-
-		unsigned int modelLoc = glGetUniformLocation(m_shader->ID, "u_modelMatrix");
-
-		unsigned int viewLoc = glGetUniformLocation(m_shader->ID, "u_viewMatrix");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-
-		//Give the shader the projection matrix
-		unsigned int projLoc = glGetUniformLocation(m_shader->ID, "u_projectionMatrix");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-
-		unsigned int u_tilesetCount = glGetUniformLocation(m_shader->ID, "u_tilesetCount");
-
-		unsigned int u_tileSize = glGetUniformLocation(m_shader->ID, "u_tileSize");
-
-		for (int i = 0; i < mapLayers[layer].size(); i++)
-		{
-			mapLayers[layer][i]->draw(model, modelLoc, u_tilesetCount, u_tileSize);
-		}
-	}
-
-	void Tilemap::loadMap(const std::string& ownMap)
+	void Tilemap::loadMap(const std::string& ownMap, unsigned int filteringType)
 	{
 		tmx::Map map;
 		map.load(assetPath + ownMap);
 
-		//create shared resources, shader and tileset textures
-		initGLStuff(map);
-
 		bounds = map.getBounds();
 		tileSize = map.getTileSize();
-		zLayers.insert(0);
 
-		tmx::Tileset tileset = map.getTilesets()[0];
-		//Log the collider shapes per tile id
-		for (const auto& tile : tileset.getTiles())
+		//Process all tiles in each tileset
+		for (const tmx::Tileset& tileset: map.getTilesets())
 		{
-			if (tile.objectGroup.getObjects().size() > 0)
-			{
-				//Get the first object in a tile to be used as a collider
-				for (const auto& point : tile.objectGroup.getObjects()[0].getPoints())
-				{
-					Vector2 vertice(point.x, point.y);
-					//transform the vertice to work with our coordinate system
-					vertice.y = -vertice.y;
-					vertice += Vector2(-(float)tileSize.x / 2, (float)tileSize.y / 2);
+			//Load the tileset's texture
+			tilesetTextures.push_back(Texture(tileset.getImagePath(), filteringType));
 
-					tileColliders[tile.ID].push_back(vertice);
+			//Get the collider shapes for each tile id
+			for (const tmx::Tileset::Tile& tile: tileset.getTiles())
+			{
+				if (!tile.objectGroup.getObjects().empty())
+				{
+					//Only one collider per tile is currently supported
+					//Get the first object in a tile to be used as a collider
+					for (const tmx::Vector2f& point: tile.objectGroup.getObjects()[0].getPoints())
+					{
+						//Transform the Vertex to work with our coordinate system
+						Vector2 vertex(point.x, point.y);
+						vertex.y = -vertex.y;
+						vertex += Vector2(-(float)tileSize.x / 2, (float)tileSize.y / 2);
+						tileColliders[tile.ID].push_back(vertex);
+					}
 				}
 			}
 		}
 
-		//create a drawable object for each tile layer
 		const auto& layers = map.getLayers();
 		for (auto i = 0u; i < layers.size(); ++i)
 		{
+			//Process the layer properties
+			for (const tmx::Property& property: layers[i]->getProperties())
+			{
+				//Convert all properties to lower case
+				std::string propertyName;
+				std::transform(property.getName().begin(), property.getName().end(), propertyName.begin(), tolower);
+				layerProperties[i][propertyName] = property;
+			}
+
 			if (layers[i]->getType() == tmx::Layer::Type::Tile)
 			{
-				//If the layer is a collision layer
-				if (layers[i]->getName() == "collider")
+				//If the layer has collision enabled give it a collider
+				if (layerProperties[i]["collision"].getBoolValue())
 				{
-					//Resize the collision map
-					collisionLayer.resize(map.getTileCount().x);
-					for (int j = 0; j < collisionLayer.size(); j++)
-					{
-						collisionLayer[j].resize(map.getTileCount().y);
-					}
-
 					//Get the tile IDs
 					auto& tiles = layers[i]->getLayerAs<tmx::TileLayer>().getTiles();
 
 					//Transfer the tile IDs to the 2D collision vector
-					for (int y = 0; y < collisionLayer[0].size(); y++)
+					layerColliders[i].resize(map.getTileCount().x);
+					for (int x = 0; x < map.getTileCount().x; x++)
 					{
-						for (int x = 0; x < collisionLayer.size(); x++)
+						layerColliders[i][x].resize(map.getTileCount().y);
+						for (int y = 0; y < map.getTileCount().y; y++)
 						{
-							collisionLayer[x][y] = tiles[(y * collisionLayer.size()) + x].ID;
+							layerColliders[i][x][y] = tiles[y * layerColliders[i].size() + x].ID;
 						}
 					}
 				}
-				else
+
+				std::shared_ptr<MapLayer> layer = std::make_unique<MapLayer>(map, i, tilesetTextures);
+
+				layer->tileSize = glm::vec2(map.getTileSize().x, map.getTileSize().y);
+
+				//If layer has a specified z offset set it here
+				if (layerProperties[i].contains("z"))
 				{
-					std::shared_ptr<MapLayer> layer = std::make_unique<MapLayer>(map, i, allTextures);
-
-					const auto& properties = layers[i]->getProperties();
-					layer->tileSize = glm::vec2(tileset.getTileSize().x, tileset.getTileSize().y);
-					for (const auto& property : properties)
-					{
-						if (property.getName() == "Z" || property.getName() == "z")
-						{
-							zLayers.insert(property.getFloatValue());
-							layer->zLayer = property.getFloatValue();
-							break;
-						}
-					}
-
-					mapLayers[layer->zLayer].push_back(layer);
-					enabledLayers[layer->zLayer] = true;
+					layerZs[i] = layerProperties[i]["z"].getFloatValue();
+					layer->zLayer = layerProperties[i]["z"].getFloatValue();
 				}
+
+				mapLayers[layer->zLayer].push_back(layer);
+				enabledLayers[layer->zLayer] = true;
 			}
 		}
 	}
@@ -235,28 +103,31 @@ namespace une
 		if (tileColliders.contains(id - 1))
 		{
 			return tileColliders[id - 1];
-		}
-		else
+		} else
 		{
 			//Default collider of a tile
 			return std::vector<Vector2>{
-				Vector2(-((float)tileSize.x / 2), (float)tileSize.y / 2), //Top-Left
-				Vector2((float)tileSize.x / 2, (float)tileSize.y / 2),  //Top-Right
-				Vector2((float)tileSize.x / 2, -((float)tileSize.y / 2)), //Bottom-Right
-				Vector2(-((float)tileSize.x / 2), -((float)tileSize.y / 2)) //Bottom-Left
+				Vector2(-((float) tileSize.x / 2), (float) tileSize.y / 2), //Top-Left
+				Vector2((float) tileSize.x / 2, (float) tileSize.y / 2), //Top-Right
+				Vector2((float) tileSize.x / 2, -((float) tileSize.y / 2)), //Bottom-Right
+				Vector2(-((float) tileSize.x / 2), -((float) tileSize.y / 2)) //Bottom-Left
 			};
 		}
 	}
 
-	//Returns the id of the collision layer's tile at tilemap coords x and y
-	unsigned int Tilemap::GetCollisionTileAtLocation(unsigned int x, unsigned int y)
+	//Returns the id of every tile with a collider at tilemap coords x and y
+	std::vector<unsigned int> Tilemap::GetCollisionTileAtLocation(unsigned int x, unsigned int y)
 	{
-		if (collisionLayer.empty())
+		std::vector<unsigned int> hits;
+		for (const auto& layer : layerColliders)
 		{
-			return 0;
+			if (!layer.second.empty())
+			{
+				hits.push_back(layer.second[x][y]);
+			}
 		}
 
-		return collisionLayer[x][y];
+		return hits;
 	}
 
 	//Get the center position of a tile in world coordinates
@@ -328,32 +199,133 @@ namespace une
 		return collisionLayer[xIndex][yIndex];
 	}
 
-	void Tilemap::initGLStuff(const tmx::Map& map)
+	namespace renderer
 	{
-		m_shader->Use();
-
-		//we'll make sure the current tile texture is active in 0,
-		//and lookup texture is active in 1 in MapLayer::draw()
-		glUniform1i(glGetUniformLocation(m_shader->ID, "u_tileMap"), 0);
-		glUniform1i(glGetUniformLocation(m_shader->ID, "u_lookupMap"), 1);
-
-
-		const auto& tilesets = map.getTilesets();
-		for (const auto& ts : tilesets)
+		void TilemapRenderSystem::Init()
 		{
-			std::string imagePath = ts.getImagePath();
-			//imagePath.erase(imagePath.begin(), imagePath.begin() + 7);
-			auto texture = loadTexture(imagePath);
-			allTextures.push_back(texture);
+			shader = new Shader(
+				R"(
+				#version 460 core
+				in vec3 a_position;
+				in vec2 a_texCoord;
+
+				uniform mat4 u_projectionMatrix;
+				uniform mat4 u_viewMatrix;
+				uniform mat4 u_modelMatrix;
+
+				out vec2 v_texCoord;
+
+				void main()
+				{
+				gl_Position =  u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(a_position, 1.0);
+
+				v_texCoord = a_texCoord;
+				}
+				)", R"(
+				#version 460 core
+				#define FLIP_HORIZONTAL 8u
+				#define FLIP_VERTICAL 4u
+				#define FLIP_DIAGONAL 2u
+
+				in vec2 v_texCoord;
+
+				uniform usampler2D u_lookupMap;
+				uniform sampler2D u_tileMap;
+
+				uniform vec2 u_tileSize;
+				uniform vec2 u_tilesetCount;
+				uniform vec2 u_tilesetScale = vec2(1.0);
+
+				uniform float u_opacity = 1.0;
+
+				out vec4 colour;
+				/*fixes rounding imprecision on AMD cards*/
+				const float epsilon = 0.000005;
+
+				void main()
+				{
+					uvec2 values = texture(u_lookupMap, v_texCoord).rg;
+					float tileID = float(values.r);
+					if (tileID > 0u)
+					{
+						float index = float(tileID) - 1.0;
+						vec2 position = vec2(mod(index + epsilon, u_tilesetCount.x), floor((index / u_tilesetCount.x) + epsilon)) / u_tilesetCount;
+						vec2 offsetCoord = (v_texCoord * (textureSize(u_lookupMap, 0) * u_tilesetScale)) / u_tileSize;
+
+						vec2 texelSize = vec2(1.0) / textureSize(u_lookupMap, 0);
+						vec2 offset = mod(v_texCoord, texelSize);
+						vec2 ratio = offset / texelSize;
+						offset = ratio * (1.0 / u_tileSize);
+						offset *= u_tileSize / u_tilesetCount;
+
+						if (values.g != 0u)
+						{
+							vec2 tileSize = vec2(1.0) / u_tilesetCount;
+							if ((values.g & FLIP_DIAGONAL) != 0u)
+							{
+								float temp = offset.x;
+								offset.x = offset.y;
+								offset.y = temp;
+								temp = tileSize.x / tileSize.y;
+								offset.x *= temp;
+								offset.y /= temp;
+								offset.x = tileSize.x - offset.x;
+								offset.y = tileSize.y - offset.y;
+							}
+							if ((values.g & FLIP_VERTICAL) != 0u)
+							{
+								offset.y = tileSize.y - offset.y;
+							}
+							if ((values.g & FLIP_HORIZONTAL) != 0u)
+							{
+								offset.x = tileSize.x - offset.x;
+							}
+						}
+						colour = texture(u_tileMap, position + offset);
+						colour.a = min(colour.a, u_opacity);
+					}
+					else
+					{
+						colour = vec4(0.0);
+					}
+				}
+				)", false);
+
+			glUniform1i(glGetUniformLocation(shader->ID, "u_tileMap"), 0);
+			glUniform1i(glGetUniformLocation(shader->ID, "u_lookupMap"), 1);
 		}
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glBlendEquation(GL_FUNC_ADD);
-	}
+		void TilemapRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+		{
+			TilemapRenderer renderer = ecs::GetComponent<TilemapRenderer>(entity);
 
-	std::shared_ptr<Texture> Tilemap::loadTexture(const std::string& path)
-	{
-		return std::make_shared<une::Texture>(path.c_str(), GL_NEAREST, false);
+			if (!renderer.enabled)
+				return;
+
+
+			shader->Use();
+
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+
+			unsigned int modelLoc = glGetUniformLocation(m_shader->ID, "u_modelMatrix");
+
+			unsigned int viewLoc = glGetUniformLocation(m_shader->ID, "u_viewMatrix");
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+
+			//Give the shader the projection matrix
+			unsigned int projLoc = glGetUniformLocation(m_shader->ID, "u_projectionMatrix");
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+
+			unsigned int u_tilesetCount = glGetUniformLocation(m_shader->ID, "u_tilesetCount");
+
+			unsigned int u_tileSize = glGetUniformLocation(m_shader->ID, "u_tileSize");
+
+			for (int i = 0; i < mapLayers[layer].size(); i++)
+			{
+				mapLayers[layer][i]->draw(model, modelLoc, u_tilesetCount, u_tileSize);
+			}
+		}
+
+		Shader* TilemapRenderSystem::shader = nullptr;
 	}
 }

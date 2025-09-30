@@ -15,13 +15,14 @@ namespace une
 	public:
 		Texture(const Texture&) = delete;
 		Texture() = delete;
-
 		//Load a texture from an array of pixels
 		Texture(int sx, int sy, const std::vector<std::uint16_t>& data);
 		//Load a texture from path
 		explicit Texture(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
 		//Make a texture from an image
 		explicit Texture(const Image& image, unsigned int filteringType = GL_NEAREST);
+
+		Texture(Texture&& other);
 
 		~Texture();
 
@@ -36,7 +37,7 @@ namespace une
 
 		bool isSemiTransparent = false;
 		std::string path;
-		//Texture type Ex. texture_diffuse or texture_specular
+		//Texture type primarily for 3D models Ex. texture_diffuse or texture_specular
 		std::string type;
 	private:
 		unsigned int id = 0;

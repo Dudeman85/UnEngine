@@ -38,6 +38,7 @@ For Debian you need to install a few libraries:
 - [ ] Improve sound loading
 - [ ] Better integrate sounds with ecs
 - [ ] Fix physics fps bugs
+- [ ] Fix shader and renderer destructors
 - [ ] Update documentation
 ### Renderer
 - [ ] Redo tilemap rendering

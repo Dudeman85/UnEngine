@@ -117,7 +117,7 @@ namespace une::renderer
 		std::string::const_iterator c;
 		for (c = textRenderer.text.begin(); c != textRenderer.text.end(); ++c)
 		{
-			Character ch = textRenderer.font->characters[*c];
+			Font::Character ch = textRenderer.font->characters[*c];
 			//Size of the character is determined only by the text renderer size
 			float size = (float)textRenderer.size / (float)textRenderer.font->GetResolution();
 

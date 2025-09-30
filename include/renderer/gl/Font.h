@@ -7,27 +7,25 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <freetype/freetype.h>
 
-#include "renderer/gl/Shader.h"
-
 namespace une
 {
-	//Struct to store data about the characters
-	struct Character
-	{
-		//OpenGL texture id of this character
-		unsigned int textureID;
-		//The size of the characters in pixels
-		glm::ivec2 size;
-		//The offset of this character from its origin
-		glm::ivec2 bearing;
-		//The distance from the origin of this character to the next
-		unsigned int advance;
-	};
-
 	//Class to create and store data for the font
 	class Font
 	{
 	public:
+		//Struct to store data about the characters
+		struct Character
+		{
+			//OpenGL texture id of this character
+			unsigned int textureID;
+			//The size of the characters in pixels
+			glm::ivec2 size;
+			//The offset of this character from its origin
+			glm::ivec2 bearing;
+			//The distance from the origin of this character to the next
+			unsigned int advance;
+		};
+
 		//Load a font from file with a set dpi resolution
 		Font(const std::string& path, FT_UShort resolution, int faceIndex = 0);
 		~Font();

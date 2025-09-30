@@ -3,6 +3,7 @@
 #include "renderer/gl/Camera.h"
 #include "renderer/gl/Font.h"
 #include "renderer/gl/Utils.h"
+#include "renderer/gl/Shader.h"
 #include "Color.h"
 #include "Transform.h"
 

@@ -23,62 +23,63 @@ namespace une
 	//Load a texture from path
 	Texture::Texture(const std::string& path, unsigned int filteringType, bool flip)
 	{
+		this->path = path;
+
 		//Flip the image when loading into an OpenGL texture
 		stbi_set_flip_vertically_on_load(flip);
 
 		int width, height, nrChannels;
 		unsigned char* imageData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
-		if (imageData)
+		if (!imageData)
 		{
-			//Set the OpenGL texture format to include alpha if appropriate
-			GLint colorFormat;
-			if (nrChannels == 4)
+			std::cout << "Error loading texture from " << path << std::endl;
+			return;
+		}
+
+		//Set the OpenGL texture format to include alpha if appropriate
+		GLint colorFormat;
+		if (nrChannels == 4)
+		{
+			colorFormat = GL_RGBA;
+			//Check for semi-transparency
+			for (int i = 3; i < width * height; i+=4)
 			{
-				colorFormat = GL_RGBA;
-				//Check for semi-transparency
-				for (int i = 3; i < width * height; i+=4)
+				if (imageData[i] > 5 && imageData[i] < 250)
 				{
-					if (imageData[i] > 5 && imageData[i] < 250)
-					{
-						isSemiTransparent = true;
-						break;
-					}
+					isSemiTransparent = true;
+					break;
 				}
 			}
-			else if (nrChannels == 3)
-			{
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				colorFormat = GL_RGB;
-			}
-			else
-			{
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				colorFormat = GL_RED;
-			}
-
-			//Generate and bind texture
-			glGenTextures(1, &id);
-			glBindTexture(GL_TEXTURE_2D, id);
-
-			//Set texture filtering parameters
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringType);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringType);
-
-			//Generate the texture using the image data
-			glTexImage2D(GL_TEXTURE_2D, 0, colorFormat, width, height, 0, colorFormat, GL_UNSIGNED_BYTE, imageData);
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			//Unbind texture
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//Image data is no longer needed
-			stbi_image_free(imageData);
+		}
+		else if (nrChannels == 3)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			colorFormat = GL_RGB;
 		}
 		else
 		{
-			std::cout << "Error loading texture from " << path << std::endl;
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			colorFormat = GL_RED;
 		}
+
+		//Generate and bind texture
+		glGenTextures(1, &id);
+		glBindTexture(GL_TEXTURE_2D, id);
+
+		//Set texture filtering parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringType);
+
+		//Generate the texture using the image data
+		glTexImage2D(GL_TEXTURE_2D, 0, colorFormat, width, height, 0, colorFormat, GL_UNSIGNED_BYTE, imageData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		//Unbind texture
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		//Image data is no longer needed
+		stbi_image_free(imageData);
 	}
 
 	//Create a texture from an image
@@ -117,6 +118,14 @@ namespace une
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	Texture::Texture(Texture&& other)
+    {
+    	isSemiTransparent = other.isSemiTransparent;
+	    path = other.path;
+    	type = other.type;
+    	id = other.id;
+    }
+
 	Texture::~Texture()
 	{
 		glDeleteTextures(1, &id);
@@ -141,7 +150,7 @@ namespace une
 		return id;
 	}
 
-	//Use this texture to draw the next sprite
+	//Use this texture on the next draw call
 	void Texture::Use()
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
