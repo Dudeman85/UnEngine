@@ -31,7 +31,7 @@ For Debian you need to install a few libraries:
 - [ ] ~~Update to CMake 4~~
 ### Improvements
 - [ ] Better integrate tilemap with ecs
-- [ ] Redo camera
+- [ ] Redo camera for ecs
 - [ ] Add an option to change the transform pivot
 - [ ] Rethink the transform hierarchy
 - [ ] Improve resource loading and management
@@ -41,6 +41,7 @@ For Debian you need to install a few libraries:
 - [ ] Update documentation
 ### Renderer
 - [ ] Redo tilemap rendering
+- [x] Fix text resolution scaling
 - [ ] Unify model, sprite, text, tilemap, and primitive renderers
 - [ ] Fix the sprite scaling
 - [ ] Improve model loading and rendering
@@ -53,11 +54,11 @@ For Debian you need to install a few libraries:
 - [ ] Add anti-aliasing
 - [ ] Add multi camera support
 ### New features
+- [ ] More robust logging system
 - [ ] Add angular momentum
 - [ ] Add restraints
 - [ ] Component serialization support
 - [ ] Serialization of all engine components
-- [ ] More robust logging system
 - [ ] Add debug tools
   - Camera
   - Frame advance

@@ -14,7 +14,7 @@ int main()
     une::Texture transparentTexture("../../../examples/assets/Transparent.png");
     une::Model model("../../../examples/assets/Achelous.obj");
     une::Primitive square = une::Primitive::Rectangle();
-    une::Font font("../../../examples/assets/Coolvetica Rg Cond.otf", 0, 240, 240);
+    une::Font font("../../../examples/assets/Coolvetica Rg Cond.otf", 24);
 
     ecs::Entity e0 = ecs::NewEntity();
     ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});
@@ -26,12 +26,12 @@ int main()
     //ecs::AddComponent(e2, une::SpriteRenderer{.texture = &texture});
     //ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
     //ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
-    ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloq World!", .color = une::Color(40, 175, 199, 120)});
+    ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
     ecs::AddComponent(e2, une::Transform{.position = {10, 10, -10}, .rotation = {0, 0, 0}, .scale = 1});
 
     while (!glfwWindowShouldClose(window))
     {
-        double deltaTime = une::Update(&cam);
+        une::Update(&cam);
 
         if (glfwGetKey(window, GLFW_KEY_RIGHT))
         {
@@ -56,6 +56,14 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN))
         {
             une::TransformSystem::Translate(e2, 0, 0, -1);
+        }
+        if (glfwGetKey(window, GLFW_KEY_KP_ADD))
+        {
+            ecs::GetComponent<une::TextRenderer>(e2).size++;
+        }
+        if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT))
+        {
+            ecs::GetComponent<une::TextRenderer>(e2).size--;
         }
 
         glfwSwapBuffers(window);

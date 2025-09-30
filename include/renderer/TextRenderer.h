@@ -1,10 +1,10 @@
 #pragma once
 
 #include "renderer/gl/Camera.h"
+#include "renderer/gl/Font.h"
+#include "renderer/gl/Utils.h"
 #include "Color.h"
-#include "Font.h"
 #include "Transform.h"
-#include "gl/Utils.h"
 
 namespace une
 {
@@ -17,7 +17,7 @@ namespace une
 		//The text that is printed
 		std::string text;
 		//Font size
-		int size = 12;
+		int size = 24;
 		//Color of the text
 		Color color = Color(0, 0, 0, 255);
 		//Should this text be treated as a UI element, see doc/UserInterface.md
@@ -32,26 +32,23 @@ namespace une
 		class TextRenderSystem : public ecs::System
 		{
 		public:
+			~TextRenderSystem();
+
 			//Initialize the shaders
 			void Init();
 
 			//Sorts the text into their draw layers
 			void Prepass();
-			//Draws all entities in the opaqueWorldEntities list
-			void DrawOpaqueWorldEntities(Camera* cam);
-			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-			void DrawOpaqueUIEntities(Camera* cam);
 			//Draw a sprite to the screen, expects bound VAO
 			static void DrawEntity(ecs::Entity entity, Camera* cam);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();
 
+			static FT_Library ftLib;
 		private:
 			static Shader* shader;
 
-			std::vector<ecs::Entity> opaqueWorldEntities;
-			std::vector<ecs::Entity> opaqueUIEntities;
 			std::vector<Renderable> transparentWorldEntities;
 			std::vector<Renderable> transparentUIEntities;
 		};

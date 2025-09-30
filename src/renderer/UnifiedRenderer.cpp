@@ -46,7 +46,6 @@ namespace une::renderer
         primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
         spriteRenderSystem->DrawOpaqueWorldEntities(cam);
         modelRenderSystem->DrawOpaqueWorldEntities(cam);
-        textRenderSystem->DrawOpaqueWorldEntities(cam);
 
         //Then sort all semi-transparent world entities and render them
         std::vector<Renderable> transparentPrimitives = primitiveRenderSystem->GetTransparentWorldEntities();
@@ -68,7 +67,6 @@ namespace une::renderer
         primitiveRenderSystem->DrawOpaqueUIEntities(cam);
         spriteRenderSystem->DrawOpaqueUIEntities(cam);
         modelRenderSystem->DrawOpaqueUIEntities(cam);
-        textRenderSystem->DrawOpaqueUIEntities(cam);
 
         //Then sort all semi-transparent UI entities and render them
         std::vector<Renderable> transparentUIPrimitives = primitiveRenderSystem->GetTransparentUIEntities();

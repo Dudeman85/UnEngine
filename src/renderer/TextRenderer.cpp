@@ -1,10 +1,23 @@
 #include "renderer/TextRenderer.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 namespace une::renderer
 {
-	//Initialize the shaders
+	TextRenderSystem::~TextRenderSystem()
+	{
+		FT_Done_FreeType(ftLib);
+	}
+
+	//Initialize the shaders and freetype
 	void TextRenderSystem::Init()
 	{
+		if (FT_Init_FreeType(&ftLib))
+		{
+			std::cout << "Failed to initialize FreeType library" << std::endl;
+		}
+
 		shader = new Shader(
 		R"(
 			#version 330 core
@@ -40,50 +53,20 @@ namespace une::renderer
 	//Sorts the sprites into their draw layers
 	void TextRenderSystem::Prepass()
 	{
-		opaqueWorldEntities.clear();
 		transparentWorldEntities.clear();
-		opaqueUIEntities.clear();
 		transparentUIEntities.clear();
 
 		//Sort all entities into their draw orders
 		for (ecs::Entity entity : entities)
 		{
 			TextRenderer& text = ecs::GetComponent<TextRenderer>(entity);
-			Color srgb = text.color.AsSRGB();
 			if (!text.enabled)
 				continue;
+			//Text is always sorted because it is anti-aliased
 			if (text.uiElement)
-			{
-				if (srgb.a > 0.02 && srgb.a < 0.98)
-					transparentUIEntities.push_back({entity, DrawEntity});
-				else
-					opaqueUIEntities.push_back(entity);
-			}
+				transparentUIEntities.push_back({entity, DrawEntity});
 			else
-			{
-				if (srgb.a > 0.02 && srgb.a < 0.98)
-					transparentWorldEntities.push_back({entity, DrawEntity});
-				else
-					opaqueWorldEntities.push_back(entity);
-			}
-		}
-	}
-
-	//Draws all entities in the opaqueWorldEntities list
-	void TextRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
-	{
-		for (ecs::Entity entity : opaqueWorldEntities)
-		{
-			DrawEntity(entity, cam);
-		}
-	}
-
-	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-	void TextRenderSystem::DrawOpaqueUIEntities(Camera* cam)
-	{
-		for (ecs::Entity entity : opaqueUIEntities)
-		{
-			DrawEntity(entity, cam);
+				transparentWorldEntities.push_back({entity, DrawEntity});
 		}
 	}
 
@@ -135,12 +118,13 @@ namespace une::renderer
 		for (c = textRenderer.text.begin(); c != textRenderer.text.end(); ++c)
 		{
 			Character ch = textRenderer.font->characters[*c];
+			//Size of the character is determined only by the text renderer size
+			float size = (float)textRenderer.size / (float)textRenderer.font->GetResolution();
 
-			float xpos = x + ch.Bearing.x;
-			float ypos = ch.Size.y - ch.Bearing.y;
-
-			float w = ch.Size.x;
-			float h = ch.Size.y;
+			float xpos = x + ch.bearing.x * size;
+			float ypos = -(ch.size.y - ch.bearing.y) * size;
+			float w = ch.size.x * size;
+			float h = ch.size.y * size;
 
 			float vertices[6][4] = {
 				{xpos, ypos + h, 0.0f, 0.0f},
@@ -152,13 +136,13 @@ namespace une::renderer
 				{xpos + w, ypos + h, 1.0f, 0.0f}
 			};
 
-			glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+			glBindTexture(GL_TEXTURE_2D, ch.textureID);
 			glBindBuffer(GL_ARRAY_BUFFER, textRenderer.font->VBO);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
-			x += ch.Advance >> 6;
+			x += (ch.advance >> 6) * size;
 		}
 
 		glBindVertexArray(0);
@@ -175,4 +159,5 @@ namespace une::renderer
 	}
 
 	Shader* TextRenderSystem::shader = nullptr;
+	FT_Library TextRenderSystem::ftLib;
 }
