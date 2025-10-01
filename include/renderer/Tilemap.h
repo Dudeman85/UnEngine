@@ -74,6 +74,8 @@ namespace une
 			//Static version of DrawLayer for renderable
 			static void DrawRenderable(const Renderable& r, Camera* cam);
 
+			const std::vector<Renderable>& GetTransparentWorldLayers();
+
 		private:
 			Shader* shader = nullptr;
 			std::vector<Renderable> transparentWorldLayers;

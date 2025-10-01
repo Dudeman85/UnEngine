@@ -201,24 +201,21 @@ namespace une
 		{
 			shader = new Shader(
 				R"(
-				#version 460 core
-				in vec3 a_position;
-				in vec2 a_texCoord;
-
-				uniform mat4 u_projectionMatrix;
-				uniform mat4 u_viewMatrix;
-				uniform mat4 u_modelMatrix;
-
+				#version 330 core
+				in vec3 aPos;
+				in vec2 aTexCoord;
 				out vec2 v_texCoord;
-
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
 				void main()
 				{
-				gl_Position =  u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(a_position, 1.0);
-
-				v_texCoord = a_texCoord;
+					gl_Position = projection * view * model * vec4(aPos, 1.0);
+					v_texCoord = aTexCoord;
 				}
-				)", R"(
-				#version 460 core
+				)",
+				R"(
+				#version 330 core
 				#define FLIP_HORIZONTAL 8u
 				#define FLIP_VERTICAL 4u
 				#define FLIP_DIAGONAL 2u
@@ -286,7 +283,7 @@ namespace une
 					}
 					else
 					{
-						discard;
+						FragColor = vec4(0, 0, 0, 1);
 					}
 				}
 				)", false);
@@ -331,21 +328,28 @@ namespace une
 			model = glm::translate(model, {0, 0, layer->zOffset});
 
 			//Get and set uniforms
-			int modelLoc = glGetUniformLocation(shader->ID, "u_modelMatrix");
-			int viewLoc = glGetUniformLocation(shader->ID, "u_viewMatrix");
-			int projLoc = glGetUniformLocation(shader->ID, "u_projectionMatrix");
-			int u_tilesetCount = glGetUniformLocation(shader->ID, "u_tilesetCount");
-			int u_tileSize = glGetUniformLocation(shader->ID, "u_tileSize");
+			int modelLoc = glGetUniformLocation(shader->ID, "model");
+			int viewLoc = glGetUniformLocation(shader->ID, "view");
+			int projLoc = glGetUniformLocation(shader->ID, "projection");
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 
-			layer->draw(model, modelLoc, u_tilesetCount, u_tileSize);
+			int u_tilesetCount = glGetUniformLocation(shader->ID, "u_tilesetCount");
+			int u_tileSize = glGetUniformLocation(shader->ID, "u_tileSize");
+
+			layer->draw(u_tilesetCount, u_tileSize);
 		}
 
 		//Static version of DrawLayer for renderable
 		void TilemapRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
 		{
 			ecs::GetSystem<TilemapRenderSystem>()->DrawLayer(r.entity, cam, r.index);
+		}
+
+		const std::vector<Renderable>& TilemapRenderSystem::GetTransparentWorldLayers()
+		{
+			return transparentWorldLayers;
 		}
 	}
 }

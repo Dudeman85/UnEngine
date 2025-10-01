@@ -5,8 +5,9 @@
 #include <tmxlite/TileLayer.hpp>
 
 #include "renderer/gl/MapLayer.h"
+
+#include "UnEngine.h"
 #include "renderer/gl/Texture.h"
-#include "renderer/gl/Utils.h"
 
 namespace une
 {
@@ -20,23 +21,26 @@ namespace une
         //Set some properties
         enabled = map.getLayers()[i]->getVisible();
         //If layer has a specified z offset set it here
-        if (layerProperties.contains("zoffset"))
-            zOffset = layerProperties["zoffset"].getFloatValue();
+        if (properties.contains("zoffset"))
+            zOffset = properties["zoffset"].getFloatValue();
 
         //If the layer has collision enabled give it a collider
-        if (properties["collision"].getBoolValue())
+        if (properties.contains("zoffset"))
         {
-            //Get the tile IDs
-            auto& tiles = map.getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
-
-            //Transfer the tile IDs to the 2D collision vector
-            collider.resize(map.getTileCount().x);
-            for (int x = 0; x < map.getTileCount().x; x++)
+            if (properties["collision"].getBoolValue())
             {
-                collider[x].resize(map.getTileCount().y);
-                for (int y = 0; y < map.getTileCount().y; y++)
+                //Get the tile IDs
+                auto& tiles = map.getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
+
+                //Transfer the tile IDs to the 2D collision vector
+                collider.resize(map.getTileCount().x);
+                for (int x = 0; x < map.getTileCount().x; x++)
                 {
-                    collider[x][y] = tiles[y * collider.size() + x].ID;
+                    collider[x].resize(map.getTileCount().y);
+                    for (int y = 0; y < map.getTileCount().y; y++)
+                    {
+                        collider[x][y] = tiles[y * collider.size() + x].ID;
+                    }
                 }
             }
         }
@@ -53,7 +57,7 @@ namespace une
         }
     }
 
-    void MapLayer::draw(glm::mat4 model, int modelLoc, int tilesetCountLoc, int tileSizeLoc)
+    void MapLayer::draw(int tilesetCountLoc, int tileSizeLoc)
     {
         if (subsets.empty())
             return;
@@ -61,10 +65,6 @@ namespace une
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, subsets[0].vbo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, zOffset));
-        model = glm::rotate(model, (float)M_PI, glm::vec3(1.0f, 0.0f, 0.0f));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
         glUniform2f(tileSizeLoc, tileSize.x, tileSize.y);
 

@@ -17,6 +17,7 @@ namespace une
 		spriteRenderSystem = ecs::GetSystem<renderer::SpriteRenderSystem>();
 		modelRenderSystem = ecs::GetSystem<renderer::ModelRenderSystem>();
 		textRenderSystem = ecs::GetSystem<renderer::TextRenderSystem>();
+		tilemapRenderSystem = ecs::GetSystem<renderer::TilemapRenderSystem>();
 		renderer::Init();
 	}
 

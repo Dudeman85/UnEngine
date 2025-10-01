@@ -26,7 +26,7 @@ namespace une
 	//If true enables sprite, model, text, and primitive rendering systems
 	inline bool enableRendering = true;
 
-	//Engine system pointers (for peak performance)
+	//Engine system pointers
 	inline std::shared_ptr<TimerSystem> timerSystem;
 	inline std::shared_ptr<TransformSystem> transformSystem;
 	inline std::shared_ptr<CollisionSystem> collisionSystem;
@@ -37,6 +37,7 @@ namespace une
 	inline std::shared_ptr<renderer::SpriteRenderSystem> spriteRenderSystem;
 	inline std::shared_ptr<renderer::ModelRenderSystem> modelRenderSystem;
 	inline std::shared_ptr<renderer::TextRenderSystem> textRenderSystem;
+	inline std::shared_ptr<renderer::TilemapRenderSystem> tilemapRenderSystem;
 
 	void EngineInit();
 

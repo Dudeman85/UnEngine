@@ -20,7 +20,7 @@ namespace une
 		MapLayer& operator = (const MapLayer&) = delete;
 
 		///Draw the map with the given data
-		void draw(glm::mat4 model, int modelLoc, int, int);
+		void draw(int, int);
 
 		unsigned int index;
 		bool enabled = true;

@@ -38,8 +38,8 @@ namespace une::renderer
 			uniform mat4 projection;
 			void main()
 			{
-				gl_Position = projection * view * model * vec4(aPos, 1.0f);
-				TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+				gl_Position = projection * view * model * vec4(aPos, 1.0);
+				TexCoord = aTexCoord;
 			}
 			)",
 			R"(
@@ -49,9 +49,10 @@ namespace une::renderer
 			uniform sampler2D texture1;
 			void main()
 			{
-				vec4 FragColor = texture(texture1, TexCoord);
-				if(FragColor.a <= 0.02)
+				vec4 texColor = texture(texture1, TexCoord);
+				if(texColor.a <= 0.02)
 					discard;
+				FragColor = texColor;
 			}
 			)", false);
 

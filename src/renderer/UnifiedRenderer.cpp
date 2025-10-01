@@ -23,6 +23,7 @@ namespace une::renderer
         spriteRenderSystem->Init();
         modelRenderSystem->Init();
         textRenderSystem->Init();
+        tilemapRenderSystem->Init();
     }
 
     void UnifiedRenderPrepass()
@@ -34,6 +35,7 @@ namespace une::renderer
         spriteRenderSystem->Prepass();
         modelRenderSystem->Prepass();
         textRenderSystem->Prepass();
+        tilemapRenderSystem->Prepass();
     }
 
     void UnifiedRenderPass(Camera* cam)
@@ -44,18 +46,20 @@ namespace une::renderer
         primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
         spriteRenderSystem->DrawOpaqueWorldEntities(cam);
         modelRenderSystem->DrawOpaqueWorldEntities(cam);
-/*
+
         //Then sort all semi-transparent world entities and render them
         std::vector<Renderable> transparentPrimitives = primitiveRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentSprites = spriteRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentModels = modelRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentText = textRenderSystem->GetTransparentWorldEntities();
+        std::vector<Renderable> transparentTilemapLayers = tilemapRenderSystem->GetTransparentWorldLayers();
         std::vector<Renderable> transparentEntites;
-        transparentEntites.reserve(transparentPrimitives.size() + transparentSprites.size() + transparentModels.size() + transparentText.size());
+        transparentEntites.reserve(transparentPrimitives.size() + transparentSprites.size() + transparentModels.size() + transparentText.size() + transparentTilemapLayers.size());
         transparentEntites.insert(transparentEntites.end(), transparentPrimitives.begin(), transparentPrimitives.end());
         transparentEntites.insert(transparentEntites.end(), transparentSprites.begin(), transparentSprites.end());
         transparentEntites.insert(transparentEntites.end(), transparentModels.begin(), transparentModels.end());
         transparentEntites.insert(transparentEntites.end(), transparentText.begin(), transparentText.end());
+        transparentEntites.insert(transparentEntites.end(), transparentTilemapLayers.begin(), transparentTilemapLayers.end());
         DrawOrderedEntities(transparentEntites, cam);
 
         //Clear depth buffer to always render UI above world
@@ -77,7 +81,7 @@ namespace une::renderer
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUISprites.begin(), transparentUISprites.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIModels.begin(), transparentUIModels.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIText.begin(), transparentUIText.end());
-        DrawOrderedEntities(transparentUIEntites, cam);*/
+        DrawOrderedEntities(transparentUIEntites, cam);
     }
 
     //Draws a list of renderable entities that need to be sorted based on distance
