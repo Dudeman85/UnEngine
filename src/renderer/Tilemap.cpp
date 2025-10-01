@@ -15,19 +15,19 @@
 
 namespace une
 {
-	void Tilemap::loadMap(const std::string& ownMap, unsigned int filteringType)
+	Tilemap::Tilemap(const std::string& path, unsigned int filteringType)
 	{
 		tmx::Map map;
-		map.load(assetPath + ownMap);
+		map.load(path);
 
 		bounds = map.getBounds();
-		tileSize = map.getTileSize();
+		tileSize = Vector2(map.getTileSize().x, map.getTileSize().y);
 
 		//Process all tiles in each tileset
 		for (const tmx::Tileset& tileset: map.getTilesets())
 		{
 			//Load the tileset's texture
-			tilesetTextures.push_back(Texture(tileset.getImagePath(), filteringType));
+			tilesetTextures.push_back(new Texture(tileset.getImagePath(), filteringType));
 
 			//Get the collider shapes for each tile id
 			for (const tmx::Tileset::Tile& tile: tileset.getTiles())
@@ -41,60 +41,53 @@ namespace une
 						//Transform the Vertex to work with our coordinate system
 						Vector2 vertex(point.x, point.y);
 						vertex.y = -vertex.y;
-						vertex += Vector2(-(float)tileSize.x / 2, (float)tileSize.y / 2);
+						vertex += Vector2(tileSize.x / 2, tileSize.y / 2);
 						tileColliders[tile.ID].push_back(vertex);
 					}
 				}
 			}
 		}
 
+		//Process all the layers
 		const auto& layers = map.getLayers();
 		for (auto i = 0u; i < layers.size(); ++i)
 		{
-			//Process the layer properties
-			for (const tmx::Property& property: layers[i]->getProperties())
-			{
-				//Convert all properties to lower case
-				std::string propertyName;
-				std::transform(property.getName().begin(), property.getName().end(), propertyName.begin(), tolower);
-				layerProperties[i][propertyName] = property;
-			}
-
+			//Currently we only support tile layers
 			if (layers[i]->getType() == tmx::Layer::Type::Tile)
 			{
-				//If the layer has collision enabled give it a collider
-				if (layerProperties[i]["collision"].getBoolValue())
+				//Process the layer properties
+				std::unordered_map<std::string, tmx::Property> layerProperties;
+				for (const tmx::Property& property: layers[i]->getProperties())
 				{
-					//Get the tile IDs
-					auto& tiles = layers[i]->getLayerAs<tmx::TileLayer>().getTiles();
-
-					//Transfer the tile IDs to the 2D collision vector
-					layerColliders[i].resize(map.getTileCount().x);
-					for (int x = 0; x < map.getTileCount().x; x++)
-					{
-						layerColliders[i][x].resize(map.getTileCount().y);
-						for (int y = 0; y < map.getTileCount().y; y++)
-						{
-							layerColliders[i][x][y] = tiles[y * layerColliders[i].size() + x].ID;
-						}
-					}
+					//Convert all properties to lower case
+					std::string propertyName;
+					std::transform(property.getName().begin(), property.getName().end(), propertyName.begin(), tolower);
+					layerProperties[propertyName] = property;
 				}
 
-				std::shared_ptr<MapLayer> layer = std::make_unique<MapLayer>(map, i, tilesetTextures);
-
-				layer->tileSize = glm::vec2(map.getTileSize().x, map.getTileSize().y);
-
-				//If layer has a specified z offset set it here
-				if (layerProperties[i].contains("z"))
-				{
-					layerZs[i] = layerProperties[i]["z"].getFloatValue();
-					layer->zLayer = layerProperties[i]["z"].getFloatValue();
-				}
-
-				mapLayers[layer->zLayer].push_back(layer);
-				enabledLayers[layer->zLayer] = true;
+				MapLayer* layer = new MapLayer(map, i, tilesetTextures, layerProperties);
+				mapLayers.push_back(layer);
 			}
 		}
+	}
+
+	Tilemap::~Tilemap()
+	{
+		for (Texture* tex : tilesetTextures)
+			delete tex;
+		for (MapLayer* layer : mapLayers)
+			delete layer;
+	}
+
+	void Tilemap::SetLayerVisibility(unsigned int id, bool visible)
+	{
+		if (id >= mapLayers.size())
+		{
+			std::cout << "Tilemap warning invalid layer id " << id << std::endl;
+			return;
+		}
+
+		mapLayers[id]->enabled = visible;
 	}
 
 	//Returns the vertices making up this tile's collider
@@ -151,7 +144,7 @@ namespace une
 	{
 		//Log all tiles
 		std::vector<Vector2> collisions;
-
+		/*
 		if (collisionLayer.empty())
 		{
 			return collisions;
@@ -179,13 +172,15 @@ namespace une
 				}
 			}
 		}
-
+		*/
 		return collisions;
 	}
 
 	//Returns the collision layers tile ID at x and y
 	unsigned int Tilemap::checkCollision(float x, float y)
 	{
+		return 0;
+		/*
 		if (collisionLayer.empty())
 			return 0;
 
@@ -197,6 +192,7 @@ namespace une
 			return 0;
 
 		return collisionLayer[xIndex][yIndex];
+		*/
 	}
 
 	namespace renderer
@@ -238,7 +234,7 @@ namespace une
 
 				uniform float u_opacity = 1.0;
 
-				out vec4 colour;
+				out vec4 FragColor;
 				/*fixes rounding imprecision on AMD cards*/
 				const float epsilon = 0.000005;
 
@@ -281,12 +277,16 @@ namespace une
 								offset.x = tileSize.x - offset.x;
 							}
 						}
-						colour = texture(u_tileMap, position + offset);
-						colour.a = min(colour.a, u_opacity);
+
+						vec4 texColor = texture(u_tileMap, position + offset);
+						texColor.a = min(texColor.a, u_opacity);
+						if (texColor.a <= 0.02)
+							discard;
+						FragColor = texColor;
 					}
 					else
 					{
-						colour = vec4(0.0);
+						discard;
 					}
 				}
 				)", false);
@@ -295,37 +295,57 @@ namespace une
 			glUniform1i(glGetUniformLocation(shader->ID, "u_lookupMap"), 1);
 		}
 
-		void TilemapRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+		//Sorts the tilemap layers into their draw layers (currently only transparent world)
+		void TilemapRenderSystem::Prepass()
 		{
-			TilemapRenderer renderer = ecs::GetComponent<TilemapRenderer>(entity);
+			transparentWorldLayers.clear();
 
-			if (!renderer.enabled)
-				return;
-
-
-			shader->Use();
-
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-
-			unsigned int modelLoc = glGetUniformLocation(m_shader->ID, "u_modelMatrix");
-
-			unsigned int viewLoc = glGetUniformLocation(m_shader->ID, "u_viewMatrix");
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-
-			//Give the shader the projection matrix
-			unsigned int projLoc = glGetUniformLocation(m_shader->ID, "u_projectionMatrix");
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-
-			unsigned int u_tilesetCount = glGetUniformLocation(m_shader->ID, "u_tilesetCount");
-
-			unsigned int u_tileSize = glGetUniformLocation(m_shader->ID, "u_tileSize");
-
-			for (int i = 0; i < mapLayers[layer].size(); i++)
+			//Sort all entities into their draw orders
+			for (ecs::Entity entity : entities)
 			{
-				mapLayers[layer][i]->draw(model, modelLoc, u_tilesetCount, u_tileSize);
+				TilemapRenderer& renderer = ecs::GetComponent<TilemapRenderer>(entity);
+				Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
+
+				if (!renderer.enabled)
+					continue;
+
+				for (const MapLayer* layer : renderer.tilemap->mapLayers)
+				{
+					if (!layer->enabled)
+						continue;
+					transparentWorldLayers.push_back({entity, pos + Vector3(0, 0, layer->zOffset), DrawRenderable, layer->index});
+				}
 			}
 		}
 
-		Shader* TilemapRenderSystem::shader = nullptr;
+		//Draws one layer of an entity's tilemap
+		void TilemapRenderSystem::DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id)
+		{
+			TilemapRenderer& renderer = ecs::GetComponent<TilemapRenderer>(entity);
+			MapLayer* layer = renderer.tilemap->mapLayers[id];
+
+			shader->Use();
+
+			//Create the model matrix and offset it by the layer zOffset
+			glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
+			model = glm::translate(model, {0, 0, layer->zOffset});
+
+			//Get and set uniforms
+			int modelLoc = glGetUniformLocation(shader->ID, "u_modelMatrix");
+			int viewLoc = glGetUniformLocation(shader->ID, "u_viewMatrix");
+			int projLoc = glGetUniformLocation(shader->ID, "u_projectionMatrix");
+			int u_tilesetCount = glGetUniformLocation(shader->ID, "u_tilesetCount");
+			int u_tileSize = glGetUniformLocation(shader->ID, "u_tileSize");
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+
+			layer->draw(model, modelLoc, u_tilesetCount, u_tileSize);
+		}
+
+		//Static version of DrawLayer for renderable
+		void TilemapRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+		{
+			ecs::GetSystem<TilemapRenderSystem>()->DrawLayer(r.entity, cam, r.index);
+		}
 	}
 }

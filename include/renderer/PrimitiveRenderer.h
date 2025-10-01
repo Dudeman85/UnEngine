@@ -69,7 +69,9 @@ namespace une
 			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
 			void DrawOpaqueUIEntities(Camera* cam);
 			//Draw a primitive to the screen
-			static void DrawEntity(ecs::Entity entity, Camera* cam);
+			void DrawEntity(ecs::Entity entity, Camera* cam);
+			//Static version of DrawEntity for renderable
+			static void DrawRenderable(const Renderable& r, Camera* cam);
 			//Draw a primitive to the screen, does not require an entity
 			static void DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
 

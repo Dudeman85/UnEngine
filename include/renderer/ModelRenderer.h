@@ -41,13 +41,15 @@ namespace une
 			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
 			void DrawOpaqueUIEntities(Camera* cam);
 			//Draw an entity to the screen
-			static void DrawEntity(ecs::Entity entity, Camera* cam);
+			void DrawEntity(ecs::Entity entity, Camera* cam);
+			//Static version of DrawEntity for renderable
+			static void DrawRenderable(const Renderable& r, Camera* cam);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();
 
 		private:
-			static Shader* defaultShader;
+			Shader* defaultShader = nullptr;
 
 			std::vector<ecs::Entity> opaqueWorldEntities;
 			std::vector<ecs::Entity> opaqueUIEntities;

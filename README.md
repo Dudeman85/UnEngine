@@ -31,6 +31,7 @@ For Debian you need to install a few libraries:
 - [ ] ~~Update to CMake 4~~
 ### Improvements
 - [ ] Better integrate tilemap with ecs
+- [ ] Redo tilemap collision
 - [ ] Redo camera for ecs
 - [ ] Add an option to change the transform pivot
 - [ ] Rethink the transform hierarchy

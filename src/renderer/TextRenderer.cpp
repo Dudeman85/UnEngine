@@ -60,14 +60,22 @@ namespace une::renderer
 		for (ecs::Entity entity : entities)
 		{
 			TextRenderer& text = ecs::GetComponent<TextRenderer>(entity);
+            Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
+
 			if (!text.enabled)
 				continue;
 			//Text is always sorted because it is anti-aliased
 			if (text.uiElement)
-				transparentUIEntities.push_back({entity, DrawEntity});
+				transparentUIEntities.push_back({entity, pos, DrawRenderable});
 			else
-				transparentWorldEntities.push_back({entity, DrawEntity});
+				transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 		}
+	}
+
+	//Static version of DrawEntity for renderer
+	void TextRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+	{
+		ecs::GetSystem<TextRenderSystem>()->DrawEntity(r.entity, cam);
 	}
 
 	//Draw a sprite to the screen, expects bound VAO
@@ -78,7 +86,7 @@ namespace une::renderer
 		if (!textRenderer.font)
 		{
 			printf("ERROR: No font given!");
-			return;;
+			return;
 		}
 
 		shader->Use();
@@ -158,6 +166,5 @@ namespace une::renderer
 		return transparentUIEntities;
 	}
 
-	Shader* TextRenderSystem::shader = nullptr;
 	FT_Library TextRenderSystem::ftLib;
 }

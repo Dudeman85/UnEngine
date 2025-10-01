@@ -2,9 +2,6 @@
 
 #include <algorithm>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/norm.hpp>
-
 #include "UnEngine.h"
 
 namespace une::renderer
@@ -47,7 +44,7 @@ namespace une::renderer
         primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
         spriteRenderSystem->DrawOpaqueWorldEntities(cam);
         modelRenderSystem->DrawOpaqueWorldEntities(cam);
-
+/*
         //Then sort all semi-transparent world entities and render them
         std::vector<Renderable> transparentPrimitives = primitiveRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentSprites = spriteRenderSystem->GetTransparentWorldEntities();
@@ -80,7 +77,7 @@ namespace une::renderer
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUISprites.begin(), transparentUISprites.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIModels.begin(), transparentUIModels.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIText.begin(), transparentUIText.end());
-        DrawOrderedEntities(transparentUIEntites, cam);
+        DrawOrderedEntities(transparentUIEntites, cam);*/
     }
 
     //Draws a list of renderable entities that need to be sorted based on distance
@@ -89,9 +86,8 @@ namespace une::renderer
         //Calculate squared distances to camera
         for (Renderable& r : entities)
         {
-            Vector3 pos = TransformSystem::GetGlobalTransform(r.entity).position;
             //TODO: This needs to take into account camera rotation
-            r.distToCamera = cam->position.z - pos.z;
+            r.distToCamera = cam->position.z - r.position.z;
         }
 
         //Sort farthest to nearest based on relative distance to camera
@@ -104,7 +100,7 @@ namespace une::renderer
         //Draw them with the proper draw function
         for (const Renderable& r : entities)
         {
-            r.render(r.entity, cam);
+            r.render(r, cam);
         }
     }
 

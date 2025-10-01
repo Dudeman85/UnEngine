@@ -40,8 +40,8 @@ namespace une
 			void DrawOpaqueUIEntities(Camera* cam);
 			//Draw a sprite to the screen, expects bound VAO
 			void DrawEntity(ecs::Entity entity, Camera* cam);
-			//Static version of DrawEntity for renderer
-			static void DrawEntityStatic(ecs::Entity entity, Camera* cam);
+			//Static version of DrawEntity for renderable
+			static void DrawRenderable(const Renderable& r, Camera* cam);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();

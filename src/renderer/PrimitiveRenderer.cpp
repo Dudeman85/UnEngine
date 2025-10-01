@@ -197,20 +197,22 @@ namespace une
 			for (ecs::Entity entity : entities)
 			{
 				PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
+				Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
 				Color srgb = primitiveRenderer.color.AsSRGB();
+
 				if (!primitiveRenderer.enabled)
 					continue;
 				if (primitiveRenderer.uiElement)
 				{
 					if (srgb.a > 0.02 && srgb.a < 0.98)
-						transparentUIEntities.push_back({entity, DrawEntity});
+						transparentUIEntities.push_back({entity, pos, DrawRenderable});
 					else
 						opaqueUIEntities.push_back(entity);
 				}
 				else
 				{
 					if (srgb.a > 0.02 && srgb.a < 0.98)
-						transparentWorldEntities.push_back({entity, DrawEntity});
+						transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 					else
 						opaqueWorldEntities.push_back(entity);
 				}
@@ -233,6 +235,12 @@ namespace une
 			{
 				DrawEntity(entity, cam);
 			}
+		}
+
+		//Static version of DrawEntity for renderer
+		void PrimitiveRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+		{
+			ecs::GetSystem<PrimitiveRenderSystem>()->DrawEntity(r.entity, cam);
 		}
 
 		//Draw a primitive to the screen

@@ -49,10 +49,9 @@ namespace une::renderer
 			uniform sampler2D texture1;
 			void main()
 			{
-				vec4 texColor = texture(texture1, TexCoord);
-				if(texColor.a <= 0.02)
+				vec4 FragColor = texture(texture1, TexCoord);
+				if(FragColor.a <= 0.02)
 					discard;
-				FragColor = texColor;
 			}
 			)", false);
 
@@ -112,19 +111,21 @@ namespace une::renderer
 		for (ecs::Entity entity : entities)
 		{
 			SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
+            Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
+
 			if (!sprite.enabled)
 				continue;
 			if (sprite.uiElement)
 			{
 				if (sprite.texture->isSemiTransparent)
-					transparentUIEntities.push_back({entity, DrawEntityStatic});
+					transparentUIEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
 				if (sprite.texture->isSemiTransparent)
-					transparentWorldEntities.push_back({entity, DrawEntityStatic});
+					transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueWorldEntities.push_back(entity);
 			}
@@ -162,11 +163,11 @@ namespace une::renderer
 	}
 
 	//Static version of DrawEntity for renderer
-	void SpriteRenderSystem::DrawEntityStatic(ecs::Entity entity, Camera* cam)
+	void SpriteRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
 	{
 		auto srs = ecs::GetSystem<SpriteRenderSystem>();
 		glBindVertexArray(srs->VAO);
-		srs->DrawEntity(entity, cam);
+		srs->DrawEntity(r.entity, cam);
 		glBindVertexArray(0);
 	}
 

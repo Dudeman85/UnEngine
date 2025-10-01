@@ -77,13 +77,15 @@ namespace une::renderer
 		for (ecs::Entity entity : entities)
 		{
 			ModelRenderer& model = ecs::GetComponent<ModelRenderer>(entity);
+            Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
+
 			if (!model.enabled)
 				continue;
 			if (model.uiElement)
 			{
 				//TODO: Implement transparency
 				if (false)
-					transparentUIEntities.push_back({entity, DrawEntity});
+					transparentUIEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueUIEntities.push_back(entity);
 			}
@@ -91,7 +93,7 @@ namespace une::renderer
 			{
 				//TODO: Implement transparency
 				if (false)
-					transparentWorldEntities.push_back({entity, DrawEntity});
+					transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueWorldEntities.push_back(entity);
 			}
@@ -114,6 +116,12 @@ namespace une::renderer
 		{
 			DrawEntity(entity, cam);
 		}
+	}
+
+	//Static version of DrawEntity for renderer
+	void ModelRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+	{
+		ecs::GetSystem<ModelRenderSystem>()->DrawEntity(r.entity, cam);
 	}
 
 	//Draw an entity to the screen
@@ -141,7 +149,6 @@ namespace une::renderer
 
 		//Create the model matrix, this is the same for each mesh so it only needs to be done once
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
-
 
 		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
 		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
@@ -234,6 +241,4 @@ namespace une::renderer
 	{
 		return transparentUIEntities;
 	}
-
-	Shader* ModelRenderSystem::defaultShader = nullptr;
 }

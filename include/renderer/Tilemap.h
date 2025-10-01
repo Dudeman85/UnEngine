@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <string>
 
 #include "ECS.h"
@@ -9,6 +10,7 @@
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Camera.h"
+#include "renderer/gl/Utils.h"
 #include "Transform.h"
 #include "Vector.h"
 
@@ -18,8 +20,10 @@ namespace une
 	class Tilemap
 	{
 	public:
-		///Load tilemap
-		void loadMap(const std::string& ownMap, unsigned int filteringType = GL_NEAREST);
+		Tilemap(const std::string& path, unsigned int filteringType = GL_NEAREST);
+		~Tilemap();
+
+		void SetLayerVisibility(unsigned int id, bool visible);
 
 		///Get the position of a tile in world coordinates
 		Vector2 GetTilePosition(unsigned int x, unsigned int y);
@@ -31,25 +35,18 @@ namespace une
 		unsigned int checkCollision(float x, float y);
 		//Returns the vertices making up this tile's collider
 		std::vector<Vector2> GetTileCollider(unsigned int id);
-		///The size of a tile
-		tmx::Vector2u tileSize;
-		///The position of a tile
-		glm::vec3 position;
-		///The bounds of the map
+
+		Vector2 tileSize;
 		tmx::FloatRect bounds;
 
 		std::unordered_map<unsigned int, std::vector<Vector2>> tileColliders;
 
 		//All of these should be modes to MapLayer
-		std::unordered_map<unsigned int, bool> enabledLayers;
-		std::unordered_map<unsigned int, float> layerZs;
-		std::unordered_map<unsigned int, std::unordered_map<std::string, tmx::Property>> layerProperties;
 		std::unordered_map<unsigned int, std::vector<std::vector<unsigned int>>> layerColliders;
 
+		std::vector<MapLayer*> mapLayers;
 	private:
-
-		std::unordered_map<float, std::vector<std::shared_ptr<MapLayer>>> mapLayers;
-		std::vector<Texture> tilesetTextures;
+		std::vector<Texture*> tilesetTextures;
 	};
 
 	//Tilemap renderer component
@@ -69,10 +66,17 @@ namespace une
 		public:
 			void Init();
 
-			static void DrawEntity(ecs::Entity entity, Camera* cam);
+			//Sorts the tilemap layers into their draw layers (currently only transparent world)
+			void Prepass();
+
+			//Draws one layer of an entity's tilemap
+			void DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id);
+			//Static version of DrawLayer for renderable
+			static void DrawRenderable(const Renderable& r, Camera* cam);
 
 		private:
-			static Shader* shader;
+			Shader* shader = nullptr;
+			std::vector<Renderable> transparentWorldLayers;
 		};
 	}
 }

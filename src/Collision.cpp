@@ -138,7 +138,8 @@ namespace une
 		for (int i = 0; i < possibleCollisions.size(); i++)
 		{
 			//Get the final polygon collider of the tile
-			unsigned int tileID = tilemap->GetCollisionTileAtLocation(possibleCollisions[i].x, possibleCollisions[i].y);
+			std::vector<unsigned int> tileIDs = tilemap->GetCollisionTileAtLocation(possibleCollisions[i].x, possibleCollisions[i].y);
+			unsigned int tileID = tileIDs[0];
 			std::vector<Vector2> tileVerts = tilemap->GetTileCollider(tileID);
 
 			//Comply with the layer matrix
@@ -452,25 +453,6 @@ namespace une
 		}
 
 		collider.bounds = bounds;
-	}
-
-	///Set the tilemap collision layer
-	void CollisionSystem::SetTilemap(Tilemap* collisionTilemap)
-	{
-		if (collisionTilemap->collisionLayer.empty())
-		{
-			std::cout << "WARNING: No collision layer in this tilemap!\n";
-		}
-		else
-		{
-			tilemap = collisionTilemap;
-		}
-	}
-
-	///Removes the tilemap from collision
-	void CollisionSystem::RemoveTilemap()
-	{
-		tilemap = nullptr;
 	}
 
 	//Set the collision layer of a tile id
