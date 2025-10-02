@@ -20,7 +20,7 @@ namespace une
 		MapLayer& operator = (const MapLayer&) = delete;
 
 		///Draw the map with the given data
-		void draw(int, int);
+		void draw(int);
 
 		unsigned int index;
 		bool enabled = true;
@@ -36,7 +36,6 @@ namespace une
 		{
 			float sx;
 			float sy;
-			unsigned int vbo = 0;
 			Texture* texture = 0;
 			Texture* lookup = 0;
 		};
@@ -45,6 +44,5 @@ namespace une
 
 		std::vector<Texture*> tilesetTextures;
 		std::vector<Subset> subsets;
-		unsigned int VAO;
 	};
 }

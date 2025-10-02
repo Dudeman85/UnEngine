@@ -69,10 +69,33 @@ namespace une
 				mapLayers.push_back(layer);
 			}
 		}
+
+		//Initialize the OpenGL resources
+		const float vertices[] = {
+			bounds.left, bounds.top, 0.f, 0.f, 0.f,
+			bounds.left + bounds.width, bounds.top, 0.f, 1.f, 0.f,
+			bounds.left, bounds.top + bounds.height, 0.f, 0.f, 1.f,
+			bounds.left + bounds.width, bounds.top + bounds.height, 0.f, 1.f, 1.f
+		};
+
+		//Make the single shared buffer
+		glGenVertexArrays(1, &VAO);
+		glBindVertexArray(VAO);
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		//Every layer will use the same vertex data
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
 	}
 
 	Tilemap::~Tilemap()
 	{
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteVertexArrays(1, &VBO);
 		for (Texture* tex : tilesetTextures)
 			delete tex;
 		for (MapLayer* layer : mapLayers)
@@ -112,6 +135,7 @@ namespace une
 	std::vector<unsigned int> Tilemap::GetCollisionTileAtLocation(unsigned int x, unsigned int y)
 	{
 		std::vector<unsigned int> hits;
+		/*
 		for (const auto& layer : layerColliders)
 		{
 			if (!layer.second.empty())
@@ -119,7 +143,7 @@ namespace une
 				hits.push_back(layer.second[x][y]);
 			}
 		}
-
+		*/
 		return hits;
 	}
 
@@ -201,26 +225,26 @@ namespace une
 		{
 			shader = new Shader(
 				R"(
-				#version 330 core
+				#version 460 core
 				in vec3 aPos;
 				in vec2 aTexCoord;
-				out vec2 v_texCoord;
+				out vec2 TexCoord;
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
 				void main()
 				{
 					gl_Position = projection * view * model * vec4(aPos, 1.0);
-					v_texCoord = aTexCoord;
+					TexCoord = aTexCoord;
 				}
 				)",
 				R"(
-				#version 330 core
+				#version 460 core
 				#define FLIP_HORIZONTAL 8u
 				#define FLIP_VERTICAL 4u
 				#define FLIP_DIAGONAL 2u
 
-				in vec2 v_texCoord;
+				in vec2 TexCoord;
 
 				uniform usampler2D u_lookupMap;
 				uniform sampler2D u_tileMap;
@@ -237,16 +261,16 @@ namespace une
 
 				void main()
 				{
-					uvec2 values = texture(u_lookupMap, v_texCoord).rg;
+					uvec2 values = texture(u_lookupMap, TexCoord).rg;
 					float tileID = float(values.r);
 					if (tileID > 0u)
 					{
 						float index = float(tileID) - 1.0;
 						vec2 position = vec2(mod(index + epsilon, u_tilesetCount.x), floor((index / u_tilesetCount.x) + epsilon)) / u_tilesetCount;
-						vec2 offsetCoord = (v_texCoord * (textureSize(u_lookupMap, 0) * u_tilesetScale)) / u_tileSize;
+						vec2 offsetCoord = (TexCoord * (textureSize(u_lookupMap, 0) * u_tilesetScale)) / u_tileSize;
 
 						vec2 texelSize = vec2(1.0) / textureSize(u_lookupMap, 0);
-						vec2 offset = mod(v_texCoord, texelSize);
+						vec2 offset = mod(TexCoord, texelSize);
 						vec2 ratio = offset / texelSize;
 						offset = ratio * (1.0 / u_tileSize);
 						offset *= u_tileSize / u_tilesetCount;
@@ -329,16 +353,16 @@ namespace une
 
 			//Get and set uniforms
 			int modelLoc = glGetUniformLocation(shader->ID, "model");
-			int viewLoc = glGetUniformLocation(shader->ID, "view");
-			int projLoc = glGetUniformLocation(shader->ID, "projection");
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			int viewLoc = glGetUniformLocation(shader->ID, "view");
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+			int projLoc = glGetUniformLocation(shader->ID, "projection");
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
-
+			int tileSizeLoc = glGetUniformLocation(shader->ID, "u_tileSize");
+			glUniform2f(tileSizeLoc, renderer.tilemap->tileSize.x, renderer.tilemap->tileSize.y);
 			int u_tilesetCount = glGetUniformLocation(shader->ID, "u_tilesetCount");
-			int u_tileSize = glGetUniformLocation(shader->ID, "u_tileSize");
 
-			layer->draw(u_tilesetCount, u_tileSize);
+			layer->draw(u_tilesetCount);
 		}
 
 		//Static version of DrawLayer for renderable

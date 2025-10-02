@@ -42,11 +42,13 @@ namespace une::renderer
     {
 		glEnable(GL_DEPTH_BUFFER_BIT);
 
+        glDisable(GL_BLEND);
         //First render all opaque world entities (non semi-transparent & non UI)
         primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
         spriteRenderSystem->DrawOpaqueWorldEntities(cam);
         modelRenderSystem->DrawOpaqueWorldEntities(cam);
 
+        glEnable(GL_BLEND);
         //Then sort all semi-transparent world entities and render them
         std::vector<Renderable> transparentPrimitives = primitiveRenderSystem->GetTransparentWorldEntities();
         std::vector<Renderable> transparentSprites = spriteRenderSystem->GetTransparentWorldEntities();
@@ -65,11 +67,13 @@ namespace une::renderer
         //Clear depth buffer to always render UI above world
         glClear(GL_DEPTH_BUFFER_BIT);
 
+        glDisable(GL_BLEND);
         //Then render all opaque UI entities
         primitiveRenderSystem->DrawOpaqueUIEntities(cam);
         spriteRenderSystem->DrawOpaqueUIEntities(cam);
         modelRenderSystem->DrawOpaqueUIEntities(cam);
 
+        glEnable(GL_BLEND);
         //Then sort all semi-transparent UI entities and render them
         std::vector<Renderable> transparentUIPrimitives = primitiveRenderSystem->GetTransparentUIEntities();
         std::vector<Renderable> transparentUISprites = spriteRenderSystem->GetTransparentUIEntities();

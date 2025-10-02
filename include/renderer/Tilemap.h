@@ -40,12 +40,10 @@ namespace une
 		tmx::FloatRect bounds;
 
 		std::unordered_map<unsigned int, std::vector<Vector2>> tileColliders;
-
-		//All of these should be modes to MapLayer
-		std::unordered_map<unsigned int, std::vector<std::vector<unsigned int>>> layerColliders;
-
 		std::vector<MapLayer*> mapLayers;
+
 	private:
+		unsigned int VAO, VBO;
 		std::vector<Texture*> tilesetTextures;
 	};
 

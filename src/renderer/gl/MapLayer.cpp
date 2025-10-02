@@ -52,33 +52,17 @@ namespace une
     {
         for(auto& ss : subsets)
         {
-            glDeleteBuffers(1, &ss.vbo);
             delete ss.lookup;
         }
     }
 
-    void MapLayer::draw(int tilesetCountLoc, int tileSizeLoc)
+    void MapLayer::draw(int tilesetCountLoc)
     {
         if (subsets.empty())
             return;
 
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, subsets[0].vbo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        glUniform2f(tileSizeLoc, tileSize.x, tileSize.y);
-
-        glBindVertexArray(VAO);
-
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-
         for(const auto& ss : subsets)
         {
-            glBindBuffer(GL_ARRAY_BUFFER, ss.vbo);
-
             glUniform2f(tilesetCountLoc, ss.sx, ss.sy);
 
             glActiveTexture(GL_TEXTURE0);
@@ -98,9 +82,6 @@ namespace une
 
     void MapLayer::CreateSubsets(const tmx::Map& map, std::size_t layerIdx)
     {
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
         const auto& layers = map.getLayers();
         if(layerIdx >= layers.size() || (layers[layerIdx]->getType() != tmx::Layer::Type::Tile))
         {
@@ -110,14 +91,6 @@ namespace une
         const auto layer = dynamic_cast<const tmx::TileLayer*>(layers[layerIdx].get());
 
         auto bounds = map.getBounds();
-        float verts[] =
-        {
-            bounds.left, bounds.top, 0.f, 0.f, 0.f,
-            bounds.left + bounds.width, bounds.top, 0.f, 1.f, 0.f,
-            bounds.left, bounds.top + bounds.height, 0.f, 0.f, 1.f,
-            bounds.left + bounds.width, bounds.top + bounds.height, 0.f, 1.f, 1.f
-        };
-
         const auto& mapSize = map.getTileCount();
         const auto& tilesets = map.getTilesets();
         for(auto i = 0u; i < tilesets.size(); ++i)
@@ -160,10 +133,6 @@ namespace une
                 subsets.back().sy = numRows;
                 subsets.back().texture = tilesetTextures[i];
                 subsets.back().lookup = new Texture(mapSize.x, mapSize.y, pixelData);
-
-                glGenBuffers(1, &subsets.back().vbo);
-                glBindBuffer(GL_ARRAY_BUFFER, subsets.back().vbo);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
             }
         }
     }
