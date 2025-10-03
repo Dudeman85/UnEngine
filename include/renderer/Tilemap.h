@@ -6,7 +6,7 @@
 #include <string>
 
 #include "ECS.h"
-#include "renderer/gl/MapLayer.h"
+#include "renderer/gl/TilemapLayer.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Camera.h"
@@ -42,8 +42,8 @@ namespace une
 		std::unordered_map<unsigned int, std::vector<Vector2>> tileColliders;
 		std::vector<MapLayer*> mapLayers;
 
-	private:
 		unsigned int VAO, VBO;
+	private:
 		std::vector<Texture*> tilesetTextures;
 	};
 

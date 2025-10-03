@@ -15,14 +15,14 @@ namespace une
 	public:
 		Texture(const Texture&) = delete;
 		Texture() = delete;
-		//Load a texture from an array of pixels
-		Texture(int sx, int sy, const std::vector<std::uint16_t>& data);
+		//Make a texture from an existing opengl texture id
+		explicit Texture(unsigned int id);
 		//Load a texture from path
 		explicit Texture(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
 		//Make a texture from an image
 		explicit Texture(const Image& image, unsigned int filteringType = GL_NEAREST);
 
-		Texture(Texture&& other);
+		Texture(Texture&& other) noexcept;
 
 		~Texture();
 

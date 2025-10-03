@@ -2,16 +2,14 @@
 #include <cmath>
 #include <cassert>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <tmxlite/TileLayer.hpp>
 #include <tmxlite/Map.hpp>
 
-#include "utils/Constants.h"
 #include "renderer/Tilemap.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
-#include "renderer/gl/MapLayer.h"
+#include "renderer/gl/TilemapLayer.h"
 
 namespace une
 {
@@ -72,24 +70,29 @@ namespace une
 
 		//Initialize the OpenGL resources
 		const float vertices[] = {
-			bounds.left, bounds.top, 0.f, 0.f, 0.f,
-			bounds.left + bounds.width, bounds.top, 0.f, 1.f, 0.f,
-			bounds.left, bounds.top + bounds.height, 0.f, 0.f, 1.f,
-			bounds.left + bounds.width, bounds.top + bounds.height, 0.f, 1.f, 1.f
+			bounds.left, bounds.top, 0.f, 0.f, 1.f,
+			bounds.left + bounds.width, bounds.top, 0.f, 1.f, 1.f,
+			bounds.left, bounds.top + bounds.height, 0.f, 0.f, 0.f,
+			bounds.left + bounds.width, bounds.top + bounds.height, 0.f, 1.f, 0.f
 		};
 
 		//Make the single shared buffer
 		glGenVertexArrays(1, &VAO);
-		glBindVertexArray(VAO);
 		glGenBuffers(1, &VBO);
+		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 		//Every layer will use the same vertex data
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		//Vertex positions
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
+		//Lookup texture coords
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	Tilemap::~Tilemap()
@@ -226,8 +229,8 @@ namespace une
 			shader = new Shader(
 				R"(
 				#version 460 core
-				in vec3 aPos;
-				in vec2 aTexCoord;
+				layout(location = 0) in vec3 aPos;
+				layout(location = 1) in vec2 aTexCoord;
 				out vec2 TexCoord;
 				uniform mat4 model;
 				uniform mat4 view;
@@ -240,45 +243,49 @@ namespace une
 				)",
 				R"(
 				#version 460 core
+				//Tiled flip flags
 				#define FLIP_HORIZONTAL 8u
 				#define FLIP_VERTICAL 4u
 				#define FLIP_DIAGONAL 2u
 
 				in vec2 TexCoord;
 
-				uniform usampler2D u_lookupMap;
-				uniform sampler2D u_tileMap;
+				uniform sampler2D tilesetTexture;
+				uniform usampler2D lookupTexture;
 
-				uniform vec2 u_tileSize;
-				uniform vec2 u_tilesetCount;
+				uniform vec2 tileSize;
+				uniform vec2 tilesetSize;
 				uniform vec2 u_tilesetScale = vec2(1.0);
-
-				uniform float u_opacity = 1.0;
+				uniform float opacity = 1.0;
 
 				out vec4 FragColor;
-				/*fixes rounding imprecision on AMD cards*/
-				const float epsilon = 0.000005;
 
 				void main()
 				{
-					uvec2 values = texture(u_lookupMap, TexCoord).rg;
-					float tileID = float(values.r);
-					if (tileID > 0u)
-					{
-						float index = float(tileID) - 1.0;
-						vec2 position = vec2(mod(index + epsilon, u_tilesetCount.x), floor((index / u_tilesetCount.x) + epsilon)) / u_tilesetCount;
-						vec2 offsetCoord = (TexCoord * (textureSize(u_lookupMap, 0) * u_tilesetScale)) / u_tileSize;
+					uvec2 lookupValues = texture(lookupTexture, TexCoord).rg;
+					uint tileID = lookupValues.r;
+					uint flipFlags = lookupValues.g;
 
-						vec2 texelSize = vec2(1.0) / textureSize(u_lookupMap, 0);
+					if (tileID > 0)
+					{
+						float tileIndex = float(tileID - 1);
+
+						vec2 positionInTileset = vec2(mod(tileIndex, tilesetSize.x), floor(tileIndex / tilesetSize.x));
+
+						vec2 position = vec2(mod(tileIndex + EPSILON, tilesetSize.x), floor((tileIndex / tilesetSize.x) + EPSILON)) / tilesetSize;
+						vec2 offsetCoord = (TexCoord * (textureSize(lookupTexture, 0) * u_tilesetScale)) / tileSize;
+
+						vec2 texelSize = vec2(1.0) / textureSize(lookupTexture, 0);
 						vec2 offset = mod(TexCoord, texelSize);
 						vec2 ratio = offset / texelSize;
-						offset = ratio * (1.0 / u_tileSize);
-						offset *= u_tileSize / u_tilesetCount;
+						offset = ratio * (1.0 / tileSize);
+						offset *= tileSize / tilesetSize;
 
-						if (values.g != 0u)
+						//Flip the tile based on flip flags
+						if (flipFlags != 0)
 						{
-							vec2 tileSize = vec2(1.0) / u_tilesetCount;
-							if ((values.g & FLIP_DIAGONAL) != 0u)
+							vec2 tileSize = vec2(1.0) / tilesetSize;
+							if ((flipFlags & FLIP_DIAGONAL) != 0)
 							{
 								float temp = offset.x;
 								offset.x = offset.y;
@@ -289,31 +296,26 @@ namespace une
 								offset.x = tileSize.x - offset.x;
 								offset.y = tileSize.y - offset.y;
 							}
-							if ((values.g & FLIP_VERTICAL) != 0u)
+							if ((flipFlags & FLIP_VERTICAL) != 0)
 							{
 								offset.y = tileSize.y - offset.y;
 							}
-							if ((values.g & FLIP_HORIZONTAL) != 0u)
+							if ((flipFlags & FLIP_HORIZONTAL) != 0)
 							{
 								offset.x = tileSize.x - offset.x;
 							}
 						}
 
-						vec4 texColor = texture(u_tileMap, position + offset);
-						texColor.a = min(texColor.a, u_opacity);
-						if (texColor.a <= 0.02)
-							discard;
+						vec4 texColor = texture(tilesetTexture, position + offsetCoord);
+						texColor.a *= opacity;
 						FragColor = texColor;
 					}
 					else
 					{
-						FragColor = vec4(0, 0, 0, 1);
+						FragColor = vec4(0, 0, 0.1, 1);
 					}
 				}
 				)", false);
-
-			glUniform1i(glGetUniformLocation(shader->ID, "u_tileMap"), 0);
-			glUniform1i(glGetUniformLocation(shader->ID, "u_lookupMap"), 1);
 		}
 
 		//Sorts the tilemap layers into their draw layers (currently only transparent world)
@@ -358,11 +360,18 @@ namespace une
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
 			int projLoc = glGetUniformLocation(shader->ID, "projection");
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
-			int tileSizeLoc = glGetUniformLocation(shader->ID, "u_tileSize");
+			int tileSizeLoc = glGetUniformLocation(shader->ID, "tileSize");
 			glUniform2f(tileSizeLoc, renderer.tilemap->tileSize.x, renderer.tilemap->tileSize.y);
-			int u_tilesetCount = glGetUniformLocation(shader->ID, "u_tilesetCount");
+			int tilesetSizeLoc = glGetUniformLocation(shader->ID, "tilesetSize");
+			//Set the textures to their proper slots
+			glUniform1i(glGetUniformLocation(shader->ID, "tilesetTexture"), 0);
+			glUniform1i(glGetUniformLocation(shader->ID, "lookupTexture"), 1);
 
-			layer->draw(u_tilesetCount);
+			//Draw all layer subsets with the same VAO
+			glBindVertexArray(renderer.tilemap->VAO);
+			layer->DrawSubsets(tilesetSizeLoc);
+
+			glBindVertexArray(0);
 		}
 
 		//Static version of DrawLayer for renderable

@@ -7,7 +7,7 @@ int main()
 
 	une::EngineInit();
 	une::Camera cam = une::Camera(4000, 3000);
-	cam.SetPosition({0, 0, 10000});
+	cam.SetPosition({1000, 2000, 3000});
 	cam.perspective = true;
 	une::renderer::SetBackgroundColor(une::Color(100, 20, 150));
 
@@ -16,7 +16,7 @@ int main()
 	une::Model model("../../../examples/assets/Achelous.obj");
 	une::Primitive square = une::Primitive::Rectangle();
 	une::Font font("../../../examples/assets/Coolvetica Rg Cond.otf", 24);
-	une::Tilemap tilemap("../../../examples/assets/level1.tmx");
+	une::Tilemap tilemap("../../../examples/assets/testMap.tmx");
 
 	ecs::Entity e0 = ecs::NewEntity();
 	//ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});

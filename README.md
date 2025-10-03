@@ -67,6 +67,7 @@ For Debian you need to install a few libraries:
   - Logging
   - Info
 - [ ] Implement enet
+- [ ] Add multithreading support
 - [ ] Add raycasting
 - [ ] Add quaternion support
 - [ ] Add extrapolation functions

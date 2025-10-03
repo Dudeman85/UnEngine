@@ -36,11 +36,12 @@ namespace une::renderer
         modelRenderSystem->Prepass();
         textRenderSystem->Prepass();
         tilemapRenderSystem->Prepass();
+
     }
 
     void UnifiedRenderPass(Camera* cam)
     {
-		glEnable(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 
         glDisable(GL_BLEND);
         //First render all opaque world entities (non semi-transparent & non UI)

@@ -6,18 +6,10 @@
 
 namespace une
 {
-	//Make a texture from raw pixel data
-    Texture::Texture(int sx, int sy, const std::vector<std::uint16_t>& data)
+	//Make a texture from an existing opengl texture id
+	Texture::Texture(unsigned int id)
 	{
-		//Generate and bind texture
-		glGenTextures(1, &id);
-		glBindTexture(GL_TEXTURE_2D, id);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16UI, sx, sy, 0, GL_RG_INTEGER, GL_UNSIGNED_SHORT, &data[0]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		this->id = id;
 	}
 
 	//Load a texture from path
@@ -118,7 +110,7 @@ namespace une
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	Texture::Texture(Texture&& other)
+	Texture::Texture(Texture&& other) noexcept
     {
     	isSemiTransparent = other.isSemiTransparent;
 	    path = other.path;

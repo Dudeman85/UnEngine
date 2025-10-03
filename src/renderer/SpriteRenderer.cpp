@@ -20,7 +20,6 @@ namespace une::renderer
 	{
 		glDeleteVertexArrays(1, &VAO);
 		glDeleteVertexArrays(1, &VBO);
-		glDeleteVertexArrays(1, &EBO);
 	}
 
 	//Initialize the shaders and shared buffers
@@ -59,21 +58,15 @@ namespace une::renderer
 		//Rectangle vertices start at top left and go clockwise to bottom left
 		const float vertices[] = {
 			//Positions		  Texture Coords
-			 1.f,  1.f, 0.0f, 1.0f, 1.0f, // top right
-			 1.f, -1.f, 0.0f, 1.0f, 0.0f, // bottom right
-			-1.f, -1.f, 0.0f, 0.0f, 0.0f, // bottom left
 			-1.f,  1.f, 0.0f, 0.0f, 1.0f, // top left
-		};
-		//Indices to draw a rectangle from two triangles
-		const unsigned int indices[] = {
-			0, 1, 2, //1st trangle
-			0, 2, 3, //2nd triangle
+			 1.f,  1.f, 0.0f, 1.0f, 1.0f, // top right
+			-1.f, -1.f, 0.0f, 0.0f, 0.0f, // bottom left
+			 1.f, -1.f, 0.0f, 1.0f, 0.0f, // bottom right
 		};
 
 		//Make the Vertex Array Object, Vertex Buffer Object, and Element Buffer Object
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
-		glGenBuffers(1, &EBO);
 
 		//Bind the Vertex Array Object
 		glBindVertexArray(VAO);
@@ -82,14 +75,9 @@ namespace une::renderer
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		//Bind and set indices to EBO
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
 		//Configure Vertex attribute at location 0 aka position
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-
 		//Configure Vertex attribute at location 1 aka texture coords
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
@@ -97,7 +85,6 @@ namespace une::renderer
 		//Unbind all buffers and arrays
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
 	//Sorts the sprites into their draw layers
@@ -136,40 +123,25 @@ namespace une::renderer
 	//Draws all entities in the opaqueWorldEntities list
 	void SpriteRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
 	{
-		//Use the same VAO for every sprite
-		glBindVertexArray(VAO);
-
 		for (ecs::Entity entity : opaqueWorldEntities)
 		{
 			DrawEntity(entity, cam);
 		}
-
-		//Unbind the VAO
-		glBindVertexArray(0);
 	}
 
 	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
 	void SpriteRenderSystem::DrawOpaqueUIEntities(Camera* cam)
 	{
-		//Use the same VAO for every sprite
-		glBindVertexArray(VAO);
-
 		for (ecs::Entity entity : opaqueUIEntities)
 		{
 			DrawEntity(entity, cam);
 		}
-
-		//Unbind the VAO
-		glBindVertexArray(0);
 	}
 
 	//Static version of DrawEntity for renderer
 	void SpriteRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
 	{
-		auto srs = ecs::GetSystem<SpriteRenderSystem>();
-		glBindVertexArray(srs->VAO);
-		srs->DrawEntity(r.entity, cam);
-		glBindVertexArray(0);
+		ecs::GetSystem<SpriteRenderSystem>()->DrawEntity(r.entity, cam);
 	}
 
 	//Draw a sprite to the screen, expects bound VAO
@@ -213,14 +185,15 @@ namespace une::renderer
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 		}
 
-		//Bind the texture
+		//Bind the resources
+		glBindVertexArray(VAO);
 		glActiveTexture(GL_TEXTURE0);
 		sprite.texture->Use();
 
-		//Draw the sprite
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		//Unbind the texture
+		//Unbind the resources
+		glBindVertexArray(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 

@@ -46,10 +46,9 @@ namespace une
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();
 
-			Shader* defaultShader = nullptr;
-			unsigned int VAO;
 		private:
-			unsigned int VBO, EBO;
+			Shader* defaultShader = nullptr;
+			unsigned int VAO, VBO;
 
 			std::vector<ecs::Entity> opaqueWorldEntities;
 			std::vector<ecs::Entity> opaqueUIEntities;

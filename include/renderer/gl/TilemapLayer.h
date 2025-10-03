@@ -19,14 +19,13 @@ namespace une
 		MapLayer(const MapLayer&) = delete;
 		MapLayer& operator = (const MapLayer&) = delete;
 
-		///Draw the map with the given data
-		void draw(int);
+		//Draw a quad for each subset in this layer
+		void DrawSubsets(int tilesetSizeLoc);
 
 		unsigned int index;
 		bool enabled = true;
 		//User specified z offset
 		float zOffset = 0;
-		Vector2 tileSize;
 		//Tile based collision map
 		std::vector<std::vector<unsigned int>> collider;
 		std::unordered_map<std::string, tmx::Property> properties;
@@ -34,13 +33,14 @@ namespace une
 	private:
 		struct Subset
 		{
-			float sx;
-			float sy;
-			Texture* texture = 0;
-			Texture* lookup = 0;
+			unsigned int columns;
+			unsigned int rows;
+			Texture* texture = nullptr;
+			Texture* lookup = nullptr;
 		};
 
-		void CreateSubsets(const tmx::Map&, std::size_t);
+		//Create a subset for each tilseset this layer uses
+		void CreateSubsets(const tmx::Map& map);
 
 		std::vector<Texture*> tilesetTextures;
 		std::vector<Subset> subsets;

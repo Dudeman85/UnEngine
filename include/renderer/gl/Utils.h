@@ -22,7 +22,4 @@ namespace une::renderer
 		//Renderer implementation internal
 		float distToCamera = INFINITY;
 	};
-
-	//Better check gl error function
-	GLenum CheckGLError();
 }
