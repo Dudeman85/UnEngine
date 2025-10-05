@@ -15,11 +15,19 @@ It is built on a custom implementation of [Entity Component System (ECS)](doc/EC
 - [Audio](doc/Audio%20Reference.md)
 
 ## Building
-### Windows
-### Linux
-For Debian you need to install a few libraries:
+After cloning the repo update the submodules:
+```bash
+git submodule update --init
+```
+Then generate the CMake project for your preferred build tool. Works with CMake > 3.20 and < 4. Tested with GCC, Clang and MSVC, requires C++ 20 or higher.
 
-```sudo apt install libwayland-dev libxkbcommon-dev xorg-dev```
+To build the example projects, set the UNENGINE_BUILD_EXAMPLES=ON CMake option.
+
+### Linux specific
+For Debian & pals you need to install a few libraries:
+```bash
+sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
+```
 
 ## TODO
 ### General
@@ -74,3 +82,22 @@ For Debian you need to install a few libraries:
 - [ ] Copy entity function
 - [ ] Add TOML or similar config support
 - [ ] Add joints
+
+### Idea for new UI system
+Rip off unity again, we have a ui component and ui canvas:
+```
+struct UIComponent
+{
+    UICanvas*
+    ...
+}
+struct UICanvas // not a component
+{
+    enabled
+    size //relative to viewport
+    offset //relative to viewport
+    rotation 
+}
+```
+All ui elements will be transformed using a canvas instead of the camera's view, still have to figure out what to do about projection, probably just use ortho.
+This means the UI elements will use standard coordinates relative to the canvas instead of ndc like it was. Makes it easier to position things, make menus, simplify code, and hide/show things, also unifies ui element implementation instead of it being renderer specific.
