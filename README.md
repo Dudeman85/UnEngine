@@ -19,7 +19,7 @@ After cloning the repo update the submodules:
 ```bash
 git submodule update --init
 ```
-Then generate the CMake project for your preferred build tool. Works with CMake > 3.20 and < 4. Tested with GCC, Clang and MSVC, requires C++ 20 or higher.
+Then generate the CMake project for your preferred build tool. Works with CMake > 3.20 and < 4. Tested with GCC, Clang and MSVC, requires C++20 or higher.
 
 To build the example projects, set the UNENGINE_BUILD_EXAMPLES=ON CMake option.
 
@@ -30,58 +30,67 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 ```
 
 ## TODO
-### General
+## Required
+### Improvements
 - [x] Move to new repo
 - [x] Add linux build compatibility
 - [x] Update all dependencies
 - [x] Refactor to h + cpp
-- [ ] Update the vector library
-- [ ] ~~Update to CMake 4~~
-### Improvements
-- [ ] Better integrate tilemap with ecs
+- [ ] Unify model, sprite, text, tilemap, and primitive renderers
+  - [ ] Redo tilemap rendering
+- [ ] Fix the sprite scaling
 - [ ] Redo tilemap collision
 - [ ] Redo camera for ecs
+- [ ] Redo UI system
+
+### New Features
+- [ ] Implement enet
+  - [ ] Component serialization support
+  - [ ] Serialization of all engine components
+
+## High Priority
+### Improvements
+- [ ] Update the vector library
+- [ ] Expand and improve the timing system
+- [ ] Improve resource loading and management
 - [ ] Add an option to change the transform pivot
 - [ ] Rethink the transform hierarchy
-- [ ] Improve resource loading and management
-- [ ] Improve sound loading
-- [ ] Better integrate sounds with ecs
-- [ ] Fix physics fps bugs
-- [ ] Fix shader and renderer destructors
-- [ ] Update documentation
-### Renderer
-- [ ] Redo tilemap rendering
 - [x] Fix text resolution scaling
-- [ ] Unify model, sprite, text, tilemap, and primitive renderers
-- [ ] Fix the sprite scaling
-- [ ] Improve model loading and rendering
-- [ ] Add transparency to model rendering
-- [ ] Finally fix the damn transparency
-- [ ] Fix primitive rendering
-- [ ] Rethink UI rendering
-- [ ] Redo lighting system
+- [ ] Fix physics fps bugs
+- [ ] Fix sound bugs
+- [ ] Better integrate sounds with ecs
+
+### New features
 - [ ] Add animation support to tilemap
+- [ ] More robust logging system
+- [ ] Add multithreading support
 - [ ] Add anti-aliasing
 - [ ] Add multi camera support
-### New features
-- [ ] More robust logging system
-- [ ] Add angular momentum
-- [ ] Add restraints
-- [ ] Component serialization support
-- [ ] Serialization of all engine components
+
+## Low Priority
+### Improvements
+- [ ] Improve model loading and rendering
+- [ ] Add transparency to model rendering
+- [ ] Redo lighting system
+- [ ] Fix primitive rendering
+- [ ] Update documentation
+- [ ] Fix shader and renderer destructors
+
+### New Features
+- Create a particle system
 - [ ] Add debug tools
   - Camera
   - Frame advance
   - Logging
   - Info
-- [ ] Implement enet
-- [ ] Add multithreading support
+- [ ] Add TOML or similar config support
+- [ ] Copy entity function
+- [ ] Add angular momentum
+- [ ] Add restraints
+- [ ] Add joints
 - [ ] Add raycasting
 - [ ] Add quaternion support
 - [ ] Add extrapolation functions
-- [ ] Copy entity function
-- [ ] Add TOML or similar config support
-- [ ] Add joints
 
 ### Idea for new UI system
 Rip off unity again, we have a ui component and ui canvas:
