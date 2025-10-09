@@ -387,7 +387,7 @@ namespace ecs
 	};
 
 	//Implementation internal function. Called whenever an entity's signature changes
-	inline void _OnEntitySignatureChanged(Entity entity)
+	inline void OnEntitySignatureChanged(Entity entity)
 	{
 		const Signature& signature = entitySignatures[entity];
 
@@ -411,19 +411,19 @@ namespace ecs
 	//Implementation internal function. Make a signature from a series of components.
 	//This is getting really complicated...
 	template<typename Comp, typename... Comps>
-	Signature _MakeSignature()
+	Signature MakeSignature()
 	{
 		//Recursively add each component type to the signature
 		Signature signature;
 		if constexpr (sizeof...(Comps) > 0)
-			signature = _MakeSignature<Comps...>();
+			signature = MakeSignature<Comps...>();
 		signature.set(GetComponentID<Comp>());
 		return signature;
 	}
 
 	//Implementation internal function. Get a component array of type T
 	template<typename T>
-	ComponentArray<T>* _GetComponentArray()
+	ComponentArray<T>* GetComponentArray()
 	{
 		return static_cast<ComponentArray<T>*>(componentArrays[typeid(T).name()]);
 	}
@@ -628,7 +628,7 @@ namespace ecs
 		}
 #endif
 
-		_GetComponentArray<T>()->SetDestructor(destructor);
+		GetComponentArray<T>()->SetDestructor(destructor);
 	}
 
 	//Check if the entity has a component
@@ -636,7 +636,7 @@ namespace ecs
 	bool HasComponent(Entity entity)
 	{
 		//Call HasComponent of the relevant component array
-		return _GetComponentArray<T>()->HasComponent(entity);
+		return GetComponentArray<T>()->HasComponent(entity);
 	}
 
 	//Get a reference to entity's component of type T
@@ -658,7 +658,7 @@ namespace ecs
 		}
 #endif
 
-		return _GetComponentArray<T>()->GetComponent(entity);
+		return GetComponentArray<T>()->GetComponent(entity);
 	}
 
 	//Get the ID of a component
@@ -698,11 +698,11 @@ namespace ecs
 		}
 #endif
 
-		_GetComponentArray<T>()->AddComponent(entity, component);
+		GetComponentArray<T>()->AddComponent(entity, component);
 
 		//Update the entity signature
 		entitySignatures[entity].set(GetComponentID<T>());
-		_OnEntitySignatureChanged(entity);
+		OnEntitySignatureChanged(entity);
 	}
 
 	//Remove a component of type T from entity
@@ -726,11 +726,11 @@ namespace ecs
 		}
 #endif
 
-		_GetComponentArray<T>()->RemoveComponent(entity);
+		GetComponentArray<T>()->RemoveComponent(entity);
 
 		//Update the entity's signature
 		entitySignatures[entity].reset(componentTypeToID[componentType]);
-		_OnEntitySignatureChanged(entity);
+		OnEntitySignatureChanged(entity);
 	}
 
 	//Returns a new entity with no components
@@ -788,7 +788,7 @@ namespace ecs
 		//Set the entitys signature to none temporarily
 		entitySignatures[entity].reset();
 
-		_OnEntitySignatureChanged(entity);
+		OnEntitySignatureChanged(entity);
 		RemoveAllTags(entity);
 
 		//Set the entity as available and update relevant trackers
@@ -808,7 +808,7 @@ namespace ecs
 		for (auto itr = usedEntitiesCopy.begin(); itr != usedEntitiesCopy.end();)
 		{
 			//Get the entity and increment the iterator
-			ecs::Entity entity = *itr++;
+			Entity entity = *itr++;
 
 			//Check validity of entity, it can get deleted by component destructors
 			if (!EntityExists(entity))
@@ -856,7 +856,7 @@ namespace ecs
 #endif
 
 		//Make the signature and system
-		systemSignatures[systemType] = _MakeSignature<Comps...>();
+		systemSignatures[systemType] = MakeSignature<Comps...>();
 		std::shared_ptr<Sys> system = std::make_shared<Sys>();
 		systems[systemType] = system;
 		return system;

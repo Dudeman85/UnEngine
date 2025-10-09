@@ -1,8 +1,21 @@
+#include <source_location>
+
 #include "UnEngine.h"
 #include "Vector.h"
+#include "Debug.h"
 
 int main()
 {
+	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
+	debug::verbosity = debug::Verbosity::Spam;
+
+	debug::LogSpam("spam");
+	debug::LogInfo("Info");
+	debug::LogWarning("warning");
+	debug::LogError("Error");
+
+	return 0;
+
 	GLFWwindow* window = une::CreateGLWindow(800, 600, "Window");
 
 	une::EngineInit();
