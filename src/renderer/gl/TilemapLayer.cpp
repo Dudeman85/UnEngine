@@ -4,6 +4,8 @@
 #include <tmxlite/TileLayer.hpp>
 
 #include "renderer/gl/TilemapLayer.h"
+
+#include "Debug.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Utils.h"
 
@@ -75,7 +77,7 @@ namespace une
 		const auto& layers = map.getLayers();
 		if (index >= layers.size() || layers[index]->getType() != tmx::Layer::Type::Tile)
 		{
-			std::cout << "Invalid layer index or layer type, layer will be empty" << std::endl;
+			debug::LogWarning("Invalid tilemap layer index or layer type, layer will be empty");
 			return;
 		}
 

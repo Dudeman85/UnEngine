@@ -1,5 +1,7 @@
 #include "renderer/gl/Window.h"
 
+#include "Debug.h"
+
 namespace une
 {
 	//Return the monitor with greatest window overlap
@@ -40,7 +42,7 @@ namespace une
 		return bestmonitor;
 	}
 
-	///Create OpenGL window and context
+	//Create OpenGL window and context
 	GLFWwindow* CreateGLWindow(int width, int height, const char* name, bool fullscreen)
 	{
 		mainWindowWidth = width;
@@ -60,13 +62,15 @@ namespace une
 		{
 			const char* desc;
 			glfwGetError(&desc);
-			std::cout << "Failed to create GLFW window: " << desc << std::endl;
+			debug::LogError("Failed to create GLFW window: " + std::string(desc));
 			glfwTerminate();
+			return nullptr;
 		}
 		glfwMakeContextCurrent(mainWindow);
 		if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
 		{
-			std::cout << "Failed to initialize GLAD" << std::endl;
+			debug::LogError("Failed to initialize GLAD");
+			return nullptr;
 		}
 
 		//Set the resize window callback function
@@ -90,6 +94,7 @@ namespace une
 		glfwWindowHint(GLFW_SAMPLES, 4);
 		glEnable(GL_MULTISAMPLE);
 
+		debug::LogInfo("Successfully initialized GLFW");
 		return mainWindow;
 	}
 

@@ -7,8 +7,14 @@
 #include <iomanip>
 #include <unordered_map>
 
+#ifndef __gl_h_
+#include "glad/gl.h"
+#endif
+
 namespace debug
 {
+	//LOGGING
+
 	//Define one or more ostreams as logging outputs, and specify if they should use colors
 	inline std::vector<std::pair<std::ostream*, bool>> logOutputs = {{&std::cout, true}};
 
@@ -69,5 +75,79 @@ namespace debug
 	inline void LogError(const std::string& msg, std::source_location sl = std::source_location::current())
 	{
 		Log(msg, Error, sl);
+	}
+
+	//Better glGetError function
+	inline GLenum CheckGLError(std::source_location sl = std::source_location::current())
+	{
+		const GLenum e = glGetError();
+		switch (e)
+		{
+			case GL_INVALID_ENUM:
+				LogError("Last OpenGL error: GL_INVALID_ENUM");
+				break;
+			case GL_INVALID_VALUE:
+				LogError("Last OpenGL error: GL_INVALID_VALUE");
+				break;
+			case GL_INVALID_OPERATION:
+				LogError("Last OpenGL error: GL_INVALID_OPERATION");
+				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				LogError("Last OpenGL error: GL_INVALID_FRAMEBUFFER_OPERATION");
+				break;
+			case GL_OUT_OF_MEMORY:
+				LogError("Last OpenGL error: GL_OUT_OF_MEMORY");
+				break;
+			default:
+				break;
+		}
+		return e;
+	}
+
+	//TIMERS
+
+	//Store timers by name
+	inline std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> timers;
+
+	inline void StartTimer(const std::string& name)
+	{
+		timers[name] = std::chrono::high_resolution_clock::now();
+	}
+	//Return the time in milliseconds since the start of this timer
+	inline long SampleTimer(const std::string& name)
+	{
+		if (!timers.contains(name))
+		{
+			LogWarning("No timer named " + name);
+			return 0;
+		}
+
+		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+	}
+	//Return the time in milliseconds since the start of this timer, also resets the timer
+	inline long ResetTimer(const std::string& name)
+	{
+		if (!timers.contains(name))
+		{
+			LogWarning("No timer named " + name);
+			return 0;
+		}
+
+		const long duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+		timers[name] = std::chrono::high_resolution_clock::now();
+		return duration;
+	}
+	//Return the time in milliseconds since the start of this timer, also ends the timer
+	inline long EndTimer(const std::string& name)
+	{
+		if (!timers.contains(name))
+		{
+			LogWarning("No timer named " + name);
+			return 0;
+		}
+
+		const long duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+		timers.erase(name);
+		return duration;
 	}
 }

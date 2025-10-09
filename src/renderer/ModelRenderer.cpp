@@ -1,5 +1,7 @@
 #include "renderer/ModelRenderer.h"
 
+#include "Debug.h"
+
 namespace une::renderer
 {
 	void ModelRenderSystem::Init()
@@ -137,7 +139,7 @@ namespace une::renderer
 
 		if (!modelRenderer.model)
 		{
-			std::cout << "Warning: no model given for ModelRenderer of entity " << entity << std::endl;
+			debug::LogWarning("No model given for ModelRenderer of entity " + std::to_string(entity));
 			return;
 		}
 

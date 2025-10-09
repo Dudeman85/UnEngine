@@ -75,6 +75,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Fix primitive rendering
 - [ ] Update documentation
 - [ ] Fix shader and renderer destructors
+- [ ] Improve animation system
 
 ### New Features
 - Create a particle system

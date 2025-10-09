@@ -1,5 +1,6 @@
 #include "renderer/gl/Font.h"
 
+#include "Debug.h"
 #include "renderer/TextRenderer.h"
 
 namespace une
@@ -9,7 +10,7 @@ namespace une
 		FT_Face face;
 		if (FT_New_Face(renderer::TextRenderSystem::ftLib, path.c_str(), faceIndex, &face))
 		{
-			std::cout << "Failed to load font from " + path << std::endl;
+			debug::LogError("Failed to load font from " + path);
 			return;
 		}
 
@@ -34,15 +35,12 @@ namespace une
 
 	void Font::LoadCharacters(FT_Face face)
 	{
-		if (!characters.empty())
-			std::cout << "WARNING: multiple calls to LoadCharacters" << std::endl;
-
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		for (unsigned char c = 0; c < 128; ++c)
 		{
 			if (FT_Load_Char(face, c, FT_LOAD_RENDER))
 			{
-				std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+				debug::LogError("Failed to load character " + std::to_string(c));
 				continue;
 			}
 

@@ -20,7 +20,7 @@ namespace une
 	//How many seconds the program has been running
 	inline double programTime = 0;
 	//How many frames the program has been through
-	inline unsigned long frameCount = 0;
+	inline uint64_t frameCount = 0;
 
 	inline std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrame;
 

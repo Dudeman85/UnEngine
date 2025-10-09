@@ -1,6 +1,9 @@
 #include "renderer/TextRenderer.h"
 
 #include <ft2build.h>
+
+#include "Debug.h"
+
 #include FT_FREETYPE_H
 
 namespace une::renderer
@@ -15,7 +18,7 @@ namespace une::renderer
 	{
 		if (FT_Init_FreeType(&ftLib))
 		{
-			std::cout << "Failed to initialize FreeType library" << std::endl;
+			debug::LogError("Failed to initialize freetype library");
 		}
 
 		shader = new Shader(
@@ -85,7 +88,7 @@ namespace une::renderer
 
 		if (!textRenderer.font)
 		{
-			printf("ERROR: No font given!");
+			debug::LogWarning("No font given for TextRenderer of entity " + std::to_string(entity));
 			return;
 		}
 

@@ -2,8 +2,6 @@
 
 #include <functional>
 
-#include <glad/gl.h>
-
 #include "ECS.h"
 #include "renderer/gl/Camera.h"
 

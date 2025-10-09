@@ -1,11 +1,15 @@
 #include "renderer/gl/Shader.h"
 
+#include "Debug.h"
+
 
 namespace une
 {
-	///Give the vertex and fragment shader sources directly or if fromFile = true load them from given directories.
-	Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath, bool fromFile)
+	//Give the vertex and fragment shader sources directly or if fromFile = true load them from given directories.
+	Shader::Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, bool fromFile)
 	{
+		debug::StartTimer("LoadShader");
+
 		//Load Vertex shader
 		std::string vertexShaderString;
 		const char* vertexShaderSource;
@@ -15,7 +19,10 @@ namespace une
 			//Load the Vertex shader from file if given
 			std::ifstream file(vertexShaderPath);
 			if (!file)
-				std::cout << "Error Loading Vertex Shader from path: " << vertexShaderPath << "!\n";
+			{
+				debug::LogError("Failed to load vertex shader from " + vertexShaderPath);
+				return;
+			}
 			std::stringstream buffer;
 			buffer << file.rdbuf();
 			vertexShaderString = buffer.str();
@@ -39,7 +46,8 @@ namespace une
 		if (!success)
 		{
 			glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-			std::cout << "Error compiling vertex shader:\n" << infoLog << std::endl;
+			debug::LogError("Failed to compile vertex shader:\n" + std::string(infoLog));
+			return;
 		}
 
 		//Load Fragment Shader
@@ -51,7 +59,10 @@ namespace une
 			//Load the Fragment shader from file if given
 			std::ifstream file(fragmentShaderPath);
 			if (!file)
-				std::cout << "Error Loading Fragment Shader from path: " << vertexShaderPath << "!\n";
+			{
+				debug::LogError("Failed to load fragment shader from " + fragmentShaderPath);
+				return;
+			}
 			std::stringstream buffer;
 			buffer << file.rdbuf();
 			fragmentShaderString = buffer.str();
@@ -73,9 +84,9 @@ namespace une
 		if (!success)
 		{
 			glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-			std::cout << "Error compiling fragment shader::\n" << infoLog << std::endl;
+			debug::LogError("Failed to compile fragment shader:\n" + std::string(infoLog));
+			return;
 		}
-
 
 		//Create the shader program
 		ID = glCreateProgram();
@@ -88,16 +99,20 @@ namespace une
 		if (!success)
 		{
 			glGetProgramInfoLog(ID, 512, NULL, infoLog);
-			std::cout << "Error linking shaders:\n" << infoLog << std::endl;
+			debug::LogError("Failed to link shaders:\n" + std::string(infoLog));
+			return;
 		}
 
 		//Delete the shader programs after they are no longer needed
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
+
+		debug::LogSpam("Successfully compiled shader from " + (fromFile ? fragmentShaderPath : "code") + " in "
+			+ std::to_string(debug::EndTimer("LoadShader")) + "ms");
 	}
 
-	///Use this shader program
-	void Shader::Use()
+	//Use this shader program in the bound texture slot
+	void Shader::Use() const
 	{
 		glUseProgram(ID);
 	}

@@ -1,5 +1,7 @@
 #include "UnEngine.h"
 
+#include "Debug.h"
+
 namespace une
 {
 	void EngineInit()
@@ -24,17 +26,25 @@ namespace une
 	//Updates all default engine systems, returns delta time
 	double Update(Camera* cam)
 	{
-		renderer::UnifiedRenderPrepass();
+		debug::StartTimer("EngineUpdate");
+		std::string debugString = "Completed engine update for frame " + std::to_string(frameCount) + ". ";
+
 		//Update engine systems
+		debug::StartTimer("SystemsTimer");
 		//Physics must be before collision
 		if (enablePhysics)
+		{
 			physicsSystem->Update();
+			debugString += "Physics took " + std::to_string(debug::ResetTimer("SystemsTimer")) + "ms,";
+		}
 		//Animation must be before sprite rendering
 		if (enableAnimation)
 			animationSystem->Update();
 		if (enableRendering)
 		{
+			renderer::UnifiedRenderPrepass();
 			renderer::UnifiedRenderPass(cam);
+			debugString += "Rendering took " + std::to_string(debug::EndTimer("SystemsTimer")) + "ms,";
 		}
 		soundSystem->Update();
 		//Collision system should be after rendering
@@ -45,6 +55,8 @@ namespace une
 		//Timer must be last
 		timerSystem->Update(enablePhysics);
 
+		long totalTime = debug::EndTimer("EngineUpdate");
+		debug::LogSpam(debugString + " Total: " + std::to_string(totalTime) + "ms, " + std::to_string(1 / totalTime * 1000) + "fps");
 		return deltaTime;
 	}
 }

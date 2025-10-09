@@ -4,6 +4,8 @@
 
 #include <assimp/postprocess.h>
 
+#include "Debug.h"
+
 namespace une
 {
 	void Model::LoadModel(std::string path)
@@ -15,7 +17,7 @@ namespace une
 		//Make sure the model scene is not null and it imported properly
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
-			std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+			debug::LogError("Failed to load model from " + path + " : " + import.GetErrorString());
 			return;
 		}
 
@@ -133,7 +135,7 @@ namespace une
 			if (!skip)
 			{
 				//Load the texture from location relative to model
-				Texture* texture = new Texture((directory + "/" + textureLoc.C_Str()).c_str(), GL_LINEAR, false);
+				Texture* texture = new Texture(directory + "/" + textureLoc.C_Str(), GL_LINEAR, false);
 				texture->type = typeName;
 				texture->path = textureLoc.C_Str();
 				textures.push_back(texture);

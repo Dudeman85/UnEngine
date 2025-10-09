@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "UnEngine.h"
+#include "Debug.h"
 
 namespace une::renderer
 {
@@ -37,6 +38,7 @@ namespace une::renderer
         textRenderSystem->Prepass();
         tilemapRenderSystem->Prepass();
 
+        debug::CheckGLError();
     }
 
     void UnifiedRenderPass(Camera* cam)
@@ -87,6 +89,8 @@ namespace une::renderer
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIModels.begin(), transparentUIModels.end());
         transparentUIEntites.insert(transparentUIEntites.end(), transparentUIText.begin(), transparentUIText.end());
         DrawOrderedEntities(transparentUIEntites, cam);
+
+        debug::CheckGLError();
     }
 
     //Draws a list of renderable entities that need to be sorted based on distance

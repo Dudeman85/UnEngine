@@ -7,6 +7,8 @@
 #include <tmxlite/Map.hpp>
 
 #include "renderer/Tilemap.h"
+
+#include "Debug.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/TilemapLayer.h"
@@ -109,7 +111,7 @@ namespace une
 	{
 		if (id >= mapLayers.size())
 		{
-			std::cout << "Tilemap warning invalid layer id " << id << std::endl;
+			debug::LogWarning("Invalid layer id " + std::to_string(id));
 			return;
 		}
 
@@ -344,8 +346,15 @@ namespace une
 		//Draws one layer of an entity's tilemap
 		void TilemapRenderSystem::DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id)
 		{
-			TilemapRenderer& renderer = ecs::GetComponent<TilemapRenderer>(entity);
-			MapLayer* layer = renderer.tilemap->mapLayers[id];
+			TilemapRenderer& tilemapRenderer = ecs::GetComponent<TilemapRenderer>(entity);
+
+			if (!tilemapRenderer.tilemap)
+			{
+				debug::LogWarning("No tilemap given for TilemapRenderer of entity " + std::to_string(entity));
+				return;
+			}
+
+			MapLayer* layer = tilemapRenderer.tilemap->mapLayers[id];
 
 			shader->Use();
 
@@ -361,14 +370,14 @@ namespace une
 			int projLoc = glGetUniformLocation(shader->ID, "projection");
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 			int tileSizeLoc = glGetUniformLocation(shader->ID, "tileSize");
-			glUniform2f(tileSizeLoc, renderer.tilemap->tileSize.x, renderer.tilemap->tileSize.y);
+			glUniform2f(tileSizeLoc, tilemapRenderer.tilemap->tileSize.x, tilemapRenderer.tilemap->tileSize.y);
 			int tilesetSizeLoc = glGetUniformLocation(shader->ID, "tilesetSize");
 			//Set the textures to their proper slots
 			glUniform1i(glGetUniformLocation(shader->ID, "tilesetTexture"), 0);
 			glUniform1i(glGetUniformLocation(shader->ID, "lookupTexture"), 1);
 
 			//Draw all layer subsets with the same VAO
-			glBindVertexArray(renderer.tilemap->VAO);
+			glBindVertexArray(tilemapRenderer.tilemap->VAO);
 			layer->DrawSubsets(tilesetSizeLoc);
 
 			glBindVertexArray(0);

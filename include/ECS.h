@@ -1,15 +1,16 @@
 #pragma once
 #include <bitset>
+#include <cstring>
 #include <stack>
 #include <set>
 #include <vector>
 #include <unordered_map>
 #include <typeinfo>
 #include <stdexcept>
-#include <iostream>
 #include <memory>
-#include <cstring>
 #include <functional>
+
+#include "Debug.h"
 
 //Allow max components to be determined outside this file
 #ifndef ECS_MAX_COMPONENTS
@@ -34,11 +35,6 @@ inline bool SYSTEM##Registered = ( ecs::RegisterSystem<SYSTEM, __VA_ARGS__>(), t
 
 namespace ecs
 {
-	//Define colors for errors and warnings
-	constexpr const char* errorFormat = "\033[31m";
-	constexpr const char* warningFormat = "\033[33m";
-	constexpr const char* normalFormat = "\033[37m";
-
 	//Entities as IDs, 0 will never be a valid ID
 	using Entity = uint32_t;
 	//Signatures as bitsets, where each component has its own bit
@@ -49,13 +45,17 @@ namespace ecs
 	inline uint16_t GetComponentID();
 	inline std::vector<std::string> GetTags(Entity);
 	inline bool EntityExists(Entity);
+	inline void LogInfo(const std::string& message)
+	{
+		debug::LogInfo(message);
+	}
 	inline void LogWarning(const std::string& message)
 	{
-		std::cout << warningFormat << message << normalFormat << std::endl;
+		debug::LogWarning(message);
 	}
 	inline void LogError(const std::string& message)
 	{
-		std::cout << errorFormat << message << normalFormat << std::endl;
+		debug::LogError(message);
 	}
 
 	//ENTITY MANAGEMENT DATA
@@ -186,15 +186,16 @@ namespace ecs
 			return size;
 		}
 
-		//Debug function, will print all entities
-		void PrintEntities() const
+		//Debug function, will log all entities
+		void LogEntities() const
 		{
-			std::cout << size << ": [";
+			std::string str = std::to_string(size) + ":[";
 			for (uint32_t i = 0; i < size; i++)
 			{
-				std::cout << entities[i] << ", ";
+				str += std::to_string(entities[i]) + ", ";
 			}
-			std::cout << "]" << std::endl;
+			str += "]";
+			LogInfo(str);
 		}
 
 		//Add an entity to the end of the list, if it does not exist in it
@@ -433,40 +434,50 @@ namespace ecs
 	//Print all entities to log
 	inline void LogEntities()
 	{
-		std::cout << "Entities: ";
+		std::string str = "Entities: ";
 		for (const Entity entity : usedEntities)
 		{
-			std::cout << entity << ", ";
+			str += std::to_string(entity) + ", ";
 		}
 	}
 	//Log the signature and component list of an entity as a string
 	inline void LogEntityInfo(Entity entity)
 	{
-		//Print id
-		if (EntityExists(entity))
-			std::cout << "ID: " << entity;
-		else
-			std::cout << "Entity " << entity << " does not exist" << std::endl;
-
-		//Print tags
-		std::cout << ", Tags: ";
-		for (const std::string& tag : GetTags(entity))
+		if (!EntityExists(entity))
 		{
-			std::cout << tag << ", ";
+			LogInfo("Entity " + std::to_string(entity) + " does not exist.");
+			return;
 		}
+
+		//Log id
+		std::string str = "ID: " + std::to_string(entity);
+
+		//Log tags
+		str += ", Tags: ";
 		if (GetTags(entity).empty())
-			std::cout << "none";
-
-		//Print components
-		std::cout << ", Signature: " << entitySignatures[entity] << ", Components: ";
-		for (uint16_t i = 0; i < entitySignatures[entity].size(); i++)
+			str += "none";
+		else
 		{
-			if (entitySignatures[entity][i])
-				std::cout << componentIDToType[i] << ", ";
+			for (const std::string& tag : GetTags(entity))
+			{
+				str += tag + ", ";
+			}
 		}
+
+		//Log components
+		str += ", Signature: " + entitySignatures[entity].to_string() + ", Components: ";
 		if (entitySignatures[entity].none())
-			std::cout << "none";
-		std::cout << std::endl;
+			str += "none";
+		else
+		{
+			for (uint16_t i = 0; i < entitySignatures[entity].size(); i++)
+			{
+				if (entitySignatures[entity][i])
+					str += std::string(componentIDToType[i]) + ", ";
+			}
+		}
+
+		LogInfo(str);
 	}
 
 	//PUBLIC FUNCTIONS

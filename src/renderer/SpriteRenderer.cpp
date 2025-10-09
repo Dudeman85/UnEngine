@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Debug.h"
 #include "ECS.h"
 #include "Transform.h"
 #include "renderer/gl/Shader.h"
@@ -152,7 +153,7 @@ namespace une::renderer
 
 		if (!sprite.texture)
 		{
-			std::cout << "Warning: no texture given for sprite of entity " << entity << std::endl;
+			debug::LogWarning("No texture given for SpriteRenderer of entity " + std::to_string(entity));
 			return;
 		}
 

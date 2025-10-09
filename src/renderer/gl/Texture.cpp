@@ -4,6 +4,8 @@
 
 #include <stb_image.h>
 
+#include "Debug.h"
+
 namespace une
 {
 	//Make a texture from an existing opengl texture id
@@ -15,6 +17,8 @@ namespace une
 	//Load a texture from path
 	Texture::Texture(const std::string& path, unsigned int filteringType, bool flip)
 	{
+		debug::StartTimer("LoadTexture");
+
 		this->path = path;
 
 		//Flip the image when loading into an OpenGL texture
@@ -25,7 +29,7 @@ namespace une
 
 		if (!imageData)
 		{
-			std::cout << "Error loading texture from " << path << std::endl;
+			debug::LogError("Error loading texture from " + path);
 			return;
 		}
 
@@ -72,6 +76,8 @@ namespace une
 
 		//Image data is no longer needed
 		stbi_image_free(imageData);
+
+		debug::LogSpam("Successfully loaded texture from " + path + " in " + std::to_string(debug::EndTimer("LoadTexture")) + "ms");
 	}
 
 	//Create a texture from an image
