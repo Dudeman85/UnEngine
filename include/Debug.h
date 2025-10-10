@@ -33,7 +33,7 @@ namespace debug
 		std::time_t time = std::time(0);
 		auto ms = duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
 		std::ostringstream oss;
-		oss << std::put_time(std::localtime(&time), "%T.") << ms;
+		oss << std::put_time(std::localtime(&time), "%T.") << std::setfill('0') << std::setw(3) << ms;
 		return oss.str();
 	}
 
@@ -77,31 +77,24 @@ namespace debug
 		Log(msg, Error, sl);
 	}
 
-	//Better glGetError function
-	inline GLenum CheckGLError(std::source_location sl = std::source_location::current())
+	//Logs the last OpenGL error
+	inline void CheckGLError(std::source_location sl = std::source_location::current())
 	{
-		const GLenum e = glGetError();
-		switch (e)
+		std::unordered_map<GLenum, std::string> errorMap = {
+			{GL_INVALID_ENUM, "GL_INVALID_ENUM"}, {GL_INVALID_VALUE, "GL_INVALID_VALUE"}, {GL_INVALID_OPERATION, "GL_INVALID_OPERATION"},
+			{GL_INVALID_FRAMEBUFFER_OPERATION, "GL_INVALID_FRAMEBUFFER_OPERATION"}, {GL_OUT_OF_MEMORY, "GL_OUT_OF_MEMORY"}
+		};
+
+		std::string errors;
+		GLenum e = glGetError();
+		while (e != GL_NO_ERROR)
 		{
-			case GL_INVALID_ENUM:
-				LogError("Last OpenGL error: GL_INVALID_ENUM");
-				break;
-			case GL_INVALID_VALUE:
-				LogError("Last OpenGL error: GL_INVALID_VALUE");
-				break;
-			case GL_INVALID_OPERATION:
-				LogError("Last OpenGL error: GL_INVALID_OPERATION");
-				break;
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				LogError("Last OpenGL error: GL_INVALID_FRAMEBUFFER_OPERATION");
-				break;
-			case GL_OUT_OF_MEMORY:
-				LogError("Last OpenGL error: GL_OUT_OF_MEMORY");
-				break;
-			default:
-				break;
+			errors += errorMap[e] + ", ";
+			e = glGetError();
 		}
-		return e;
+
+		if (!errors.empty())
+			LogError("Last OpenGL error(s): " + errors, sl);
 	}
 
 	//TIMERS
@@ -113,7 +106,8 @@ namespace debug
 	{
 		timers[name] = std::chrono::high_resolution_clock::now();
 	}
-	//Return the time in milliseconds since the start of this timer
+	//Return the time (default milliseconds) since the start of this timer
+	template <typename T = std::chrono::milliseconds>
 	inline long SampleTimer(const std::string& name)
 	{
 		if (!timers.contains(name))
@@ -122,9 +116,10 @@ namespace debug
 			return 0;
 		}
 
-		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+		return std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - timers[name]).count();
 	}
-	//Return the time in milliseconds since the start of this timer, also resets the timer
+	//Return the time (default milliseconds) since the start of this timer, also resets the timer
+	template <typename T = std::chrono::milliseconds>
 	inline long ResetTimer(const std::string& name)
 	{
 		if (!timers.contains(name))
@@ -133,11 +128,12 @@ namespace debug
 			return 0;
 		}
 
-		const long duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+		const long duration = std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - timers[name]).count();
 		timers[name] = std::chrono::high_resolution_clock::now();
 		return duration;
 	}
-	//Return the time in milliseconds since the start of this timer, also ends the timer
+	//Return the time (default milliseconds) since the start of this timer, also ends the timer
+	template <typename T = std::chrono::milliseconds>
 	inline long EndTimer(const std::string& name)
 	{
 		if (!timers.contains(name))
@@ -146,7 +142,7 @@ namespace debug
 			return 0;
 		}
 
-		const long duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timers[name]).count();
+		const long duration = std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - timers[name]).count();
 		timers.erase(name);
 		return duration;
 	}

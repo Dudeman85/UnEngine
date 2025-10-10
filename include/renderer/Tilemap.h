@@ -25,13 +25,13 @@ namespace une
 
 		void SetLayerVisibility(unsigned int id, bool visible);
 
-		///Get the position of a tile in world coordinates
+		//Get the position of a tile in world coordinates
 		Vector2 GetTilePosition(unsigned int x, unsigned int y);
-		///Check larger area collisionbox
+		//Check larger area collisionbox
 		std::vector<Vector2> CheckCollisionBox(Vector2 topLeft, Vector2 bottomRight);
 		//Returns the id of every tile with a collider at tilemap coords x and y
 		std::vector<unsigned int> GetCollisionTileAtLocation(unsigned int x, unsigned int y);
-		///Check the smaller Collisions that are turned on upon the larger collision box colliding
+		//Check the smaller Collisions that are turned on upon the larger collision box colliding
 		unsigned int checkCollision(float x, float y);
 		//Returns the vertices making up this tile's collider
 		std::vector<Vector2> GetTileCollider(unsigned int id);
@@ -51,7 +51,7 @@ namespace une
 	ECS_REGISTER_COMPONENT(TilemapRenderer)
 	struct TilemapRenderer
 	{
-		Tilemap* tilemap;
+		Tilemap* tilemap = nullptr;
 
 		bool enabled = true;
 	};

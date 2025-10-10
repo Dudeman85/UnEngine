@@ -60,7 +60,7 @@ namespace une
 	{
 		for (const auto& ss: subsets)
 		{
-			glUniform2f(tilesetSizeLoc, (float)ss.columns, (float)ss.rows);
+			glUniform2ui(tilesetSizeLoc, ss.columns, ss.rows);
 
 			glActiveTexture(GL_TEXTURE0);
 			ss.texture->Use();
@@ -95,8 +95,8 @@ namespace une
 			{
 				if (tile.ID >= ts.getFirstGID() && tile.ID <= ts.getLastGID())
 				{
-					//Make sure to index relative to the tileset +1 because 0 is no tile
-					uint16_t id = tile.ID - ts.getFirstGID() + 1;
+					//Make sure to index relative to the tileset
+					uint16_t id = tile.ID - ts.getFirstGID();
 					//Red channel is used for tile ids
 					lookupData.push_back(id);
 					//Green channel is used for flip flags
@@ -105,9 +105,9 @@ namespace une
 				}
 				else
 				{
-					//Pad with empty space
-					lookupData.push_back(0);
-					lookupData.push_back(0);
+					//UINT16_MAX aka 65535 is no tile
+					lookupData.push_back(UINT16_MAX);
+					lookupData.push_back(UINT16_MAX);
 				}
 			}
 

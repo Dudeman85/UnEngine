@@ -9,15 +9,6 @@ int main()
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Spam;
 
-	ecs::AddTag(666, "Eea");
-
-	debug::LogSpam("spam");
-	debug::LogInfo("Info");
-	debug::LogWarning("warning");
-	debug::LogError("Error");
-
-	return 0;
-
 	GLFWwindow* window = une::CreateGLWindow(800, 600, "Window");
 
 	une::EngineInit();
@@ -47,13 +38,11 @@ int main()
 	//ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
 	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
-	ecs::AddComponent(e2, une::Transform{.position = {0, 0, 0}, .rotation = {0, 0, 0}, .scale = 1});
+	ecs::AddComponent(e2, une::Transform{.position = {-100, -5, 0}, .rotation = {0, 0, 35}, .scale = 0.6});
 
 
 	while (!glfwWindowShouldClose(window))
 	{
-		une::Update(&cam);
-
 		if (glfwGetKey(window, GLFW_KEY_RIGHT))
 		{
 			une::TransformSystem::Translate(e2, 2, 0, 0);
@@ -102,6 +91,8 @@ int main()
 		{
 			cam.Translate({10, 0, 0});
 		}
+
+		une::Update(&cam);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

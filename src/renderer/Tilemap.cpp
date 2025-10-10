@@ -27,7 +27,7 @@ namespace une
 		for (const tmx::Tileset& tileset: map.getTilesets())
 		{
 			//Load the tileset's texture
-			tilesetTextures.push_back(new Texture(tileset.getImagePath(), filteringType));
+			tilesetTextures.push_back(new Texture(tileset.getImagePath(), filteringType, false));
 
 			//Get the collider shapes for each tile id
 			for (const tmx::Tileset::Tile& tile: tileset.getTiles())
@@ -255,9 +255,8 @@ namespace une
 				uniform sampler2D tilesetTexture;
 				uniform usampler2D lookupTexture;
 
-				uniform vec2 tileSize;
-				uniform vec2 tilesetSize;
-				uniform vec2 u_tilesetScale = vec2(1.0);
+				uniform uvec2 tileSize;
+				uniform uvec2 tilesetSize;
 				uniform float opacity = 1.0;
 
 				out vec4 FragColor;
@@ -268,14 +267,9 @@ namespace une
 					uint tileID = lookupValues.r;
 					uint flipFlags = lookupValues.g;
 
-					if (tileID > 0)
+					if (tileID < 65535)
 					{
-						float tileIndex = float(tileID - 1);
-
-						vec2 positionInTileset = vec2(mod(tileIndex, tilesetSize.x), floor(tileIndex / tilesetSize.x));
-
-						vec2 position = vec2(mod(tileIndex + EPSILON, tilesetSize.x), floor((tileIndex / tilesetSize.x) + EPSILON)) / tilesetSize;
-						vec2 offsetCoord = (TexCoord * (textureSize(lookupTexture, 0) * u_tilesetScale)) / tileSize;
+						vec2 position = vec2(tileID % tilesetSize.x, floor(tileID / tilesetSize.x)) / tilesetSize;
 
 						vec2 texelSize = vec2(1.0) / textureSize(lookupTexture, 0);
 						vec2 offset = mod(TexCoord, texelSize);
@@ -288,7 +282,7 @@ namespace une
 						{
 							vec2 tileSize = vec2(1.0) / tilesetSize;
 							if ((flipFlags & FLIP_DIAGONAL) != 0)
-							{
+							{/*
 								float temp = offset.x;
 								offset.x = offset.y;
 								offset.y = temp;
@@ -296,7 +290,7 @@ namespace une
 								offset.x *= temp;
 								offset.y /= temp;
 								offset.x = tileSize.x - offset.x;
-								offset.y = tileSize.y - offset.y;
+								offset.y = tileSize.y - offset.y;*/
 							}
 							if ((flipFlags & FLIP_VERTICAL) != 0)
 							{
@@ -308,13 +302,13 @@ namespace une
 							}
 						}
 
-						vec4 texColor = texture(tilesetTexture, position + offsetCoord);
+						vec4 texColor = texture(tilesetTexture, position + offset);
 						texColor.a *= opacity;
 						FragColor = texColor;
 					}
 					else
 					{
-						FragColor = vec4(0, 0, 0.1, 1);
+						FragColor = vec4(0);
 					}
 				}
 				)", false);
@@ -370,7 +364,7 @@ namespace une
 			int projLoc = glGetUniformLocation(shader->ID, "projection");
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
 			int tileSizeLoc = glGetUniformLocation(shader->ID, "tileSize");
-			glUniform2f(tileSizeLoc, tilemapRenderer.tilemap->tileSize.x, tilemapRenderer.tilemap->tileSize.y);
+			glUniform2ui(tileSizeLoc, tilemapRenderer.tilemap->tileSize.x, tilemapRenderer.tilemap->tileSize.y);
 			int tilesetSizeLoc = glGetUniformLocation(shader->ID, "tilesetSize");
 			//Set the textures to their proper slots
 			glUniform1i(glGetUniformLocation(shader->ID, "tilesetTexture"), 0);

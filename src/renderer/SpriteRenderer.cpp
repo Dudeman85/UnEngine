@@ -19,8 +19,11 @@ namespace une::renderer
 {
 	SpriteRenderSystem::~SpriteRenderSystem()
 	{
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteVertexArrays(1, &VBO);
+		if (VAO)
+		{
+			glDeleteVertexArrays(1, &VAO);
+			glDeleteVertexArrays(1, &VBO);
+		}
 	}
 
 	//Initialize the shaders and shared buffers

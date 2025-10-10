@@ -37,11 +37,12 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Update all dependencies
 - [x] Refactor to h + cpp
 - [ ] Unify model, sprite, text, tilemap, and primitive renderers
-  - [ ] Redo tilemap rendering
-- [ ] Fix the sprite scaling
-- [ ] Redo tilemap collision
+  - [x] Improve tilemap rendering
+  - [ ] Fix the sprite scaling
+- [ ] Improve tilemap collision
 - [ ] Redo camera for ecs
 - [ ] Redo UI system
+- [ ] Redo window and context system
 
 ### New Features
 - [ ] Implement enet
@@ -54,6 +55,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Expand and improve the timing system
 - [ ] Improve resource loading and management
 - [ ] Add an option to change the transform pivot
+- [ ] Improve animation system
 - [ ] Rethink the transform hierarchy
 - [x] Fix text resolution scaling
 - [ ] Fix physics fps bugs
@@ -62,7 +64,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ### New features
 - [ ] Add animation support to tilemap
-- [ ] More robust logging system
+- [x] More robust logging system
 - [ ] Add multithreading support
 - [ ] Add anti-aliasing
 - [ ] Add multi camera support
@@ -75,15 +77,14 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Fix primitive rendering
 - [ ] Update documentation
 - [ ] Fix shader and renderer destructors
-- [ ] Improve animation system
 
 ### New Features
-- Create a particle system
+- [ ] Create a particle system
 - [ ] Add debug tools
-  - Camera
-  - Frame advance
-  - Logging
-  - Info
+  - [ ] Camera
+  - [ ] Frame advance
+  - [x] Logging
+  - [ ] Info
 - [ ] Add TOML or similar config support
 - [ ] Copy entity function
 - [ ] Add angular momentum
