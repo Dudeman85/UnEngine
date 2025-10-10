@@ -45,17 +45,31 @@ namespace ecs
 	inline uint16_t GetComponentID();
 	inline std::vector<std::string> GetTags(Entity);
 	inline bool EntityExists(Entity);
-	inline void LogInfo(const std::string& message)
+
+	//Debug Logging functions
+	inline void LogInfo(const std::string& message, std::source_location sl = std::source_location::current())
 	{
-		debug::LogInfo(message);
+		debug::LogInfo(message, sl);
 	}
-	inline void LogWarning(const std::string& message)
+	inline void LogWarning(const std::string& message, std::source_location sl = std::source_location::current())
 	{
-		debug::LogWarning(message);
+		std::string func = sl.function_name();
+		func = func.substr(func.find_first_of(' ') + 6);
+		func = func.substr(0, func.find_first_of(";]"));
+		std::string header = "in " + func.substr(0, func.find_first_of('(')) + "()";
+		if (func.find("with ") != std::string::npos)
+			header += " <" + func.substr(func.find("with ") + 5) + ">";
+		debug::LogWarning(header + ": " + message, sl);
 	}
-	inline void LogError(const std::string& message)
+	inline void LogError(const std::string& message, std::source_location sl = std::source_location::current())
 	{
-		debug::LogError(message);
+		std::string func = sl.function_name();
+		func = func.substr(func.find_first_of(' ') + 6);
+		func = func.substr(0, func.find_first_of(";]"));
+		std::string header = "in " + func.substr(0, func.find_first_of('(')) + "()";
+		if (func.find("with ") != std::string::npos)
+			header += " <" + func.substr(func.find("with ") + 5) + ">";
+		debug::LogError(header + ": " + message, sl);
 	}
 
 	//ENTITY MANAGEMENT DATA
@@ -155,7 +169,7 @@ namespace ecs
 			Entity& operator*() const
 			{
 				if (*currentPtr == 0)
-					LogError("ECS ERROR in Iterator: fuck");
+					LogError("fuck");
 				return *currentPtr;
 			}
 		};
@@ -203,7 +217,7 @@ namespace ecs
 		{
 			//Add 100 or double capacity to the list, whichever is less
 			if (size >= maxSize)
-				Resize(maxSize + std::min(maxSize, static_cast<uint32_t>(100)));
+				Resize(maxSize + std::min(maxSize, 100u));
 
 			//Look through the array and make sure the entity is not in it
 			for (uint32_t i = 0; i < size; i++)
@@ -220,7 +234,7 @@ namespace ecs
 		}
 
 		//Remove an entity from the list
-		//Size is not updated, so pack() should be called shortly after
+		//Size is not updated, so Pack() should be called shortly after
 		void Erase(Entity e)
 		{
 			//Look through the array and set the entity to 0
@@ -244,7 +258,7 @@ namespace ecs
 				return;
 
 			//Look through the array
-			uint32_t iterations = size;
+			const uint32_t iterations = size;
 			for (uint32_t i = 0; i < iterations; i++)
 			{
 				//Check for invalid entity
@@ -334,10 +348,10 @@ namespace ecs
 		std::unordered_map<Entity, uint32_t> entityToIndex;
 		std::unordered_map<uint32_t, Entity> indexToEntity;
 		//Callback funtion to be used as a component destructor
-		std::function<void(Entity, T)> componentDestructor;
+		std::function<void(Entity, T&)> componentDestructor;
 
 	public:
-		void SetDestructor(std::function<void(Entity, T)> destructor)
+		void SetDestructor(std::function<void(Entity, T&)> destructor)
 		{
 			componentDestructor = destructor;
 		}
@@ -439,6 +453,7 @@ namespace ecs
 		{
 			str += std::to_string(entity) + ", ";
 		}
+		LogInfo(str);
 	}
 	//Log the signature and component list of an entity as a string
 	inline void LogEntityInfo(Entity entity)
@@ -500,11 +515,11 @@ namespace ecs
 	//Set a list of tags to an entity
 	inline void SetTags(Entity entity, const std::vector<std::string>& tags)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in SetTags(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 #endif
@@ -515,16 +530,16 @@ namespace ecs
 	//Add a tag to an entity
 	inline void AddTag(Entity entity, const std::string& tag)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in AddTag(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 #endif
 
-		if (entityTags.contains(entity))
+		if (!entityTags.contains(entity))
 			entityTags[entity].push_back(tag);
 		else
 			SetTags(entity, { tag });
@@ -533,17 +548,17 @@ namespace ecs
 	//Remove a tag from an entity
 	inline void RemoveTag(Entity entity, const std::string& tag)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in RemoveTag(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 #endif
 
 		//Remove every instance of the tag
-		for (size_t i = 0; i < entityTags[entity].size(); i++)
+		for (uint32_t i = 0; i < entityTags[entity].size(); i++)
 		{
 			if (entityTags[entity][i] == tag)
 			{
@@ -555,11 +570,11 @@ namespace ecs
 	//Removes aevery tag from an entity
 	inline void RemoveAllTags(Entity entity)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in RemoveAllTags(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 #endif
@@ -570,11 +585,11 @@ namespace ecs
 	//Get the list of tags for entity
 	inline std::vector<std::string> GetTags(Entity entity)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in GetTags(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return {};
 		}
 #endif
@@ -585,11 +600,11 @@ namespace ecs
 	//Returns true if entity has the specified tag
 	inline bool HasTag(Entity entity, const std::string& tag)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in HasTag(): The entity does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return false;
 		}
 #endif
@@ -603,17 +618,17 @@ namespace ecs
 	{
 		const char* componentType = typeid(T).name();
 
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the component has not been previously registered
-		if (componentArrays.count(componentType) != 0)
+		if (componentArrays.contains(componentType))
 		{
-			LogWarning("ECS WARNING in RegisterComponent(): The component you are trying to register has alredy been registered!");
+			LogWarning("The component you are trying to register has already been registered!");
 			return;
 		}
 		//Make sure there are not too many components registered
 		if (componentCount >= ECS_MAX_COMPONENTS)
 		{
-			LogError("ECS ERROR in RegisterComponent(): Too many registered components! The default limit is 100. This can be increased with \"#define ECS_MAX_COMPONENTS num\" before you include ECS.h!");
+			LogError("Too many registered components! The default limit is 100. This can be increased with \"#define ECS_MAX_COMPONENTS num\" before you include ECS.h!");
 			throw std::runtime_error("ECS ERROR: Too many registered components!");
 		}
 #endif
@@ -628,13 +643,13 @@ namespace ecs
 
 	//Add a destructor function to be called when a component is deleted
 	template<typename T>
-	void SetComponentDestructor(std::function<void(Entity, T)> destructor)
+	void SetComponentDestructor(std::function<void(Entity, T&)> destructor)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the component has been registered
-		if (componentArrays.count(typeid(T).name()) == 0)
+		if (!componentArrays.contains(typeid(T).name()))
 		{
-			LogWarning("ECS WARNING in SetComponentDestructor(): The component you are trying to add a destructor to has not been registered!");
+			LogWarning("The component you are trying to add a destructor to has not been registered!");
 			return;
 		}
 #endif
@@ -654,17 +669,17 @@ namespace ecs
 	template<typename T>
 	T& GetComponent(Entity entity)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogError("ECS ERROR in GetComponent(): The Entity does not exist!");
+			LogError("Entity " + std::to_string(entity) + " does not exist!");
 			throw std::runtime_error("ECS ERROR: Entity does not exist!");
 		}
 		//Make sure the entity has the component
 		if (!HasComponent<T>(entity))
 		{
-			LogError("ECS ERROR in GetComponent(): Entity does not have the desired component!");
+			LogError("Entity " + std::to_string(entity) + " does not have the desired component!");
 			throw std::runtime_error("ECS ERROR: Entity does not have the desired component!");
 		}
 #endif
@@ -678,11 +693,11 @@ namespace ecs
 	{
 		const char* componentType = typeid(T).name();
 
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the component has been registered
-		if (componentArrays.count(componentType) == 0)
+		if (!componentArrays.contains(componentType))
 		{
-			LogError("ECS ERROR in GetComponentID(): The component has not been registered!");
+			LogError("Component has not been registered!");
 			throw std::runtime_error("ECS ERROR: Component not registered!");
 		}
 #endif
@@ -694,17 +709,17 @@ namespace ecs
 	template<typename T>
 	void AddComponent(Entity entity, T component)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogError("ECS ERROR in AddComponent(): The entity you are trying to add the component to does not exist!");
+			LogError("Entity " + std::to_string(entity) + " does not exist!");
 			throw std::runtime_error("ECS ERROR: Entity does not exist!");
 		}
 		//Make sure the entity does not already have the component
 		if (HasComponent<T>(entity))
 		{
-			LogWarning("ECS WARNING in AddComponent(): Entity already has the component you are trying to add!");
+			LogWarning("Entity " + std::to_string(entity) + " already has the component you are trying to add!");
 			return;
 		}
 #endif
@@ -722,17 +737,17 @@ namespace ecs
 	{
 		const char* componentType = typeid(T).name();
 
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in RemoveComponent(): The entity you are trying to remove the component from does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 		//Make sure the entity has the component
 		if (!HasComponent<T>(entity))
 		{
-			LogWarning("ECS WARNING in RemoveComponent(): Entity does not have the component you are trying to remove!");
+			LogWarning("Entity " + std::to_string(entity) + " does not have the component you are trying to remove!");
 			return;
 		}
 #endif
@@ -747,11 +762,11 @@ namespace ecs
 	//Returns a new entity with no components
 	inline Entity NewEntity()
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure there are not too many entities
 		if (entityCount > UINT32_MAX)
 		{
-			LogError("ECS ERROR in NewEntity(): Too many Entities!");
+			LogError("Too many Entities!");
 			throw std::runtime_error("ECS ERROR: Too many Entities!");
 		}
 #endif
@@ -779,11 +794,11 @@ namespace ecs
 	//Delete an entity and all of its components
 	inline void DestroyEntity(Entity entity)
 	{
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
 		{
-			LogWarning("ECS WARNING in DestroyEntity(): The Entity you are trying to destroy does not exist!");
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
 			return;
 		}
 #endif
@@ -813,14 +828,8 @@ namespace ecs
 	//If ignorePersistent is set to true, will also delete "persistent" entities.
 	inline void DestroyAllEntities(bool ignorePersistent = false)
 	{
-		//Make a copy of the entities set to prevent iterator breaking
-		std::set<Entity> usedEntitiesCopy = usedEntities;
-
-		for (auto itr = usedEntitiesCopy.begin(); itr != usedEntitiesCopy.end();)
+		for (Entity entity : usedEntities)
 		{
-			//Get the entity and increment the iterator
-			Entity entity = *itr++;
-
 			//Check validity of entity, it can get deleted by component destructors
 			if (!EntityExists(entity))
 				continue;
@@ -839,11 +848,11 @@ namespace ecs
 	{
 		const char* systemType = typeid(T).name();
 
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the system has been registered
-		if (systems.count(systemType) == 0)
+		if (!systems.contains(systemType))
 		{
-			LogError("ECS ERROR in GetSystem(): The system has not been registered!");
+			LogError("System has not been registered!");
 			throw std::runtime_error("ECS ERROR: System not registered!");
 		}
 #endif
@@ -857,11 +866,11 @@ namespace ecs
 	{
 		const char* systemType = typeid(Sys).name();
 
-#ifdef ECS_ENABLE_CHECKS
+#ifndef ECS_DISABLE_CHECKS
 		//Make sure the system has not been registered
-		if (systems.count(systemType) != 0)
+		if (systems.contains(systemType))
 		{
-			LogWarning("ECS WARNING in RegisterSystem(): The system has already been registered!");
+			LogWarning("System has already been registered!");
 			return GetSystem<Sys>();
 		}
 #endif

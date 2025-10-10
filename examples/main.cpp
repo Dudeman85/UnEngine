@@ -9,6 +9,8 @@ int main()
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Spam;
 
+	ecs::AddTag(666, "Eea");
+
 	debug::LogSpam("spam");
 	debug::LogInfo("Info");
 	debug::LogWarning("warning");
