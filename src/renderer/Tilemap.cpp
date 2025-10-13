@@ -41,7 +41,7 @@ namespace une
 						//Transform the Vertex to work with our coordinate system
 						Vector2 vertex(point.x, point.y);
 						vertex.y = -vertex.y;
-						vertex += Vector2(tileSize.x / 2, tileSize.y / 2);
+						vertex += Vector2((double)tileSize.x / 2, (double)tileSize.y / 2);
 						tileColliders[tile.ID].push_back(vertex);
 					}
 				}

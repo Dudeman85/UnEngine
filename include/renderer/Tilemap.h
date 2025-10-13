@@ -36,7 +36,7 @@ namespace une
 		//Returns the vertices making up this tile's collider
 		std::vector<Vector2> GetTileCollider(unsigned int id);
 
-		Vector2 tileSize;
+		Vector2Int tileSize;
 		tmx::FloatRect bounds;
 
 		std::unordered_map<unsigned int, std::vector<Vector2>> tileColliders;

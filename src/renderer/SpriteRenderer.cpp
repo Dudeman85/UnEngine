@@ -62,10 +62,10 @@ namespace une::renderer
 		//Rectangle vertices start at top left and go clockwise to bottom left
 		const float vertices[] = {
 			//Positions		  Texture Coords
-			-1.f,  1.f, 0.0f, 0.0f, 1.0f, // top left
-			 1.f,  1.f, 0.0f, 1.0f, 1.0f, // top right
-			-1.f, -1.f, 0.0f, 0.0f, 0.0f, // bottom left
-			 1.f, -1.f, 0.0f, 1.0f, 0.0f, // bottom right
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f, // top left
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
 		};
 
 		//Make the Vertex Array Object, Vertex Buffer Object, and Element Buffer Object
@@ -168,6 +168,7 @@ namespace une::renderer
 
 		//Create the model matrix
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
+		model = glm::scale(model, glm::vec3(sprite.texture->size.x, sprite.texture->size.y, 1));
 
 		//Give the shader the model matrix
 		int modelLoc = glGetUniformLocation(shader->ID, "model");

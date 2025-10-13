@@ -36,9 +36,9 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Add linux build compatibility
 - [x] Update all dependencies
 - [x] Refactor to h + cpp
-- [ ] Unify model, sprite, text, tilemap, and primitive renderers
+- [x] Unify model, sprite, text, tilemap, and primitive renderers
   - [x] Improve tilemap rendering
-  - [ ] Fix the sprite scaling
+  - [x] Fix sprite scaling
 - [ ] Improve tilemap collision
 - [ ] Redo camera for ecs
 - [ ] Redo UI system
@@ -51,7 +51,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ## High Priority
 ### Improvements
-- [ ] Update the vector library
+- [x] Update the vector library
 - [ ] Expand and improve the timing system
 - [ ] Improve resource loading and management
 - [ ] Add an option to change the transform pivot

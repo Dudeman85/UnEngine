@@ -33,6 +33,7 @@ namespace une
 			return;
 		}
 
+		size = {width, height};
 		//Set the OpenGL texture format to include alpha if appropriate
 		GLint colorFormat;
 		if (nrChannels == 4)
@@ -85,6 +86,7 @@ namespace une
 	{
 		//Convert the image to a 1D char array for OpenGL
 		unsigned char* imageData = new unsigned char[image.width * image.height * 4];
+		size = {image.width, image.height};
 		int i = 0;
 		//Make sure to flip the vertical for OpenGL
 		for (int y = image.height - 1; y >= 0; y--)
@@ -122,6 +124,7 @@ namespace une
 	    path = other.path;
     	type = other.type;
     	id = other.id;
+		size = other.size;
     }
 
 	Texture::~Texture()

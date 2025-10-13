@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
-#include <glad/gl.h>
+#include "glad/gl.h"
 
+#include "Vector.h"
 #include "Image.h"
 
 namespace une
@@ -35,6 +35,7 @@ namespace une
 		//Use this texture on the next draw call
 		void Use();
 
+		Vector2Int size;
 		bool isSemiTransparent = false;
 		std::string path;
 		//Texture type primarily for 3D models Ex. texture_diffuse or texture_specular
