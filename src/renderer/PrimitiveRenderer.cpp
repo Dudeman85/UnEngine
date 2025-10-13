@@ -8,7 +8,7 @@
 
 namespace une
 {
-	Primitive::Primitive(const std::vector<float>& vertices, const std::vector<unsigned int>& indices)
+	Primitive::Primitive(const std::vector<double>& vertices, const std::vector<unsigned int>& indices)
 	{
 		numVertices = indices.size();
 
@@ -22,14 +22,14 @@ namespace une
 
 		//Bind the Vertex Bufer Object and set vertices
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(double) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
 		//Bind and set indices to EBO
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
 		//Configure Vertex attribute at location 0 aka position
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 3 * sizeof(double), nullptr);
 		glEnableVertexAttribArray(0);
 
 		//Unbind all buffers and arrays
@@ -49,7 +49,7 @@ namespace une
 	Primitive Primitive::Line(Vector3 p1, Vector3 p2)
 	{
 		//Rectangle vertices start at top left and go clockwise to bottom left
-		std::vector<float> vertices
+		std::vector<double> vertices
 		{
 			//Positions
 			p1.x, p1.y, p1.z,
@@ -65,11 +65,11 @@ namespace une
 		return Primitive(vertices, indices);
 	}
 
-	///Create a triangle from three vertices, Defaults to equilateral triangle
+	//Create a triangle from three vertices, Defaults to equilateral triangle
 	Primitive Primitive::Triangle(Vector3 v1, Vector3 v2, Vector3 v3)
 	{
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
-		std::vector<float> vertices
+		std::vector<double> vertices
 		{
 			//Positions
 			v1.x, v1.y, v1.z,
@@ -86,11 +86,11 @@ namespace une
 		return Primitive(vertices, indices);
 	}
 
-	///Create a rectangle from four vertices going clockwise, Defaults to square
+	//Create a rectangle from four vertices going clockwise, Defaults to square
 	Primitive Primitive::Rectangle(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
 	{
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
-		std::vector<float> vertices
+		std::vector<double> vertices
 		{
 			//Positions
 			v1.x, v1.y, v1.z,
@@ -109,11 +109,11 @@ namespace une
 		return Primitive(vertices, indices);
 	}
 
-	///Create a polygon from provided 3D vertices, going clockwise
+	//Create a polygon from provided 3D vertices, going clockwise
 	Primitive Primitive::Polygon(const std::vector<Vector3>& verts)
 	{
 		//Move all Vector3 vertices to a simple float vector
-		std::vector<float> vertices;
+		std::vector<double> vertices;
 		//Automaticaly create indices to draw triangles
 		std::vector<unsigned int> indices;
 		for (int i = 0; i < verts.size(); i++)
@@ -127,11 +127,11 @@ namespace une
 		//Create the primitive object from vertice data
 		return Primitive(vertices, indices);
 	}
-	///Create a polygon from provided 2D vertices, going clockwise
+	//Create a polygon from provided 2D vertices, going clockwise
 	Primitive Primitive::Polygon(const std::vector<Vector2>& verts)
 	{
 		//Move all Vector2 vertices to a simple float vector
-		std::vector<float> vertices;
+		std::vector<double> vertices;
 		//Automaticaly create indices to draw triangles
 		std::vector<unsigned int> indices;
 		for (int i = 0; i < verts.size(); i++)
@@ -262,13 +262,13 @@ namespace une
 			glBindVertexArray(primitive->VAO);
 
 			//Create the model matrix
-			glm::mat4 model = glm::mat4(1.0f);
+			glm::mat4 model = glm::mat4(1.0);
 			//Position
 			model = glm::translate(model, position.ToGlm());
 			//X, Y, Z euler rotations
-			model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::rotate(model, (float)glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, (float)glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::rotate(model, (float)glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			//Scale
 			model = glm::scale(model, scale.ToGlm());
 

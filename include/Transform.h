@@ -1,6 +1,8 @@
 #pragma once
 #include <set>
 
+#include "glm/glm.hpp"
+
 #include "ECS.h"
 #include "Vector.h"
 

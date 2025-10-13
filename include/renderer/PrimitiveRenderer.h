@@ -15,7 +15,7 @@ namespace une
 	class Primitive
 	{
 	private:
-		Primitive(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+		Primitive(const std::vector<double>& vertices, const std::vector<unsigned int>& indices);
 
 	public:
 		Primitive() = delete;
@@ -41,7 +41,7 @@ namespace une
 	struct PrimitiveRenderer
 	{
 		Primitive* primitive = nullptr;
-		Color color;
+		Color color = {0};
 		//Draw wireframe only
 		bool wireframe = true;
 		//Should this sprite be treated as a UI element, see doc/UserInterface.md

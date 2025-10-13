@@ -7,14 +7,14 @@
 int main()
 {
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
-	debug::verbosity = debug::Verbosity::Spam;
+	debug::verbosity = debug::Verbosity::Info;
 
 	GLFWwindow* window = une::CreateGLWindow(800, 600, "Window");
 
 	une::EngineInit();
-	une::Camera cam = une::Camera(4000, 3000);
-	cam.SetPosition({1000, 2000, 3000});
-	cam.perspective = true;
+	une::Camera cam = une::Camera(800, 600);
+	cam.SetPosition({0, 0, 3000});
+	cam.perspective = false;
 	une::renderer::SetBackgroundColor(une::Color(100, 20, 150));
 
 	une::Texture texture("../../../examples/assets/strawberry.png");
@@ -29,7 +29,7 @@ int main()
 	ecs::AddComponent(e0, une::Transform{.position = {-50, 30, -10}, .scale = 150});
 
 	ecs::Entity e1 = ecs::NewEntity();
-	ecs::AddComponent(e1, une::SpriteRenderer{.texture = &transparentTexture, .enabled = true});
+	//ecs::AddComponent(e1, une::SpriteRenderer{.texture = &transparentTexture, .enabled = true});
 	ecs::AddComponent(e1, une::Transform{.position = {0, 0, -20}, .scale = 100});
 
 	ecs::Entity e2 = ecs::NewEntity();
@@ -37,8 +37,8 @@ int main()
 	//ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
 	//ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
-	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
-	ecs::AddComponent(e2, une::Transform{.position = {-100, -5, 0}, .rotation = {0, 0, 35}, .scale = 0.6});
+	//ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
+	ecs::AddComponent(e2, une::Transform{.position = {0, 0, 0}, .rotation = {0, 0, 0}, .scale = 1});
 
 
 	while (!glfwWindowShouldClose(window))

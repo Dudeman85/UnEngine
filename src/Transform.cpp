@@ -355,34 +355,34 @@ namespace une
 		switch (order)
 		{
 			case XYZ:
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				break;
 			case XZY:
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				break;
 			case YXZ:
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
 				break;
 			case ZXY:
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
 				break;
 			case YZX:
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				break;
 			case ZYX:
-				mat = glm::rotate(mat, glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
-				mat = glm::rotate(mat, glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.z), glm::vec3(0.0f, 0.0f, 1.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.y), glm::vec3(0.0f, 1.0f, 0.0f));
+				mat = glm::rotate(mat, (float)glm::radians(eulers.x), glm::vec3(1.0f, 0.0f, 0.0f));
 				break;
 			default:
 				break;

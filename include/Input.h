@@ -49,7 +49,7 @@ namespace input
 		// Y is value
 		// X starts out as 0 for first InputValue.
 		// X is set to the moment a callback to this input is reached. Y is set to value
-		using InputSample = Vector2;
+		using InputSample = une::Vector2;
 
 		std::list<InputSample> inputSamples;
 
@@ -181,7 +181,7 @@ namespace input
 				return std::nullopt;
 			}
 
-			return Vector2(std::abs(currentSample.x - targetX.value()), std::abs(currentSample.y - targetValue)).Length();
+			return une::Vector2(std::abs(currentSample.x - targetX.value()), std::abs(currentSample.y - targetValue)).Length();
 		}
 	};
 	
