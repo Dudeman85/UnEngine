@@ -1,13 +1,25 @@
-#include <source_location>
-
 #include "UnEngine.h"
 #include "Vector.h"
 #include "Debug.h"
+#include "Serialization.h"
 
 int main()
 {
+	une::Packet packet;
+	packet.Write(une::Vector3(1, 2, 3));
+	packet.Write(5.0);
+	packet.Write(5.f);
+	packet.Write(std::string("test data\n"));
+
+	auto v = packet.Read<une::Vector3>();
+	auto d = packet.Read<double>();
+	auto f = packet.Read<float>();
+	auto s = packet.Read<std::string>();
+
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Info;
+
+	return 0;
 
 	GLFWwindow* window = une::CreateGLWindow(800, 600, "Window");
 
@@ -17,12 +29,13 @@ int main()
 	cam.perspective = false;
 	une::renderer::SetBackgroundColor(une::Color(100, 20, 150));
 
-	une::Texture texture("../../../examples/assets/strawberry.png");
-	une::Texture transparentTexture("../../../examples/assets/Transparent.png");
-	une::Model model("../../../examples/assets/Achelous.obj");
+	std::string assets = "../../../examples/assets/";
+	une::Texture texture(assets + "strawberry.png");
+	une::Texture transparentTexture(assets + "Transparent.png");
+	une::Model model(assets + "Achelous.obj");
+	une::Font font(assets + "Coolvetica Rg Cond.otf", 24);
+	une::Tilemap tilemap(assets + "testMap.tmx");
 	une::Primitive square = une::Primitive::Rectangle();
-	une::Font font("../../../examples/assets/Coolvetica Rg Cond.otf", 24);
-	une::Tilemap tilemap("../../../examples/assets/testMap.tmx");
 
 	ecs::Entity e0 = ecs::NewEntity();
 	//ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});
@@ -39,7 +52,6 @@ int main()
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
 	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
 	ecs::AddComponent(e2, une::Transform{.position = {0, 0, 0}, .rotation = {0, 0, 0}, .scale = 1});
-
 
 	while (!glfwWindowShouldClose(window))
 	{

@@ -55,6 +55,8 @@ namespace une
 		//Timer must be last
 		timerSystem->Update(enablePhysics);
 
+		ecs::Update();
+
 		debug::LogSpam(debugString + " Total: " + std::to_string(debug::EndTimer("EngineUpdate")) + "ms");
 		return deltaTime;
 	}

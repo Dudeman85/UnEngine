@@ -125,37 +125,6 @@ namespace une
 		conn = Connection{};
 	}
 
-	//Serialize an aggregate data type into binary data
-	//This is not null terminated, it's length will be the size of the type serialized
-	template<typename T>
-	char* Serialize(T data)
-	{
-		//Create the buffer to be the size of the data plus it's size denominator
-		size_t size = sizeof(T);
-		char* buff = new char[size];
-		//Init the buffer to 0
-		memset(buff, 0, size);
-		//Copy the data to buffer
-		memcpy(buff, &data, sizeof(T));
-
-		return buff;
-	}
-
-	//Deserialize binary data into an object
-	template<typename T>
-	T Deserialize(char* data)
-	{
-		T result;
-		memcpy(&result, data, sizeof(T));
-		return result;
-	}
-	//Special case for string
-	std::string DeserializeString(char* data, size_t size)
-	{
-		std::string result(data, size);
-		return result;
-	}
-
 	//Update Enet, sends any queued packets, receives any pending packets, and calls the appropriate callbacs 
 	inline void UpdateEnet(Connection& conn, auto connectFunc, auto disconnectFunc, auto receiveFunc, int timeOut)
 	{

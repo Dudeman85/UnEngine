@@ -19,10 +19,6 @@
 #error The maximum possible number of components is 65535
 #endif
 
-#ifdef _DEBUG
-#define ECS_ENABLE_CHECKS
-#endif
-
 //Macro to register a component outside main
 #define ECS_REGISTER_COMPONENT(COMPONENT) \
 struct COMPONENT; \
