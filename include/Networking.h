@@ -8,6 +8,8 @@
 #include <cstring>
 #include <assert.h>
 
+#include "Serialization.h"
+
 namespace une
 {
 	enum packetFlag

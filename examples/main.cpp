@@ -3,18 +3,34 @@
 #include "Debug.h"
 #include "Serialization.h"
 
+#include <vector>
+
+struct Foo
+{
+	const char name[4] = "Foo";
+};
+
 int main()
 {
+	char* data = une::Serialize(une::Vector3(0, 1, 2)).first;
+	std::pair<une::Vector3, size_t> v = une::Deserialize<une::Vector3>(data);
+
 	une::Packet packet;
 	packet.Write(une::Vector3(1, 2, 3));
 	packet.Write(5.0);
 	packet.Write(5.f);
-	packet.Write(std::string("test data\n"));
+	packet.Write(std::string("Hello World!"));
+	char bytes[4] = {0x45, 0x70, 0x69, 0x63};
+	packet.WriteBytes(bytes, 4);
+	packet.Write(Foo());
 
-	auto v = packet.Read<une::Vector3>();
-	auto d = packet.Read<double>();
-	auto f = packet.Read<float>();
-	auto s = packet.Read<std::string>();
+	une::Vector3 v3 = packet.Read<une::Vector3>().first;
+	auto d = packet.Read<double>().first;
+	auto f = packet.Read<float>().first;
+	auto s = packet.Read<std::string>().first;
+	std::vector<char> b = packet.ReadBytes(4);
+	auto F = packet.Read<Foo>().first;
+
 
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Info;
