@@ -94,7 +94,7 @@ namespace une
 			delete[] bytes.first;
 		}
 		//Read a numer of bytes and move the head
-		[[nodiscard]] std::vector<char> ReadBytes(size_t num)
+		std::vector<char> ReadBytes(size_t num)
 		{
 			if (num > data.size() + readHead)
 			{
@@ -106,7 +106,7 @@ namespace une
 			return bytes;
 		}
 		//Read a numer of bytes and move the head
-		[[nodiscard]] std::vector<char> PeekBytes(size_t num)
+		std::vector<char> PeekBytes(size_t num)
 		{
 			if (num > data.size() + readHead)
 			{
@@ -122,7 +122,7 @@ namespace une
 		}
 
 		//Create an enet packet from serialized data
-		ENetPacket* ToENetPacket(Flag flags)
+		[[nodiscard]] ENetPacket* ToENetPacket() const
 		{
 			ENetPacket* packet = enet_packet_create(nullptr, data.size(), flags);
 			memcpy(packet->data, data.data(), data.size());
@@ -131,6 +131,8 @@ namespace une
 
 		std::vector<char> data;
 		size_t readHead = 0;
+		//You can set enet packet flags here
+		Flag flags;
 		//These are used by enet implementation
 		int peerID = -1;
 		int chanelID = 0;
