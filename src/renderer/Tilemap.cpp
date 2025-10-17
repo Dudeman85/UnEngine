@@ -1,14 +1,9 @@
-#include <algorithm>
-#include <cmath>
-#include <cassert>
-
-#include <glm/gtc/type_ptr.hpp>
-#include <tmxlite/TileLayer.hpp>
-#include <tmxlite/Map.hpp>
-
-#include "renderer/Tilemap.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "tmxlite/TileLayer.hpp"
+#include "tmxlite/Map.hpp"
 
 #include "Debug.h"
+#include "renderer/Tilemap.h"
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/TilemapLayer.h"

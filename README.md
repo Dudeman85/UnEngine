@@ -45,9 +45,8 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Redo window and context system
 
 ### New Features
-- [ ] Implement enet
-  - [ ] Component serialization support
-  - [ ] Serialization of all engine components
+- [x] Implement enet (was already implemented)
+- [x] Component serialization support
 
 ## High Priority
 ### Improvements
@@ -61,8 +60,10 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Fix physics fps bugs
 - [ ] Fix sound bugs
 - [ ] Better integrate sounds with ecs
+- [ ] Serialization of all engine components
 
 ### New features
+- [ ] Implement UPnP for automatic port forwarding
 - [ ] Add animation support to tilemap
 - [x] More robust logging system
 - [ ] Add multithreading support

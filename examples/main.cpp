@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "Networking.h"
+
 struct Foo
 {
 	const char name[4] = "Foo";
@@ -30,7 +32,6 @@ int main()
 	auto s = packet.Read<std::string>().first;
 	std::vector<char> b = packet.ReadBytes(4);
 	auto F = packet.Read<Foo>().first;
-
 
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Info;

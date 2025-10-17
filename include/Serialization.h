@@ -56,8 +56,9 @@ namespace une
 	class Packet
 	{
 	public:
-		enum Flag
+		enum Flag : uint32_t
 		{
+			None = 0,
 			Reliable = ENET_PACKET_FLAG_RELIABLE,
 			Unreliable = ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT,
 			Unsequenced = ENET_PACKET_FLAG_UNSEQUENCED
@@ -98,7 +99,7 @@ namespace une
 		{
 			if (num > data.size() + readHead)
 			{
-				debug::LogWarning("Could not read " + std::to_string(num) + " bytes, eof!");
+				debug::LogWarning("Could not read " + std::to_string(num) + " bytes, eof");
 				return {};
 			}
 			std::vector<char> bytes(data.begin() + readHead, data.begin() + readHead + num);
@@ -110,7 +111,7 @@ namespace une
 		{
 			if (num > data.size() + readHead)
 			{
-				debug::LogWarning("Could not read " + std::to_string(num) + " bytes, eof!");
+				debug::LogWarning("Could not read " + std::to_string(num) + " bytes, eof");
 				return {};
 			}
 			return std::vector<char>(data.begin() + readHead, data.begin() + readHead + num);
@@ -132,9 +133,8 @@ namespace une
 		std::vector<char> data;
 		size_t readHead = 0;
 		//You can set enet packet flags here
-		Flag flags;
-		//These are used by enet implementation
-		int peerID = -1;
+		Flag flags = Reliable;
+		//What channel is this packet sent on
 		int chanelID = 0;
 	};
 }

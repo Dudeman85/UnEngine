@@ -66,112 +66,101 @@ namespace une::enet
 		conn.address.port = port;
 
 		//Initiate the connection
-		ENetPeer* peer = enet_host_connect(conn.host, &conn.address, numChannels, 0);
+		ENetPeer* server = enet_host_connect(conn.host, &conn.address, numChannels, 0);
 
-		if (!peer)
+		if (!server)
 		{
 			debug::LogError("No available peers at " + ip + ":" + std::to_string(port));
 			return false;
 		}
-		conn.peers.push_back(peer);
+		conn.peers[conn.nextPeerId++] = server;
 		conn.closed = false;
 		debug::LogInfo("Successfully connected to host at " + ip + ":" + std::to_string(port));
 		return true;
 	}
 
 	//Update Enet, sends any queued packets, receives any pending packets, and calls the appropriate callbacs
-	void UpdateEnet(Connection& conn, auto connectFunc, auto disconnectFunc, auto receiveFunc)
+	void UpdateEnet(Connection& conn)
 	{
-		//Get the update event from Enet
+		//Get every event ENet has in queue
 		ENetEvent event;
-		if (enet_host_service(conn.host, &event, 0) < 0)
+		while (enet_host_service(conn.host, &event, 0) > 0)
 		{
-			debug::LogWarning("Failed to update ENet");
-			return;
-		}
-
-		if (event.type == ENET_EVENT_TYPE_CONNECT)
-		{
-			char ipAddress[100];
-			enet_address_get_host_ip(&event.peer->address, ipAddress, sizeof(ipAddress) - 1);
-			printf("Client connected to %s:%u.\n", ipAddress, event.peer->address.port);
-			// Store client id:
-			int peerId = (int)conn.peers.size();
-			conn.peers.push_back(event.peer);
-			if (false == connectFunc(peerId))
+			switch (event.type)
 			{
-				enet_peer_reset(event.peer);
-				conn.peers.pop_back();
-			}
-		}
-		//Receiving data
-		else if (event.type == ENET_EVENT_TYPE_RECEIVE)
-		{
-			//Parse event packet into Packet class
-			Packet packet((char*)event.packet->data, event.packet->dataLength);
-			packet.flags = (Packet::Flag)event.packet->flags;
-			packet.chanelID = event.channelID;
+				case ENET_EVENT_TYPE_RECEIVE: {
+					//Parse peer info
+					PeerInfo info;
+					memcpy(&info, event.peer->data, sizeof(PeerInfo));
+					//Parse event packet into Packet class
+					Packet packet((char*) event.packet->data, event.packet->dataLength);
+					packet.flags = (Packet::Flag) event.packet->flags;
+					packet.chanelID = event.channelID;
+					enet_packet_destroy(event.packet);
 
-			//Packet no longer needed
-			enet_packet_destroy(event.packet);
+					//Call OnReceive if applicable
+					if (onReceiveFunc)
+						onReceiveFunc(info, packet);
+					break;
+				}
 
-			//Send to appropriate peer
-			for (int i = 0; i < conn.peers.size(); ++i)
-			{
-				if (conn.peers[i] == event.peer)
-				{
-					msg.peerID = i;
-					//Make sure receive callback returns true
-					if (!receiveFunc(msg))
+				case ENET_EVENT_TYPE_CONNECT: {
+					//Get the peer id, ip, and port
+					PeerInfo* info = new PeerInfo{.id = conn.nextPeerId++, .port = event.peer->address.port};
+					enet_address_get_host_ip(&event.peer->address, info->ip, sizeof(info->ip) - 1);
+					event.peer->data = info;
+					conn.peers[info->id] = event.peer;
+					std::string infoString = conn.isServer ? "client: " : "server: " + std::string(info->ip) + ":" + std::to_string(info->port);
+
+					//Call OnConnect if applicable
+					if (onConnectFunc)
 					{
-						printf("Peer %d misbehave!\n", conn.msgBuffer.peerID);
+						if (!onConnectFunc(*info))
+						{
+							debug::LogWarning("Failed to connect to " + infoString + ", OnConnect returned false.");
+							enet_peer_disconnect(event.peer, 0);
+							return;
+						}
 					}
+					debug::LogInfo("Connected to " + infoString);
+					break;
 				}
-			}
-		}
-		else if (event.type == ENET_EVENT_TYPE_DISCONNECT)
-		{
-			//Loop through the peers to find the one that disconnected
-			for (size_t i = 0; i < conn.peers.size(); ++i)
-			{
-				if (conn.peers[i] == event.peer)
-				{
-					disconnectFunc(i);
-					char ip[100];
-					enet_address_get_host_ip(&conn.peers[i]->address, ip, sizeof(ip) - 1);
-					debug::LogInfo("Peer " + std::to_string(i) + " with ip " + ip + " disconnected");
-					conn.peers.erase(conn.peers.begin() + i);
+
+				case ENET_EVENT_TYPE_DISCONNECT: {
+					//Parse peer info
+					PeerInfo info;
+					memcpy(&info, event.peer->data, sizeof(PeerInfo));
+
+					//Remove the peer
+					onDisconnectFunc(info);
+					conn.peers.erase(info.id);
+					debug::LogInfo("Peer " + std::to_string(info.id) + " with ip " + info.ip + " disconnected");
+					break;
 				}
+
+				case ENET_EVENT_TYPE_NONE:
+					return;
 			}
 		}
 	}
 
+	//Close this connection and disconnect all peers, no disconnect events will be received
 	void CloseConnection(Connection& conn)
 	{
-		if (conn.host != 0)
+		if (conn.host)
 		{
-			printf("Destroy ENet connection. ");
-			printf("Disconnect all peers...");
-			for (ENetPeer* peer : conn.peers)
-			{
-				printf(".");
-				enet_peer_disconnect(peer, 0);
-			}
-			enet_host_flush(conn.host);
+			debug::LogInfo("Closing ENet connection and disconnecting all peers");
+			for (auto peer: conn.peers)
+				enet_peer_disconnect(peer.second, 0);
 			conn.peers.clear();
-			// Run host once
-			printf(" done!.\nWait to close connection...");
-			ENetEvent event;
-			enet_host_service(conn.host, &event, 50);
-			printf(" closed!\n");
+			enet_host_flush(conn.host);
 			enet_host_destroy(conn.host);
-			printf("ENet connection destroyed.\n");
 		}
 		conn = Connection{};
 	}
 
 	//Send a packet to a specific peer, or if peer < 0 broadcast to all
-	int SendData(const Connection& conn, const Packet& packet, int channel, int peer)
+	bool SendData(Connection& conn, const Packet& packet, int channel, int peer)
 	{
 		//Create an enet packet from the serialized data
 		ENetPacket* enetPacket = packet.ToENetPacket();
@@ -182,9 +171,9 @@ namespace une::enet
 			int ret = enet_peer_send(conn.peers[peer], channel, enetPacket);
 			if (ret < 0)
 			{
-				debug::LogWarning("Failed to send ENet packet!");
+				debug::LogWarning("Failed to send ENet packet");
 				enet_packet_destroy(enetPacket);
-				return ret;
+				return false;
 			}
 		}
 		else
@@ -193,6 +182,22 @@ namespace une::enet
 			enet_host_broadcast(conn.host, channel, enetPacket);
 		}
 		enet_host_flush(conn.host);
-		return 0;
+		return true;
+	}
+
+	//Set a function to call when a peer is connected
+	void OnConnect(const std::function<bool(const PeerInfo&)>& callback)
+	{
+		onConnectFunc = callback;
+	}
+	//Set a function to call when a peer is disconnected
+	void OnDisconnect(const std::function<void(const PeerInfo&)>& callback)
+	{
+		onDisconnectFunc = callback;
+	}
+	//Set a function to call when a packet is received
+	void OnReceive(const std::function<void(const PeerInfo&, const Packet&)>& callback)
+	{
+		onReceiveFunc = callback;
 	}
 }
