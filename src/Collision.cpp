@@ -40,8 +40,8 @@ namespace une
 				Primitive boundingBoxPrimitive = Primitive::Polygon(boundingBoxVerts);
 
 				//Draw those vertices
-				colliderPrimitive.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(0, 0, 0) });
-				boundingBoxPrimitive.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(0, 0, 0) });
+				//colliderPrimitive.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(0, 0, 0) });
+				//boundingBoxPrimitive.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(0, 0, 0) });
 			}
 #endif
 		}
@@ -171,7 +171,7 @@ namespace une
 				if (collider.visualise)
 				{
 					Primitive tileCollider = Primitive::Polygon(tileVerts);
-					tileCollider.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(tilePosition, 10) });
+					//tileCollider.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(tilePosition, 10) });
 				}
 #endif
 
@@ -201,7 +201,7 @@ namespace une
 							Vector2(-((float)tilemap->tileSize.x / 2), -((float)tilemap->tileSize.y / 2)) //Bottom-Left
 					};
 					Primitive tileCollider = Primitive::Polygon(boundingBoxVerts);
-					tileCollider.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(tilePosition, 10) });
+					//tileCollider.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(tilePosition, 10) });
 				}
 #endif
 			}

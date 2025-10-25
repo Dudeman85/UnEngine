@@ -17,7 +17,7 @@ namespace une
 		//Make sure the model scene is not null and it imported properly
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
-			debug::LogError("Failed to load model from " + path + " : " + import.GetErrorString());
+			debug::LogError(import.GetErrorString());
 			return;
 		}
 

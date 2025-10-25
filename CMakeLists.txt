@@ -3,6 +3,8 @@ project(UnEngine)
 
 option(UNENGINE_BUILD_EXAMPLES "Build example scene" OFF)
 
+add_compile_definitions(NOMINMAX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(TMXLITE_STATIC_LIB ON CACHE BOOL "")
@@ -16,9 +18,10 @@ set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_OBJ_IMPORTER ON)
 
-include_directories("ext")
-include_directories("ext/enet/include")
 include_directories("include")
+include_directories("ext")
+include_directories("ext/glad")
+include_directories("ext/enet/include")
 
 add_subdirectory("ext/enet")
 add_subdirectory("ext/freetype")

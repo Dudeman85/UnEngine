@@ -1,4 +1,5 @@
 #include "audio/SoundSystem.h"
+#include <algorithm>
 
 namespace une
 {

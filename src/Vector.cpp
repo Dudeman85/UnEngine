@@ -157,7 +157,7 @@ namespace une
 	std::string Vector2Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%ld, %ld)", x, y);
+		std::snprintf(buff, sizeof(buff) - 1, "(%lld, %lld)", x, y);
 		return std::string(buff);
 	}
 
@@ -470,7 +470,7 @@ namespace une
 	std::string Vector3Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%ld, %ld, %ld)", x, y, z);
+		std::snprintf(buff, sizeof(buff) - 1, "(%lld, %lld, %lld)", x, y, z);
 		return std::string(buff);
 	}
 

@@ -43,6 +43,11 @@ namespace debug
 		{
 			std::ostringstream header;
 			std::string file = sl.file_name();
+			//Fix for MSVC
+			size_t pos = file.rfind('\\');
+			if (pos != std::string::npos)
+				file = file.substr(pos + 1);
+
 			header << "[" << GetTimestamp() << "][" << nameMap[level] << "] " << file.substr(file.find_last_of('/') + 1) << ":" << sl.line() << " ";
 
 			for (const auto os : logOutputs)
@@ -82,7 +87,7 @@ namespace debug
 	{
 		std::unordered_map<GLenum, std::string> errorMap = {
 			{GL_INVALID_ENUM, "GL_INVALID_ENUM"}, {GL_INVALID_VALUE, "GL_INVALID_VALUE"}, {GL_INVALID_OPERATION, "GL_INVALID_OPERATION"},
-			{GL_INVALID_FRAMEBUFFER_OPERATION, "GL_INVALID_FRAMEBUFFER_OPERATION"}, {GL_OUT_OF_MEMORY, "GL_OUT_OF_MEMORY"}
+			 {GL_OUT_OF_MEMORY, "GL_OUT_OF_MEMORY"}
 		};
 
 		std::string errors;

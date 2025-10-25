@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "glm/gtc/type_ptr.hpp"
 #include "tmxlite/TileLayer.hpp"
 #include "tmxlite/Map.hpp"

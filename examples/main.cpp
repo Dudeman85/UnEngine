@@ -36,8 +36,6 @@ int main()
 	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
 	debug::verbosity = debug::Verbosity::Info;
 
-	return 0;
-
 	GLFWwindow* window = une::CreateGLWindow(800, 600, "Window");
 
 	une::EngineInit();
