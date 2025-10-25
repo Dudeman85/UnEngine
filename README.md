@@ -19,7 +19,7 @@ After cloning the repo update the submodules:
 ```bash
 git submodule update --init
 ```
-Then generate the CMake project for your preferred build tool. Works with CMake > 3.20 and < 4. Tested with GCC, Clang and MSVC, requires C++20 or higher.
+Then generate the CMake project for your preferred build tool. Works with CMake > 3.20 and < 4. Tested with GCC, Clang and MSVC, requires C++17 or higher.
 
 To build the example projects, set the UNENGINE_BUILD_EXAMPLES=ON CMake option.
 
@@ -57,17 +57,16 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Improve animation system
 - [ ] Rethink the transform hierarchy
 - [x] Fix text resolution scaling
-- [ ] Fix physics fps bugs
 - [ ] Fix sound bugs
 - [ ] Better integrate sounds with ecs
-- [ ] Serialization of all engine components
 
 ### New features
 - [ ] Implement UPnP for automatic port forwarding
 - [ ] Add animation support to tilemap
+- [ ] Add Hexagonal tilemap support
 - [x] More robust logging system
+- [ ] Add TOML or similar config support
 - [ ] Add multithreading support
-- [ ] Add anti-aliasing
 - [ ] Add multi camera support
 
 ## Low Priority
@@ -75,24 +74,27 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Improve model loading and rendering
 - [ ] Add transparency to model rendering
 - [ ] Redo lighting system
+- [ ] Fix physics fps bugs
 - [ ] Fix primitive rendering
 - [ ] Update documentation
 - [ ] Fix shader and renderer destructors
+- [ ] Serialization of all engine components
 
 ### New Features
 - [ ] Create a particle system
+- [ ] Add 3D animation support
 - [ ] Add debug tools
   - [ ] Camera
   - [ ] Frame advance
   - [x] Logging
   - [ ] Info
-- [ ] Add TOML or similar config support
 - [ ] Copy entity function
 - [ ] Add angular momentum
 - [ ] Add restraints
 - [ ] Add joints
 - [ ] Add raycasting
 - [ ] Add quaternion support
+- [ ] Add anti-aliasing
 - [ ] Add extrapolation functions
 
 ### Idea for new UI system
