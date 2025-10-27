@@ -19,6 +19,8 @@ namespace une::renderer
 		//Enable Depth buffering
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
+		//MSAA
+		glEnable(GL_MULTISAMPLE);
 
 		primitiveRenderSystem->Init();
 		spriteRenderSystem->Init();

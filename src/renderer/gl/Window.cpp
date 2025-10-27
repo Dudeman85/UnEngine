@@ -1,12 +1,109 @@
-#include "renderer/gl/Window.h"
+#include "glad/gl.h"
 
+#include "renderer/gl/Window.h"
 #include "Debug.h"
 
 namespace une
 {
+	Window* mainWindow;
+
+	Window::Window(int width, int height, const std::string& name)
+	{
+		//Initialize GLFW and set it to require OpenGL 3.30
+		glfwInit();
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		//Enable 4xMSAA
+		glfwWindowHint(GLFW_SAMPLES, 4);
+
+		//Create window object
+		glWindow = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
+		if (glWindow == nullptr)
+		{
+			const char* desc;
+			glfwGetError(&desc);
+			glfwTerminate();
+			debug::LogError("Failed to create GLFW window: " + std::string(desc));
+			throw std::runtime_error("Failed to create GLFW window: " + std::string(desc));
+		}
+		glfwMakeContextCurrent(glWindow);
+		if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+		{
+			debug::LogError("Failed to initialize GLAD");
+			throw std::runtime_error("Failed to initialize GLAD");
+		}
+
+		//Set the resize window callback function
+		glfwSetFramebufferSizeCallback(glWindow, [](GLFWwindow* window, int h, int w)
+			{
+				glViewport(0, 0, w, h);
+			}
+		);
+
+		glViewport(0, 0, width, height);
+		debug::LogInfo("Successfully initialized GLFW");
+	}
+
+	Vector2Int Window::GetPosition()
+	{
+		glfwGetWindowPos(glWindow, &xPos, &yPos);
+		return Vector2Int(xPos, yPos);
+	}
+	void Window::SetPosition(const Vector2Int& pos)
+	{
+		xPos = pos.x;
+		yPos = pos.y;
+		glfwSetWindowPos(glWindow, xPos, yPos);
+	}
+	Vector2Int Window::GetSize()
+	{
+		glfwGetWindowSize(glWindow, &width, &height);
+		return Vector2Int(width, height);
+	}
+	void Window::SetSize(const Vector2Int& size)
+	{
+		width = size.x;
+		height = size.y;
+		glfwSetWindowSize(glWindow, width, height);
+	}
+	bool Window::IsFullscreen()
+	{
+		return fullscreen;
+	}
+
+	//Set fullscreen or windowed mode
+	void Window::SetFullscreen(bool fullscreen)
+	{
+		this->fullscreen = fullscreen;
+		if (fullscreen)
+		{
+			//Save windowed pos
+			glfwGetWindowPos(glWindow, &xPos, &yPos);
+			glfwGetWindowSize(glWindow, &width, &height);
+
+			GLFWmonitor* monitor = GetOptimalMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+			int x, y, w, h;
+			glfwGetMonitorWorkarea(monitor, &x, &y, &w, &h);
+			glfwSetWindowMonitor(glWindow, monitor, x, y, w, h, mode->refreshRate);
+		}
+		else
+		{
+			glfwSetWindowMonitor(glWindow, nullptr, xPos, yPos, width, height, 60);
+		}
+	}
+
+	//Return glfwWindowShouldClose for this window
+	bool Window::ShouldClose()
+	{
+		return glfwWindowShouldClose(glWindow);
+	}
+
 	//Return the monitor with greatest window overlap
 	//https://stackoverflow.com/questions/21421074/how-to-create-a-full-screen-window-on-the-current-monitor-with-glfw
-	GLFWmonitor* GetOptimalMonitor(GLFWwindow* window)
+	GLFWmonitor* Window::GetOptimalMonitor()
 	{
 		int nmonitors, i;
 		int wx, wy, ww, wh;
@@ -19,8 +116,8 @@ namespace une
 		bestoverlap = 0;
 		bestmonitor = NULL;
 
-		glfwGetWindowPos(window, &wx, &wy);
-		glfwGetWindowSize(window, &ww, &wh);
+		glfwGetWindowPos(glWindow, &wx, &wy);
+		glfwGetWindowSize(glWindow, &ww, &wh);
 		monitors = glfwGetMonitors(&nmonitors);
 
 		for (i = 0; i < nmonitors; i++) {
@@ -42,94 +139,9 @@ namespace une
 		return bestmonitor;
 	}
 
-	//Create OpenGL window and context
-	GLFWwindow* CreateGLWindow(int width, int height, const char* name, bool fullscreen)
+	Window* CreateMainWindow(int width, int height, const std::string& name)
 	{
-		mainWindowWidth = width;
-		mainWindowHeight = height;
-		mainWindowFullscreen = fullscreen;
-
-		//Initialize GLFW and set it to require OpenGL 3
-		glfwInit();
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		//glfwWindowHint(GLFW_SAMPLES, 4);
-
-		//Create window object
-		mainWindow = glfwCreateWindow(width, height, name, nullptr, nullptr);
-		if (mainWindow == nullptr)
-		{
-			const char* desc;
-			glfwGetError(&desc);
-			debug::LogError("Failed to create GLFW window: " + std::string(desc));
-			glfwTerminate();
-			return nullptr;
-		}
-		glfwMakeContextCurrent(mainWindow);
-		if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
-		{
-			debug::LogError("Failed to initialize GLAD");
-			return nullptr;
-		}
-
-		//Set the resize window callback function
-		glfwSetFramebufferSizeCallback(mainWindow, [](GLFWwindow* window, int width, int height)
-			{
-				glViewport(0, 0, width, height);
-			}
-		);
-
-		//If specified set the window to fullsreen and monitors resolution
-		if (fullscreen)
-		{
-			GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-			const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-			int x, y, w, h;
-			glfwGetMonitorWorkarea(primaryMonitor, &x, &y, &w, &h);
-			glfwSetWindowMonitor(mainWindow, primaryMonitor, x, y, w, h, mode->refreshRate);
-		}
-
-		//Enable 4xMSAA
-		glfwWindowHint(GLFW_SAMPLES, 4);
-		glEnable(GL_MULTISAMPLE);
-
-		debug::LogInfo("Successfully initialized GLFW");
+		mainWindow = new Window(width, height, name);
 		return mainWindow;
-	}
-
-	Vector2 GetMainWindowSize()
-	{
-		int w, h;
-		glfwGetWindowSize(mainWindow, &w, &h);
-		return { (float)w, (float)h };
-	}
-
-	void SetFullscreen()
-	{
-		//Save windowed pos
-		glfwGetWindowPos(mainWindow, &mainWindowX, &mainWindowY);
-
-		mainWindowFullscreen = true;
-		GLFWmonitor* monitor = GetOptimalMonitor(mainWindow);
-		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-		int x, y, w, h;
-		glfwGetMonitorWorkarea(monitor, &x, &y, &w, &h);
-		glfwSetWindowMonitor(mainWindow, monitor, x, y, w, h, mode->refreshRate);
-	}
-
-	void SetWindowed()
-	{
-		mainWindowFullscreen = false;
-		glfwSetWindowMonitor(mainWindow, nullptr, mainWindowX, mainWindowY, mainWindowWidth, mainWindowHeight, 60);
-	}
-
-	void ToggleFullscreen()
-	{
-		if (mainWindowFullscreen)
-			SetWindowed();
-		else
-			SetFullscreen();
 	}
 }

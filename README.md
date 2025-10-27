@@ -42,7 +42,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Improve tilemap collision
 - [ ] Redo camera for ecs
 - [ ] Redo UI system
-- [ ] Redo window and context system
+- [x] Redo window and context system
 
 ### New Features
 - [x] Implement enet (was already implemented)
@@ -79,6 +79,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Update documentation
 - [ ] Fix shader and renderer destructors
 - [ ] Serialization of all engine components
+- [ ] Investigate compatibility modes for older hardware
 
 ### New Features
 - [ ] Create a particle system

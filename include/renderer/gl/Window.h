@@ -1,31 +1,38 @@
 #pragma once
 
-#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <Vector.h>
 #include <iostream>
 
 namespace une
 {
-	static bool OPENGL_INITIALIZED = false;
+	class Window
+	{
+	public:
+		GLFWwindow* glWindow = nullptr;
 
-	static GLFWwindow* mainWindow;
+		Window(int width, int height, const std::string& name);
 
-	static int mainWindowWidth = 0;
-	static int mainWindowHeight = 0;
-	static int mainWindowX = 15;
-	static int mainWindowY = 30;
-	static bool mainWindowFullscreen = false;
+		Vector2Int GetPosition();
+		void SetPosition(const Vector2Int& pos);
+		Vector2Int GetSize();
+		void SetSize(const Vector2Int& size);
+		bool IsFullscreen();
+		//Set fullscreen or windowed mode
+		void SetFullscreen(bool fullscreen);
+		//Return glfwWindowShouldClose for this window
+		bool ShouldClose();
 
-	//Return the monitor with greatest window overlap
-	//https://stackoverflow.com/questions/21421074/how-to-create-a-full-screen-window-on-the-current-monitor-with-glfw
-	GLFWmonitor* GetOptimalMonitor(GLFWwindow* window);
+	private:
+		int xPos, yPos;
+		int width, height;
+		bool fullscreen = false;
 
-	///Create OpenGL window and context
-	GLFWwindow* CreateGLWindow(int width, int height, const char* name, bool fullscreen = false);
+		//Return the monitor with greatest window overlap
+		//https://stackoverflow.com/questions/21421074/how-to-create-a-full-screen-window-on-the-current-monitor-with-glfw
+		GLFWmonitor* GetOptimalMonitor();
+	};
 
-	Vector2 GetMainWindowSize();
-	void SetFullscreen();
-	void SetWindowed();
-	void ToggleFullscreen();
+	extern Window* mainWindow;
+	Window* CreateMainWindow(int width, int height, const std::string& name);
 }

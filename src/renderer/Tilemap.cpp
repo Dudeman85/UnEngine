@@ -227,7 +227,7 @@ namespace une
 		{
 			shader = new Shader(
 				R"(
-				#version 460 core
+				#version 330 core
 				layout(location = 0) in vec3 aPos;
 				layout(location = 1) in vec2 aTexCoord;
 				out vec2 TexCoord;
@@ -241,7 +241,7 @@ namespace une
 				}
 				)",
 				R"(
-				#version 460 core
+				#version 330 core
 				//Tiled flip flags
 				#define FLIP_HORIZONTAL 8u
 				#define FLIP_VERTICAL 4u
@@ -264,7 +264,7 @@ namespace une
 					uint tileID = lookupValues.r;
 					uint flipFlags = lookupValues.g;
 
-					if (tileID < 65535)
+					if (tileID < 65535u)
 					{
 						vec2 position = vec2(tileID % tilesetSize.x, floor(tileID / tilesetSize.x)) / tilesetSize;
 
@@ -275,11 +275,11 @@ namespace une
 						offset *= tileSize / tilesetSize;
 
 						//Flip the tile based on flip flags
-						if (flipFlags != 0)
+						if (flipFlags != 0u)
 						{
 							vec2 tileSize = vec2(1.0) / tilesetSize;
-							if ((flipFlags & FLIP_DIAGONAL) != 0)
-							{/*
+							if ((flipFlags & FLIP_DIAGONAL) != 0u)
+							{
 								float temp = offset.x;
 								offset.x = offset.y;
 								offset.y = temp;
@@ -287,13 +287,13 @@ namespace une
 								offset.x *= temp;
 								offset.y /= temp;
 								offset.x = tileSize.x - offset.x;
-								offset.y = tileSize.y - offset.y;*/
+								offset.y = tileSize.y - offset.y;
 							}
-							if ((flipFlags & FLIP_VERTICAL) != 0)
+							if ((flipFlags & FLIP_VERTICAL) != 0u)
 							{
 								offset.y = tileSize.y - offset.y;
 							}
-							if ((flipFlags & FLIP_HORIZONTAL) != 0)
+							if ((flipFlags & FLIP_HORIZONTAL) != 0u)
 							{
 								offset.x = tileSize.x - offset.x;
 							}

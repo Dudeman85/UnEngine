@@ -6,6 +6,8 @@ namespace une
 {
 	void EngineInit()
 	{
+		assert(mainWindow && "Make sure to create the main window before initializing the engine.");
+
 		//Get the engine systems
 		timerSystem = ecs::GetSystem<TimerSystem>();
 		timerSystem->Init();
@@ -56,6 +58,9 @@ namespace une
 		timerSystem->Update(enablePhysics);
 
 		ecs::Update();
+
+		glfwSwapBuffers(mainWindow->glWindow);
+		glfwPollEvents();
 
 		debug::LogSpam(debugString + " Total: " + std::to_string(debug::EndTimer("EngineUpdate")) + "ms");
 		return deltaTime;
