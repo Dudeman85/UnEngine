@@ -6,6 +6,7 @@
 #include "ECS.h"
 #include "renderer/gl/Window.h"
 #include "renderer/UnifiedRenderer.h"
+#include "renderer/TilemapRenderer.h"
 #include "renderer/SpriteRenderer.h"
 #include "renderer/ModelRenderer.h"
 #include "renderer/TextRenderer.h"

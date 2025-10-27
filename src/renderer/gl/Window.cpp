@@ -35,7 +35,7 @@ namespace une
 		}
 
 		//Set the resize window callback function
-		glfwSetFramebufferSizeCallback(glWindow, [](GLFWwindow* window, int h, int w)
+		glfwSetFramebufferSizeCallback(glWindow, [](GLFWwindow* window, int w, int h)
 			{
 				glViewport(0, 0, w, h);
 			}

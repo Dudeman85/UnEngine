@@ -100,7 +100,7 @@ int main()
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_KP_SUBTRACT))
 		{
-			cam.Translate({0, 0, 10});
+			window->SetSize({800, 600});
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_W))
 		{

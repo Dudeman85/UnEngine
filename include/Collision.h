@@ -7,7 +7,8 @@
 #include "ECS.h"
 #include "Vector.h"
 #include "Transform.h"
-#include "renderer/Tilemap.h"
+#include "Tilemap.h"
+#include "renderer/gl/Camera.h"
 
 namespace une
 {

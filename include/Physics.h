@@ -5,8 +5,7 @@
 #include "ECS.h"
 #include "Transform.h"
 #include "Collision.h"
-#include "renderer/Tilemap.h"
-#include "utils/Timing.h"
+#include "Tilemap.h"
 
 namespace une
 {

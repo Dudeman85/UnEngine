@@ -1,17 +1,141 @@
-#include <algorithm>
-
-#include "glm/gtc/type_ptr.hpp"
-#include "tmxlite/TileLayer.hpp"
 #include "tmxlite/Map.hpp"
+#include "tmxlite/TileLayer.hpp"
 
+#include "Tilemap.h"
+#include "Vector.h"
 #include "Debug.h"
-#include "renderer/Tilemap.h"
-#include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
-#include "renderer/gl/TilemapLayer.h"
 
 namespace une
 {
+	MapLayer::MapLayer(const tmx::Map& map, unsigned int i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties)
+	{
+		tilesetTextures = textures;
+		index = i;
+		properties = layerProperties;
+
+		//Set some properties
+		enabled = map.getLayers()[i]->getVisible();
+		//If layer has a specified z offset set it here
+		if (properties.contains("zoffset"))
+			zOffset = properties["zoffset"].getFloatValue();
+
+		//If the layer has collision enabled give it a collider
+		if (properties.contains("zoffset"))
+		{
+			if (properties["collision"].getBoolValue())
+			{
+				//Get the tile IDs
+				auto& tiles = map.getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
+
+				//Transfer the tile IDs to the 2D collision vector
+				collider.resize(map.getTileCount().x);
+				for (int x = 0; x < map.getTileCount().x; x++)
+				{
+					collider[x].resize(map.getTileCount().y);
+					for (int y = 0; y < map.getTileCount().y; y++)
+					{
+						collider[x][y] = tiles[y * collider.size() + x].ID;
+					}
+				}
+			}
+		}
+
+		CreateSubsets(map);
+	}
+
+	MapLayer::~MapLayer()
+	{
+		for (auto& ss: subsets)
+		{
+			delete ss.lookup;
+		}
+	}
+
+	//Draw a quad for each subset in this layer
+	void MapLayer::DrawSubsets(int tilesetSizeLoc)
+	{
+		for (const auto& ss: subsets)
+		{
+			glUniform2ui(tilesetSizeLoc, ss.columns, ss.rows);
+
+			glActiveTexture(GL_TEXTURE0);
+			ss.texture->Use();
+			glActiveTexture(GL_TEXTURE1);
+			ss.lookup->Use();
+
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		}
+	}
+
+	//Create a subset for each tilseset this layer uses
+	void MapLayer::CreateSubsets(const tmx::Map& map)
+	{
+		const auto& layers = map.getLayers();
+		if (index >= layers.size() || layers[index]->getType() != tmx::Layer::Type::Tile)
+		{
+			debug::LogWarning("Invalid tilemap layer index or layer type, layer will be empty");
+			return;
+		}
+
+		const tmx::Vector2u& mapSize = map.getTileCount();
+		const auto& tiles = layers[index]->getLayerAs<tmx::TileLayer>().getTiles();
+		//Go through all tilesets in the map
+		for (int i = 0; i < map.getTilesets().size(); i++)
+		{
+			const tmx::Tileset& ts = map.getTilesets()[i];
+			std::vector<uint16_t> lookupData;
+			bool tsUsed = false;
+
+			//Check each tile ID to see if it falls in the current tile set
+			for (const tmx::TileLayer::Tile& tile : tiles)
+			{
+				if (tile.ID >= ts.getFirstGID() && tile.ID <= ts.getLastGID())
+				{
+					//Make sure to index relative to the tileset
+					uint16_t id = tile.ID - ts.getFirstGID();
+					//Red channel is used for tile ids
+					lookupData.push_back(id);
+					//Green channel is used for flip flags
+					lookupData.push_back(tile.flipFlags);
+					tsUsed = true;
+				}
+				else
+				{
+					//UINT16_MAX aka 65535 is no tile
+					lookupData.push_back(UINT16_MAX);
+					lookupData.push_back(UINT16_MAX);
+				}
+			}
+
+			//If we have some data for this tile set, create the resources
+			if (tsUsed)
+			{
+				//Make the lookup texture
+				unsigned int tex;
+				glGenTextures(1, &tex);
+				glBindTexture(GL_TEXTURE_2D, tex);
+				//Only nearest works
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				//Give the lookup table data
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16UI, mapSize.x, mapSize.y, 0, GL_RG_INTEGER, GL_UNSIGNED_SHORT, lookupData.data());
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				//Add the subset
+				Subset subset{
+					ts.getColumnCount(),
+					ts.getTileCount() / ts.getColumnCount(),
+					tilesetTextures[i],
+					new Texture(tex)
+				};
+				subsets.push_back(subset);
+			}
+		}
+	}
+
 	Tilemap::Tilemap(const std::string& path, unsigned int filteringType)
 	{
 		tmx::Map map;
@@ -149,13 +273,13 @@ namespace une
 		return hits;
 	}
 
-	//Get the center position of a tile in world coordinates
-	Vector2 Tilemap::GetTilePosition(unsigned int x, unsigned int y)
+	//Get the position of a tile in world coordinates
+	Vector3 Tilemap::GetTilePosition(unsigned int x, unsigned int y)
 	{
 		//Move from top left to center position
-		Vector2 position;
-		position.x += tileSize.x / 2;
-		position.y -= tileSize.y / 2;
+		Vector3 position;
+		position.x += tileSize.x / 2.0;
+		position.y -= tileSize.y / 2.0;
 
 		//X increases in positive X
 		position.x += x * tileSize.x;
@@ -219,170 +343,5 @@ namespace une
 
 		return collisionLayer[xIndex][yIndex];
 		*/
-	}
-
-	namespace renderer
-	{
-		void TilemapRenderSystem::Init()
-		{
-			shader = new Shader(
-				R"(
-				#version 330 core
-				layout(location = 0) in vec3 aPos;
-				layout(location = 1) in vec2 aTexCoord;
-				out vec2 TexCoord;
-				uniform mat4 model;
-				uniform mat4 view;
-				uniform mat4 projection;
-				void main()
-				{
-					gl_Position = projection * view * model * vec4(aPos, 1.0);
-					TexCoord = aTexCoord;
-				}
-				)",
-				R"(
-				#version 330 core
-				//Tiled flip flags
-				#define FLIP_HORIZONTAL 8u
-				#define FLIP_VERTICAL 4u
-				#define FLIP_DIAGONAL 2u
-
-				in vec2 TexCoord;
-
-				uniform sampler2D tilesetTexture;
-				uniform usampler2D lookupTexture;
-
-				uniform uvec2 tileSize;
-				uniform uvec2 tilesetSize;
-				uniform float opacity = 1.0;
-
-				out vec4 FragColor;
-
-				void main()
-				{
-					uvec2 lookupValues = texture(lookupTexture, TexCoord).rg;
-					uint tileID = lookupValues.r;
-					uint flipFlags = lookupValues.g;
-
-					if (tileID < 65535u)
-					{
-						vec2 position = vec2(tileID % tilesetSize.x, floor(tileID / tilesetSize.x)) / tilesetSize;
-
-						vec2 texelSize = vec2(1.0) / textureSize(lookupTexture, 0);
-						vec2 offset = mod(TexCoord, texelSize);
-						vec2 ratio = offset / texelSize;
-						offset = ratio * (1.0 / tileSize);
-						offset *= tileSize / tilesetSize;
-
-						//Flip the tile based on flip flags
-						if (flipFlags != 0u)
-						{
-							vec2 tileSize = vec2(1.0) / tilesetSize;
-							if ((flipFlags & FLIP_DIAGONAL) != 0u)
-							{
-								float temp = offset.x;
-								offset.x = offset.y;
-								offset.y = temp;
-								temp = tileSize.x / tileSize.y;
-								offset.x *= temp;
-								offset.y /= temp;
-								offset.x = tileSize.x - offset.x;
-								offset.y = tileSize.y - offset.y;
-							}
-							if ((flipFlags & FLIP_VERTICAL) != 0u)
-							{
-								offset.y = tileSize.y - offset.y;
-							}
-							if ((flipFlags & FLIP_HORIZONTAL) != 0u)
-							{
-								offset.x = tileSize.x - offset.x;
-							}
-						}
-
-						vec4 texColor = texture(tilesetTexture, position + offset);
-						texColor.a *= opacity;
-						FragColor = texColor;
-					}
-					else
-					{
-						FragColor = vec4(0);
-					}
-				}
-				)", false);
-		}
-
-		//Sorts the tilemap layers into their draw layers (currently only transparent world)
-		void TilemapRenderSystem::Prepass()
-		{
-			transparentWorldLayers.clear();
-
-			//Sort all entities into their draw orders
-			for (ecs::Entity entity : entities)
-			{
-				TilemapRenderer& renderer = ecs::GetComponent<TilemapRenderer>(entity);
-				Vector3 pos = TransformSystem::GetGlobalTransform(entity).position;
-
-				if (!renderer.enabled)
-					continue;
-
-				for (const MapLayer* layer : renderer.tilemap->mapLayers)
-				{
-					if (!layer->enabled)
-						continue;
-					transparentWorldLayers.push_back({entity, pos + Vector3(0, 0, layer->zOffset), DrawRenderable, layer->index});
-				}
-			}
-		}
-
-		//Draws one layer of an entity's tilemap
-		void TilemapRenderSystem::DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id)
-		{
-			TilemapRenderer& tilemapRenderer = ecs::GetComponent<TilemapRenderer>(entity);
-
-			if (!tilemapRenderer.tilemap)
-			{
-				debug::LogWarning("No tilemap given for TilemapRenderer of entity " + std::to_string(entity));
-				return;
-			}
-
-			MapLayer* layer = tilemapRenderer.tilemap->mapLayers[id];
-
-			shader->Use();
-
-			//Create the model matrix and offset it by the layer zOffset
-			glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
-			model = glm::translate(model, {0, 0, layer->zOffset});
-
-			//Get and set uniforms
-			int modelLoc = glGetUniformLocation(shader->ID, "model");
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-			int viewLoc = glGetUniformLocation(shader->ID, "view");
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-			int projLoc = glGetUniformLocation(shader->ID, "projection");
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
-			int tileSizeLoc = glGetUniformLocation(shader->ID, "tileSize");
-			glUniform2ui(tileSizeLoc, tilemapRenderer.tilemap->tileSize.x, tilemapRenderer.tilemap->tileSize.y);
-			int tilesetSizeLoc = glGetUniformLocation(shader->ID, "tilesetSize");
-			//Set the textures to their proper slots
-			glUniform1i(glGetUniformLocation(shader->ID, "tilesetTexture"), 0);
-			glUniform1i(glGetUniformLocation(shader->ID, "lookupTexture"), 1);
-
-			//Draw all layer subsets with the same VAO
-			glBindVertexArray(tilemapRenderer.tilemap->VAO);
-			layer->DrawSubsets(tilesetSizeLoc);
-
-			glBindVertexArray(0);
-		}
-
-		//Static version of DrawLayer for renderable
-		void TilemapRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
-		{
-			ecs::GetSystem<TilemapRenderSystem>()->DrawLayer(r.entity, cam, r.index);
-		}
-
-		const std::vector<Renderable>& TilemapRenderSystem::GetTransparentWorldLayers()
-		{
-			return transparentWorldLayers;
-		}
 	}
 }
