@@ -4,11 +4,13 @@
 #include "Tilemap.h"
 #include "Vector.h"
 #include "Debug.h"
+#include "ECS.h"
+#include "Transform.h"
 #include "renderer/gl/Texture.h"
 
 namespace une
 {
-	MapLayer::MapLayer(const tmx::Map& map, unsigned int i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties)
+	MapLayer::MapLayer(const tmx::Map& map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties)
 	{
 		tilesetTextures = textures;
 		index = i;
@@ -21,14 +23,14 @@ namespace une
 			zOffset = properties["zoffset"].getFloatValue();
 
 		//If the layer has collision enabled give it a collider
-		if (properties.contains("zoffset"))
+		if (properties.contains("collision"))
 		{
 			if (properties["collision"].getBoolValue())
 			{
-				//Get the tile IDs
+				//Get the tile GIDs
 				auto& tiles = map.getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
-
-				//Transfer the tile IDs to the 2D collision vector
+				hasCollision = true;
+				//Transfer the tile GIDs to the 2D collision vector
 				collider.resize(map.getTileCount().x);
 				for (int x = 0; x < map.getTileCount().x; x++)
 				{
@@ -141,11 +143,11 @@ namespace une
 		tmx::Map map;
 		map.load(path);
 
-		bounds = map.getBounds();
 		tileSize = Vector2(map.getTileSize().x, map.getTileSize().y);
+		tilesets = map.getTilesets();
 
 		//Process all tiles in each tileset
-		for (const tmx::Tileset& tileset: map.getTilesets())
+		for (const tmx::Tileset& tileset : tilesets)
 		{
 			//Load the tileset's texture
 			tilesetTextures.push_back(new Texture(tileset.getImagePath(), filteringType, false));
@@ -186,12 +188,12 @@ namespace une
 					layerProperties[propertyName] = property;
 				}
 
-				MapLayer* layer = new MapLayer(map, i, tilesetTextures, layerProperties);
-				mapLayers.push_back(layer);
+				mapLayers.push_back(new MapLayer(map, i, tilesetTextures, layerProperties));
 			}
 		}
 
 		//Initialize the OpenGL resources
+		const tmx::FloatRect bounds = map.getBounds();
 		const float vertices[] = {
 			bounds.left, bounds.top, 0.f, 0.f, 1.f,
 			bounds.left + bounds.width, bounds.top, 0.f, 1.f, 1.f,
@@ -228,24 +230,43 @@ namespace une
 			delete layer;
 	}
 
-	void Tilemap::SetLayerVisibility(unsigned int id, bool visible)
+	void Tilemap::SetLayerVisibility(uint32_t layer, bool visible)
 	{
-		if (id >= mapLayers.size())
+		if (layer >= mapLayers.size())
 		{
-			debug::LogWarning("Invalid layer id " + std::to_string(id));
+			debug::LogWarning("Invalid layer id " + std::to_string(layer));
 			return;
 		}
 
-		mapLayers[id]->enabled = visible;
+		mapLayers[layer]->enabled = visible;
+	}
+
+	//Get the position of a tile in world coordinates when attached to an entity
+	Vector3 Tilemap::GetTilePosition(ecs::Entity entity, Vector2Int pos) const
+	{
+		if (!ecs::HasComponent<Transform>(entity))
+		{
+			debug::LogWarning("Entity " + std::to_string(entity) + " does not have a transform");
+			return Vector3();
+		}
+
+		//Move from top left to center position
+		glm::vec4 position(0);
+		position.x = (float)(pos.x * tileSize.x) + (float)tileSize.x / 2.f;
+		position.y = -(float)(pos.y * tileSize.y) - (float)tileSize.y / 2.f;
+		position = TransformSystem::GetGlobalTransformMatrix(entity) * position;
+
+		return Vector3(position.x, position.y, position.z);
 	}
 
 	//Returns the vertices making up this tile's collider
-	std::vector<Vector2> Tilemap::GetTileCollider(unsigned int id)
+	std::vector<Vector2> Tilemap::GetTileCollider(uint32_t gid) const
 	{
-		if (tileColliders.contains(id - 1))
+		if (tileColliders.contains(gid - 1))
 		{
-			return tileColliders[id - 1];
-		} else
+			return tileColliders.at(gid - 1);
+		}
+		else
 		{
 			//Default collider of a tile
 			return std::vector<Vector2>{
@@ -257,91 +278,31 @@ namespace une
 		}
 	}
 
-	//Returns the id of every tile with a collider at tilemap coords x and y
-	std::vector<unsigned int> Tilemap::GetCollisionTileAtLocation(unsigned int x, unsigned int y)
+	//Returns the TileInfo of every tile with a collider at tilemap coords
+	std::vector<Tilemap::TileInfo> Tilemap::GetCollisionTilesAtLocation(Vector2Int pos) const
 	{
-		std::vector<unsigned int> hits;
-		/*
-		for (const auto& layer : layerColliders)
+		std::vector<TileInfo> hits;
+		for (const MapLayer* layer : mapLayers)
 		{
-			if (!layer.second.empty())
+			if (layer->hasCollision && layer->collider[pos.x][pos.y] != 0)
 			{
-				hits.push_back(layer.second[x][y]);
-			}
-		}
-		*/
-		return hits;
-	}
+				TileInfo info{layer->collider[pos.x][pos.y]};
+				info.collider = tileColliders.at(info.gid);
 
-	//Get the position of a tile in world coordinates
-	Vector3 Tilemap::GetTilePosition(unsigned int x, unsigned int y)
-	{
-		//Move from top left to center position
-		Vector3 position;
-		position.x += tileSize.x / 2.0;
-		position.y -= tileSize.y / 2.0;
-
-		//X increases in positive X
-		position.x += x * tileSize.x;
-		//Y increases in negative Y
-		position.y -= y * tileSize.y;
-
-		return position;
-	}
-
-	//Find any collision layer tiles in a box
-	std::vector<Vector2> Tilemap::CheckCollisionBox(Vector2 topLeft, Vector2 bottomRight)
-	{
-		//Log all tiles
-		std::vector<Vector2> collisions;
-		/*
-		if (collisionLayer.empty())
-		{
-			return collisions;
-		}
-
-		//Calculate the x and y index bounds
-		int xMin = floor((topLeft.x + position.x) / tileSize.x);
-		int xMax = ceil((bottomRight.x + position.x) / tileSize.x);
-		int yMin = floor((-topLeft.y + position.y) / tileSize.y);
-		int yMax = ceil((-bottomRight.y + position.y) / tileSize.y);
-
-		//Check every position inside the box
-		for (int x = xMin; x < xMax; x++)
-		{
-			for (int y = yMin; y < yMax; y++)
-			{
-				//Check bounds
-				if (x < collisionLayer.size() && x >= 0 && y < collisionLayer[0].size() && y >= 0)
+				//Find the tileset this GID belongs to
+				for (int i = 0; i < tilesets.size(); i++)
 				{
-					//If tile is in collision layer log it
-					if (collisionLayer[x][y] != 0)
+					if (tilesets[i].getFirstGID() > info.gid)
 					{
-						collisions.push_back(Vector2(x, y));
+						i--;
+						info.id = info.gid - tilesets[i].getFirstGID();
+						info.tilesetName = tilesets[i].getName();
+						hits.push_back(info);
+						break;
 					}
 				}
 			}
 		}
-		*/
-		return collisions;
-	}
-
-	//Returns the collision layers tile ID at x and y
-	unsigned int Tilemap::checkCollision(float x, float y)
-	{
-		return 0;
-		/*
-		if (collisionLayer.empty())
-			return 0;
-
-		int xIndex = floor((x + position.x) / tileSize.x);
-		int yIndex = floor((-y + position.y) / tileSize.y);
-
-		//Check out of bounds
-		if (xIndex >= collisionLayer.size() || yIndex >= collisionLayer[0].size() || xIndex < 0 || yIndex < 0)
-			return 0;
-
-		return collisionLayer[xIndex][yIndex];
-		*/
+		return hits;
 	}
 }

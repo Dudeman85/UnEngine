@@ -65,7 +65,7 @@ int main()
 	//ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
 	//ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
-	//ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
+	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
 	ecs::AddComponent(e2, une::Transform{.position = {0, 0, 0}, .rotation = {0, 0, 0}, .scale = 1});
 
 	while (!window->ShouldClose())

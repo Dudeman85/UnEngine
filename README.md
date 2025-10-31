@@ -39,7 +39,6 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Unify model, sprite, text, tilemap, and primitive renderers
   - [x] Improve tilemap rendering
   - [x] Fix sprite scaling
-- [ ] Improve tilemap collision
 - [ ] Redo camera for ecs
 - [ ] Redo UI system
 - [x] Redo window and context system
@@ -50,6 +49,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ## High Priority
 ### Improvements
+- [ ] Fix tilemap collision
 - [x] Update the vector library
 - [ ] Expand and improve the timing system
 - [ ] Improve resource loading and management
@@ -59,6 +59,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Fix text resolution scaling
 - [ ] Fix sound bugs
 - [ ] Better integrate sounds with ecs
+- [ ] Fix tilemaps with multiple tilesets
 
 ### New features
 - [ ] Implement UPnP for automatic port forwarding

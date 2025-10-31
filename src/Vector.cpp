@@ -318,6 +318,13 @@ namespace une
 		return Vector2(y, -x).Normalize();
 	}
 
+	//Returns a glm vec2
+	glm::vec2 Vector2::ToGlm() const
+	{
+		return glm::vec2(x, y);
+	}
+
+	//Return a string of this vector in format "(x, y)"
 	std::string Vector2::ToString() const
 	{
 		char buff[255];
@@ -840,6 +847,13 @@ namespace une
 		return *this;
 	}
 
+	//Returns a glm vec4
+	glm::vec4 Vector4::ToGlm() const
+	{
+		return glm::vec4(x, y, z, w);
+	}
+
+	//Return a string of this vector in format "(x, y, z, w)"
 	std::string Vector4::ToString() const
 	{
 		char buff[255];

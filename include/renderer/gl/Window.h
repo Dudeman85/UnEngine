@@ -9,8 +9,6 @@ namespace une
 	class Window
 	{
 	public:
-		GLFWwindow* glWindow = nullptr;
-
 		Window(int width, int height, const std::string& name);
 
 		Vector2Int GetPosition();
@@ -23,6 +21,7 @@ namespace une
 		//Return glfwWindowShouldClose for this window
 		bool ShouldClose();
 
+		GLFWwindow* glWindow = nullptr;
 	private:
 		int xPos, yPos;
 		int width, height;

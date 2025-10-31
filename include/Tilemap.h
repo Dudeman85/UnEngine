@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ECS.h"
 #include "glad/gl.h"
 #include "tmxlite/Map.hpp"
 
@@ -12,7 +13,7 @@ namespace une
 	class MapLayer
 	{
 	public:
-		MapLayer(const tmx::Map& map, unsigned int i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties);
+		MapLayer(const tmx::Map& map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties);
 		~MapLayer();
 		MapLayer(const MapLayer&) = delete;
 		MapLayer& operator = (const MapLayer&) = delete;
@@ -20,12 +21,13 @@ namespace une
 		//Draw a quad for each subset in this layer
 		void DrawSubsets(int tilesetSizeLoc);
 
-		unsigned int index;
+		uint32_t index;
 		bool enabled = true;
+		bool hasCollision = false;
 		//User specified z offset
 		float zOffset = 0;
 		//Tile based collision map
-		std::vector<std::vector<unsigned int>> collider;
+		std::vector<std::vector<uint32_t>> collider;
 		std::unordered_map<std::string, tmx::Property> properties;
 
 	private:
@@ -48,30 +50,36 @@ namespace une
 	class Tilemap
 	{
 	public:
+		struct TileInfo
+		{
+			//The unique gid of this tile
+			uint32_t gid = 0;
+			//The tileset ID of this tile
+			uint32_t id = 0;
+			//The name of the parent tileset
+			std::string tilesetName;
+			//The collider vertices of this tile
+			std::vector<Vector2> collider;
+		};
+
 		Tilemap(const std::string& path, unsigned int filteringType = GL_NEAREST);
 		~Tilemap();
 
-		void SetLayerVisibility(unsigned int id, bool visible);
-
-		//Get the position of a tile in world coordinates
-		Vector3 GetTilePosition(unsigned int x, unsigned int y);
-		//Check larger area collisionbox
-		std::vector<Vector2> CheckCollisionBox(Vector2 topLeft, Vector2 bottomRight);
-		//Returns the id of every tile with a collider at tilemap coords x and y
-		std::vector<unsigned int> GetCollisionTileAtLocation(unsigned int x, unsigned int y);
-		//Check the smaller Collisions that are turned on upon the larger collision box colliding
-		unsigned int checkCollision(float x, float y);
+		void SetLayerVisibility(uint32_t layer, bool visible);
+		//Get the position of a tile in world coordinates when attached to an entity
+		Vector3 GetTilePosition(ecs::Entity entity, Vector2Int pos) const;
+		//Returns the TileInfo of every tile with a collider at tilemap coords
+		std::vector<TileInfo> GetCollisionTilesAtLocation(Vector2Int pos) const;
 		//Returns the vertices making up this tile's collider
-		std::vector<Vector2> GetTileCollider(unsigned int id);
+		std::vector<Vector2> GetTileCollider(uint32_t gid) const;
 
 		Vector2Int tileSize;
-		tmx::FloatRect bounds;
-
-		std::unordered_map<unsigned int, std::vector<Vector2>> tileColliders;
 		std::vector<MapLayer*> mapLayers;
 
 		unsigned int VAO, VBO;
 	private:
+		std::vector<tmx::Tileset> tilesets;
+		std::unordered_map<uint32_t, std::vector<Vector2>> tileColliders;
 		std::vector<Texture*> tilesetTextures;
 	};
 }

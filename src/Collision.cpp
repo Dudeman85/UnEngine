@@ -9,9 +9,6 @@ namespace une
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		//This needs to be a member for tilemap rendering convenience
-		cam = camera;
-
 		//For each entity
 		for (ecs::Entity entity : entities)
 		{
@@ -115,7 +112,7 @@ namespace une
 
 	///Checks for collision between a tilemap collision layer and an entity. Does not call callbacks
 	std::vector<Collision> CollisionSystem::CheckTilemapCollision(ecs::Entity entity)
-	{
+	{/*
 		//If no tilemap collision layer is set return no collisions
 		if (!tilemap)
 			return std::vector<Collision>();
@@ -207,7 +204,7 @@ namespace une
 			}
 		}
 
-		return collisions;
+		return collisions;*/
 	}
 
 	///Check Entity-Entity collision. Does not call callbacks

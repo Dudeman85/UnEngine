@@ -2,7 +2,9 @@
 #include <string>
 #include <cmath>
 
+#include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 namespace une
 {
@@ -113,6 +115,8 @@ namespace une
 		//Dot product of this vector and vector b
 		double Dot(const Vector2& b) const;
 
+		//Returns a glm vec2
+		glm::vec2 ToGlm() const;
 		//Return a string of this vector in format "(x, y)"
 		std::string ToString() const;
 
@@ -222,7 +226,6 @@ namespace une
 		double x, y, z;
 	};
 
-
 	//Four doubles in one
 	class Vector4
 	{
@@ -258,6 +261,8 @@ namespace une
 		Vector4 operator/(const Vector4& div) const;
 		Vector4& operator/=(const double& div);
 
+		//Returns a glm vec4
+		glm::vec4 ToGlm() const;
 		//Return a string of this vector in format "(x, y, z, w)"
 		std::string ToString() const;
 
