@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "assimp/code/AssetLib/3MF/3MFXmlTags.h"
+#include "renderer/UserInterface.h"
 
 namespace une
 {
@@ -202,7 +203,7 @@ namespace une
 
 				if (!primitiveRenderer.enabled)
 					continue;
-				if (primitiveRenderer.uiElement)
+				if (ecs::HasComponent<UIElement>(entity))
 				{
 					if (srgb.a > 0.02 && srgb.a < 0.98)
 						transparentUIEntities.push_back({entity, pos, DrawRenderable});
@@ -249,7 +250,7 @@ namespace une
 			Transform transform = TransformSystem::GetGlobalTransform(entity);
 			PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
 
-			DrawPrimitive(primitiveRenderer.primitive, cameraEntity, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
+			DrawPrimitive(primitiveRenderer.primitive, cameraEntity, primitiveRenderer.color, ecs::HasComponent<UIElement>(entity) ? ui : normal,
 				transform.position, transform.rotation, transform.scale);
 		}
 

@@ -8,6 +8,8 @@
 
 namespace une
 {
+	class Color;
+
 	constexpr double PI = 3.14159265;
 	constexpr double epsilon = 0.0001;
 
@@ -235,6 +237,7 @@ namespace une
 		Vector4(double all);
 		Vector4(double x, double y, double z, double w);
 		Vector4(const Vector3&, double w = 0);
+		Vector4(const Color& color);
 
 		//Indexing
 		double& operator[](int i);

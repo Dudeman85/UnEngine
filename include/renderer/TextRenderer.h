@@ -21,8 +21,6 @@ namespace une
 		int size = 24;
 		//Color of the text
 		Color color = Color(0, 0, 0, 255);
-		//Should this text be treated as a UI element, see doc/UserInterface.md
-		bool uiElement = false;
 		bool enabled = true;
 	};
 

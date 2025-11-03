@@ -3,6 +3,7 @@
 #include <ft2build.h>
 
 #include "Debug.h"
+#include "renderer/UserInterface.h"
 
 #include FT_FREETYPE_H
 
@@ -68,7 +69,7 @@ namespace une::renderer
 			if (!text.enabled)
 				continue;
 			//Text is always sorted because it is anti-aliased
-			if (text.uiElement)
+			if (ecs::HasComponent<UIElement>(entity))
 				transparentUIEntities.push_back({entity, pos, DrawRenderable});
 			else
 				transparentWorldEntities.push_back({entity, pos, DrawRenderable});
@@ -105,8 +106,9 @@ namespace une::renderer
 		int viewLoc = glGetUniformLocation(shader->ID, "view");
 		int projLoc = glGetUniformLocation(shader->ID, "projection");
 
-		if (textRenderer.uiElement)
+		if (ecs::HasComponent<UIElement>(entity))
 		{
+			//TODO redo ui
 			//Render UI elements independent of camera's view and projection
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));

@@ -1,6 +1,7 @@
 #include "renderer/ModelRenderer.h"
 
 #include "Debug.h"
+#include "renderer/UserInterface.h"
 
 namespace une::renderer
 {
@@ -83,7 +84,7 @@ namespace une::renderer
 
 			if (!model.enabled)
 				continue;
-			if (model.uiElement)
+			if (ecs::HasComponent<UIElement>(entity))
 			{
 				//TODO: Implement transparency
 				if (false)
@@ -156,8 +157,9 @@ namespace une::renderer
 		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
 		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
 
-		if (modelRenderer.uiElement)
+		if (ecs::HasComponent<UIElement>(entity))
 		{
+			//TODO redo ui
 			//Render UI elements independent of camera's view and projection
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));

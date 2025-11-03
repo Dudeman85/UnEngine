@@ -18,7 +18,25 @@ namespace une
         b = blue;
         a = alpha;
     }
+    Color::Color(const Vector4& c)
+    {
+        isSRGB = true;
+        r = (float)c.x;
+        g = (float)c.y;
+        b = (float)c.z;
+        a = (float)c.w;
+    }
 
+    Color Color::As8Bit() const
+    {
+        if (isSRGB)
+            return Color(std::clamp(std::round(r * 255), 0.f, 255.f),
+                std::clamp(std::round(g * 255), 0.f, 255.f),
+                std::clamp(std::round(b * 255), 0.f, 255.f),
+                std::clamp(std::round(a * 255), 0.f, 255.f));
+        else
+            return Color(r, g, b, a);
+    }
     Color Color::AsSRGB() const
     {
         if (isSRGB)

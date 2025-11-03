@@ -20,8 +20,6 @@ namespace une
 		//Alternate textures, will override default ones from model
 		std::vector<Texture*> textures;
 
-		//Should this sprite be treated as a UI element, see doc/UserInterface.md
-		bool uiElement = false;
 		bool enabled = true;
 	};
 

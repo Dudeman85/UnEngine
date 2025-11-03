@@ -44,8 +44,6 @@ namespace une
 		Color color = {0};
 		//Draw wireframe only
 		bool wireframe = true;
-		//Should this sprite be treated as a UI element, see doc/UserInterface.md
-		bool uiElement = false;
 		bool enabled = true;
 	};
 

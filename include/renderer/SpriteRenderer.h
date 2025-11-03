@@ -16,8 +16,6 @@ namespace une
 		Texture* texture = nullptr;
 		Shader* shader = nullptr;
 
-		//Should this sprite be treated as a UI element, see doc/UserInterface.md
-		bool uiElement = false;
 		bool enabled = true;
 	};
 

@@ -2,6 +2,8 @@
 
 #include "Vector.h"
 
+#include "Color.h"
+
 namespace une
 {
 	////////// Math //////////
@@ -729,6 +731,14 @@ namespace une
 		y = vec3.y;
 		z = vec3.z;
 		this->w = w;
+	}
+	Vector4::Vector4(const Color& color)
+	{
+		const Color c = color.AsSRGB();
+		x = c.r;
+		y = c.g;
+		z = c.b;
+		w = c.a;
 	}
 
 	//Comparison
