@@ -2,77 +2,101 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "renderer/gl/Window.h"
+#include "renderer/UnifiedRenderer.h"
+
 namespace une
 {
-	Camera::Camera(float w, float h, glm::vec3 pos, glm::vec3 rot)
+	//Renders all camera views to the canvas
+	void CameraSystem::Update()
 	{
-		width = w;
-		height = h;
-		position = pos;
-		rotation = rot;
+		//Sort the cameras by draw order
+		std::vector<ecs::Entity> sortedEntities;
+		for (ecs::Entity entity : entities)
+			sortedEntities.push_back(entity);
+		std::sort(sortedEntities.begin(), sortedEntities.end(),
+			[](const ecs::Entity& lhs, const ecs::Entity& rhs)
+			{
+				return ecs::GetComponent<Camera>(lhs).drawOrder < ecs::GetComponent<Camera>(rhs).drawOrder;
+			});
+
+		for (ecs::Entity entity : sortedEntities)
+		{
+			Camera& cam = ecs::GetComponent<Camera>(entity);
+			Transform& t = ecs::GetComponent<Transform>(entity);
+
+			if (!cam.enabled)
+				continue;
+
+			const int64_t viewportWidth = cam.viewport.x2 - cam.viewport.x1;
+			const int64_t viewportHeight = cam.viewport.y2 - cam.viewport.y1;
+			//Use default viewport if none is set
+			if (viewportWidth <= 0 || viewportHeight <= 0)
+			{
+				const Vector2Int windowSize = mainWindow->GetSize();
+				glViewport(0, 0, (int)windowSize.x, (int)windowSize.y);
+			}
+			else
+			{
+				glViewport((int)cam.viewport.x1, (int)cam.viewport.y1, (int)viewportWidth, (int)viewportHeight);
+			}
+
+			if (t.staleCache)
+				RecalculateView(entity);
+
+			renderer::UnifiedRenderPass(entity);
+		}
 	}
 
-	///Sets the camera position in world space
-	void Camera::SetPosition(Vector3 pos)
+	void CameraSystem::MakeOrtho(ecs::Entity e, float width, float height, float nearPlane, float farPlane)
 	{
-		//I really have no idea why these have to be divided by 2, but otherwise the coordinates don't match the sprites
-		position.x = pos.x / 2;
-		position.y = pos.y / 2;
-		position.z = pos.z / 2;
+		Camera& cam = ecs::GetComponent<Camera>(e);
+
+		cam.width = width;
+		cam.height = height;
+		cam.nearPlane = nearPlane;
+		cam.farPlane = farPlane;
+
+		RecalculateProjection(e);
 	}
 
-	///Move the camera in world space. Camera's origin is in its center
-	void Camera::Translate(Vector3 dPos)
+	void CameraSystem::MakePerspective(ecs::Entity e, float fov, float nearPlane, float farPlane)
 	{
-		//I really have no idea why these have to be divided by 2, but otherwise the coordinates don't match the sprites
-		position.x += dPos.x / 2;
-		position.y += dPos.y / 2;
-		position.z += dPos.z / 2;
+		Camera& cam = ecs::GetComponent<Camera>(e);
+
+		cam.fov = fov;
+		cam.nearPlane = nearPlane;
+		cam.farPlane = farPlane;
+
+		RecalculateProjection(e);
 	}
 
-	///Set the rotation of the camera the camera in world space
-	void Camera::SetRotation(Vector3 rot)
+	//Recalculates the view matrix, called automatically when transform changes
+	void CameraSystem::RecalculateView(ecs::Entity e)
 	{
-		rotation.x = rot.x;
-		rotation.y = rot.y;
-		rotation.z = rot.z;
+		Camera& cam = ecs::GetComponent<Camera>(e);
+		Transform& t = ecs::GetComponent<Transform>(e);
+
+		cam.view = glm::mat4(1.0f);
+		cam.view = glm::translate(cam.view, -t.position.ToGlm());
+		cam.view = glm::rotate(cam.view, (float)glm::radians(t.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		cam.view = glm::rotate(cam.view, (float)glm::radians(t.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		cam.view = glm::rotate(cam.view, (float)glm::radians(t.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 
-	///Rotate the camera in world space
-	void Camera::Rotate(Vector3 dRot)
+	//Recalcultes the projection matrix, call this if you manually change fov, perspectve, nearPlane, or farPlane
+	void CameraSystem::RecalculateProjection(ecs::Entity e)
 	{
-		rotation.x += dRot.x;
-		rotation.y += dRot.y;
-		rotation.z += dRot.z;
-	}
+		Camera& cam = ecs::GetComponent<Camera>(e);
 
-	///Sets the width and height of the camera
-	void Camera::SetDimensions(float w, float h)
-	{
-		width = w;
-		height = h;
-	}
-
-	///Get the projection matrix for this camera. is perspective is set to true, use perspective projection instead of orthographic
-	glm::mat4 Camera::GetProjectionMatrix()
-	{
-		if (perspective)
-			return glm::perspective(glm::radians(fov), width / height, 0.01f, farPlane);
+		if (cam.perspective)
+		{
+			const double aspectRatio = (cam.viewport.x2 - cam.viewport.x1) / (cam.viewport.y2 - cam.viewport.y1);
+			cam.projection = glm::perspective(glm::radians(cam.fov), (float)aspectRatio, cam.nearPlane, cam.farPlane);
+		}
 		else
-			return glm::ortho(position.x - width / 2, position.x + width / 2, position.y - height / 2, position.y + height / 2, 0.01f, farPlane);
-	}
-
-	///Get the model matrix for this camera, aka the view matrix
-	glm::mat4 Camera::GetViewMatrix()
-	{
-		glm::mat4 model = glm::mat4(1.0f);
-		//Position
-		model = glm::translate(model, -position);
-		//X, Y, Z euler rotations
-		model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		return model;
+		{
+			cam.projection = glm::ortho(-cam.width / 2, cam.width / 2, -cam.height / 2, cam.height / 2, cam.nearPlane, cam.farPlane);
+		}
 	}
 }

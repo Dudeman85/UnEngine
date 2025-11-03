@@ -17,6 +17,7 @@ namespace une
 		physicsSystem = ecs::GetSystem<PhysicsSystem>();
 		soundSystem = ecs::GetSystem<SoundSystem>();
 		animationSystem = ecs::GetSystem<AnimationSystem>();
+		cameraSystem = ecs::GetSystem<CameraSystem>();
 		primitiveRenderSystem = ecs::GetSystem<renderer::PrimitiveRenderSystem>();
 		spriteRenderSystem = ecs::GetSystem<renderer::SpriteRenderSystem>();
 		modelRenderSystem = ecs::GetSystem<renderer::ModelRenderSystem>();
@@ -26,7 +27,7 @@ namespace une
 	}
 
 	//Updates all default engine systems, returns delta time
-	double Update(Camera* cam)
+	double Update()
 	{
 		debug::StartTimer("EngineUpdate");
 		std::string debugString = "Completed engine update for frame " + std::to_string(frameCount) + ".";
@@ -45,13 +46,13 @@ namespace une
 		if (enableRendering)
 		{
 			renderer::UnifiedRenderPrepass();
-			renderer::UnifiedRenderPass(cam);
+			cameraSystem->Update();
 			debugString += " Rendering took " + std::to_string(debug::EndTimer("SystemsTimer")) + "ms,";
 		}
 		soundSystem->Update();
 		//Collision system should be after rendering
 		if (enablePhysics)
-			collisionSystem->Update(cam);
+			collisionSystem->Update();
 		//Transform must be after physics, collision and rendering
 		transformSystem->Update();
 		//Timer must be last

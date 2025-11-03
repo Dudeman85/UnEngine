@@ -32,7 +32,7 @@ namespace une::renderer
 	void UnifiedRenderPrepass()
 	{
 		//Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		primitiveRenderSystem->Prepass();
 		spriteRenderSystem->Prepass();
@@ -43,15 +43,16 @@ namespace une::renderer
 		debug::CheckGLError();
 	}
 
-	void UnifiedRenderPass(Camera* cam)
+	void UnifiedRenderPass(ecs::Entity cameraEntity)
 	{
 		glEnable(GL_DEPTH_TEST);
+		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_BLEND);
 		//First render all opaque world entities (non semi-transparent & non UI)
-		primitiveRenderSystem->DrawOpaqueWorldEntities(cam);
-		spriteRenderSystem->DrawOpaqueWorldEntities(cam);
-		modelRenderSystem->DrawOpaqueWorldEntities(cam);
+		primitiveRenderSystem->DrawOpaqueWorldEntities(cameraEntity);
+		spriteRenderSystem->DrawOpaqueWorldEntities(cameraEntity);
+		modelRenderSystem->DrawOpaqueWorldEntities(cameraEntity);
 
 		glEnable(GL_BLEND);
 		//Then sort all semi-transparent world entities and render them
@@ -64,23 +65,23 @@ namespace une::renderer
 		};
 		//Reserve a vector for combined list of entities
 		size_t size = 0;
-		for (std::vector<Renderable> v : transparents)
+		for (const std::vector<Renderable>& v : transparents)
 			size += v.size();
 		std::vector<Renderable> transparentEntites;
 		transparentEntites.reserve(size);
 		//Merge the vectors
-		for (std::vector<Renderable> v : transparents)
+		for (const std::vector<Renderable>& v : transparents)
 			transparentEntites.insert(transparentEntites.end(), v.begin(), v.end());
-		DrawOrderedEntities(transparentEntites, cam);
+		DrawOrderedEntities(transparentEntites, cameraEntity);
 
 		//Clear depth buffer to always render UI above world
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_BLEND);
 		//Then render all opaque UI entities
-		primitiveRenderSystem->DrawOpaqueUIEntities(cam);
-		spriteRenderSystem->DrawOpaqueUIEntities(cam);
-		modelRenderSystem->DrawOpaqueUIEntities(cam);
+		primitiveRenderSystem->DrawOpaqueUIEntities(cameraEntity);
+		spriteRenderSystem->DrawOpaqueUIEntities(cameraEntity);
+		modelRenderSystem->DrawOpaqueUIEntities(cameraEntity);
 
 		glEnable(GL_BLEND);
 		//Then sort all semi-transparent UI entities and render them
@@ -92,26 +93,28 @@ namespace une::renderer
 		};
 		//Reserve a vector for combined list of entities
 		size = 0;
-		for (std::vector<Renderable> v : transparents)
+		for (const std::vector<Renderable>& v : transparents)
 			size += v.size();
 		std::vector<Renderable> transparentUIEntites;
 		transparentUIEntites.reserve(size);
 		//Merge the vectors
-		for (std::vector<Renderable> v : transparents)
+		for (const std::vector<Renderable>& v : transparents)
 			transparentUIEntites.insert(transparentUIEntites.end(), v.begin(), v.end());
-		DrawOrderedEntities(transparentUIEntites, cam);
+		DrawOrderedEntities(transparentUIEntites, cameraEntity);
 
 		debug::CheckGLError();
 	}
 
 	//Draws a list of renderable entities that need to be sorted based on distance
-	void DrawOrderedEntities(std::vector<Renderable> entities, Camera* cam)
+	void DrawOrderedEntities(std::vector<Renderable> entities, ecs::Entity cameraEntity)
 	{
+		Transform& t = ecs::GetComponent<Transform>(cameraEntity);
+
 		//Calculate squared distances to camera
 		for (Renderable& r: entities)
 		{
 			//TODO: This needs to take into account camera rotation
-			r.distToCamera = cam->position.z - r.position.z;
+			r.distToCamera = t.position.z - r.position.z;
 		}
 
 		//Sort farthest to nearest based on relative distance to camera
@@ -124,14 +127,14 @@ namespace une::renderer
 		//Draw them with the proper draw function
 		for (const Renderable& r: entities)
 		{
-			r.render(r, cam);
+			r.render(r, cameraEntity);
 		}
 	}
 
 	//Set the window clear color
-	void SetBackgroundColor(Color c)
+	void SetBackgroundColor(const Color& c)
 	{
-		Color srgb = c.AsSRGB();
+		const Color srgb = c.AsSRGB();
 		glClearColor(srgb.r, srgb.g, srgb.b, srgb.a);
 	}
 }

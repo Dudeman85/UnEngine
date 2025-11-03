@@ -34,13 +34,13 @@ namespace une
 			//Sorts the sprites into their draw layers
 			void Prepass();
 			//Draws all entities in the opaqueWorldEntities list
-			void DrawOpaqueWorldEntities(Camera* cam);
+			void DrawOpaqueWorldEntities(ecs::Entity cameraEntity);
 			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-			void DrawOpaqueUIEntities(Camera* cam);
+			void DrawOpaqueUIEntities(ecs::Entity cameraEntity);
 			//Draw a sprite to the screen, expects bound VAO
-			void DrawEntity(ecs::Entity entity, Camera* cam);
+			void DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity);
 			//Static version of DrawEntity for renderable
-			static void DrawRenderable(const Renderable& r, Camera* cam);
+			static void DrawRenderable(const Renderable& r, ecs::Entity cameraEntity);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();

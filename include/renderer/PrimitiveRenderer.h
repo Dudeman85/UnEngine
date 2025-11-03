@@ -65,15 +65,15 @@ namespace une
 			void Prepass();
 
 			//Draws all entities in the opaqueWorldEntities list
-			void DrawOpaqueWorldEntities(Camera* cam);
+			void DrawOpaqueWorldEntities(ecs::Entity cameraEntity);
 			//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-			void DrawOpaqueUIEntities(Camera* cam);
+			void DrawOpaqueUIEntities(ecs::Entity cameraEntity);
 			//Draw a primitive to the screen
-			void DrawEntity(ecs::Entity entity, Camera* cam);
+			void DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity);
 			//Static version of DrawEntity for renderable
-			static void DrawRenderable(const Renderable& r, Camera* cam);
+			static void DrawRenderable(const Renderable& r, ecs::Entity cameraEntity);
 			//Draw a primitive to the screen, does not require an entity
-			static void DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
+			static void DrawPrimitive(const Primitive* primitive, ecs::Entity cameraEntity, const Color& color, DrawPriority prio, Vector3 position = 0, Vector3 rotation = 0, Vector3 scale = 1);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();

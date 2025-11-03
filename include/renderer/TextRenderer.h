@@ -41,9 +41,9 @@ namespace une
 			//Sorts the text into their draw layers
 			void Prepass();
 			//Draw a sprite to the screen, expects bound VAO
-			void DrawEntity(ecs::Entity entity, Camera* cam);
+			void DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity);
 			//Static version of DrawEntity for renderable
-			static void DrawRenderable(const Renderable& r, Camera* cam);
+			static void DrawRenderable(const Renderable& r, ecs::Entity cameraEntity);
 
 			const std::vector<Renderable>& GetTransparentWorldEntities();
 			const std::vector<Renderable>& GetTransparentUIEntities();

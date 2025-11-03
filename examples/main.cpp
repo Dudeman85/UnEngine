@@ -39,10 +39,16 @@ int main()
 	une::Window* window = une::CreateMainWindow(800, 600, "Window");
 
 	une::EngineInit();
-	une::Camera cam = une::Camera(800, 600);
-	cam.SetPosition({0, 0, 3000});
-	cam.perspective = false;
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
+
+	ecs::Entity camera = ecs::NewEntity();
+	ecs::AddComponent(camera, une::Camera{.viewport = {0, 0, 400, 600}});
+	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 3000}});
+	une::CameraSystem::MakeOrtho(camera, 400, 600);
+	ecs::Entity camera2 = ecs::NewEntity();
+	ecs::AddComponent(camera2, une::Camera{.viewport = {400, 0, 800, 600}});
+	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 3000}});
+	une::CameraSystem::MakeOrtho(camera2, 400, 600);
 
 	std::string assets = "../../../examples/assets/";
 	une::Texture texture(assets + "strawberry.png");
@@ -62,7 +68,7 @@ int main()
 
 	ecs::Entity e2 = ecs::NewEntity();
 	ecs::AddComponent(e2, une::SpriteRenderer{.texture = &texture});
-	//ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
+	ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
 	//ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
 	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
@@ -96,7 +102,7 @@ int main()
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_KP_ADD))
 		{
-			cam.Translate({0, 0, -10});
+			une::TransformSystem::Translate(camera, 0, 0, -10);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_KP_SUBTRACT))
 		{
@@ -104,22 +110,22 @@ int main()
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_W))
 		{
-			cam.Translate({0, 10, 0});
+			une::TransformSystem::Translate(camera, 0, 10, 0);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_A))
 		{
-			cam.Translate({-10, 0, 0});
+			une::TransformSystem::Translate(camera, -10, 0, 0);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_S))
 		{
-			cam.Translate({0, -10, 0});
+			une::TransformSystem::Translate(camera, 0, -10, 0);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_D))
 		{
-			cam.Translate({10, 0, 0});
+			une::TransformSystem::Translate(camera, 10, 0, 0);
 		}
 
-		une::Update(&cam);
+		une::Update();
 	}
 
 	return 0;

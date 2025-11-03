@@ -125,33 +125,34 @@ namespace une::renderer
 	}
 
 	//Draws all entities in the opaqueWorldEntities list
-	void SpriteRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
+	void SpriteRenderSystem::DrawOpaqueWorldEntities(ecs::Entity cameraEntity)
 	{
 		for (ecs::Entity entity : opaqueWorldEntities)
 		{
-			DrawEntity(entity, cam);
+			DrawEntity(entity, cameraEntity);
 		}
 	}
 
 	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-	void SpriteRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+	void SpriteRenderSystem::DrawOpaqueUIEntities(ecs::Entity cameraEntity)
 	{
 		for (ecs::Entity entity : opaqueUIEntities)
 		{
-			DrawEntity(entity, cam);
+			DrawEntity(entity, cameraEntity);
 		}
 	}
 
 	//Static version of DrawEntity for renderer
-	void SpriteRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+	void SpriteRenderSystem::DrawRenderable(const Renderable& r, ecs::Entity cameraEntity)
 	{
-		ecs::GetSystem<SpriteRenderSystem>()->DrawEntity(r.entity, cam);
+		ecs::GetSystem<SpriteRenderSystem>()->DrawEntity(r.entity, cameraEntity);
 	}
 
 	//Draw a sprite to the screen, expects bound VAO
-	void SpriteRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+	void SpriteRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 	{
 		//Get relevant components
+		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
 
 		if (!sprite.texture)
@@ -186,8 +187,8 @@ namespace une::renderer
 		else
 		{
 			//Render World entities based on camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
 		}
 
 		//Bind the resources

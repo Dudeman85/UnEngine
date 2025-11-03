@@ -35,9 +35,9 @@ namespace une
 			void Prepass();
 
 			//Draws one layer of an entity's tilemap
-			void DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id);
+			void DrawLayer(ecs::Entity entity, ecs::Entity cameraEntity, unsigned int id);
 			//Static version of DrawLayer for renderable
-			static void DrawRenderable(const Renderable& r, Camera* cam);
+			static void DrawRenderable(const Renderable& r, ecs::Entity cameraEntity);
 
 			const std::vector<Renderable>& GetTransparentWorldLayers();
 

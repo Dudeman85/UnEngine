@@ -103,36 +103,37 @@ namespace une::renderer
 	}
 
 	//Draws all entities in the opaqueWorldEntities list
-	void ModelRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
+	void ModelRenderSystem::DrawOpaqueWorldEntities(ecs::Entity cameraEntity)
 	{
 		for (ecs::Entity entity : opaqueWorldEntities)
 		{
-			DrawEntity(entity, cam);
+			DrawEntity(entity, cameraEntity);
 		}
 	}
 
 	//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-	void ModelRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+	void ModelRenderSystem::DrawOpaqueUIEntities(ecs::Entity cameraEntity)
 	{
 		for (ecs::Entity entity : opaqueUIEntities)
 		{
-			DrawEntity(entity, cam);
+			DrawEntity(entity, cameraEntity);
 		}
 	}
 
 	//Static version of DrawEntity for renderer
-	void ModelRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+	void ModelRenderSystem::DrawRenderable(const Renderable& r, ecs::Entity cameraEntity)
 	{
-		ecs::GetSystem<ModelRenderSystem>()->DrawEntity(r.entity, cam);
+		ecs::GetSystem<ModelRenderSystem>()->DrawEntity(r.entity, cameraEntity);
 	}
 
 	//Draw an entity to the screen
-	void ModelRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+	void ModelRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 	{
 		//TODO:remake lighting system
 		Vector3 lightPos;
 		Vector3 lightColor = Vector3(255);
-
+		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
+		Transform& t = ecs::GetComponent<Transform>(cameraEntity);
 
 		//Get relevant components
 		ModelRenderer& modelRenderer = ecs::GetComponent<ModelRenderer>(entity);
@@ -164,8 +165,8 @@ namespace une::renderer
 		else
 		{
 			//Render World entities based on camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
 		}
 
 		//Model matrix
@@ -179,7 +180,7 @@ namespace une::renderer
 		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		//Camera Position
 		unsigned int viewPosLoc = glGetUniformLocation(shader->ID, "viewPos");
-		glUniform3fv(viewPosLoc, 1, glm::value_ptr(cam->position));
+		glUniform3fv(viewPosLoc, 1, glm::value_ptr(t.position.ToGlm()));
 
 		//For each mesh in the model
 		for (unsigned int i = 0; i < modelRenderer.model->meshes.size(); i++)

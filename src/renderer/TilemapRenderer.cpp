@@ -119,9 +119,16 @@ namespace une::renderer
 		}
 	}
 
-	//Draws one layer of an entity's tilemap
-	void TilemapRenderSystem::DrawLayer(ecs::Entity entity, Camera* cam, unsigned int id)
+	//Static version of DrawLayer for renderable
+	void TilemapRenderSystem::DrawRenderable(const Renderable& r, ecs::Entity cameraEntity)
 	{
+		ecs::GetSystem<TilemapRenderSystem>()->DrawLayer(r.entity, cameraEntity, r.index);
+	}
+
+	//Draws one layer of an entity's tilemap
+	void TilemapRenderSystem::DrawLayer(ecs::Entity entity, ecs::Entity cameraEntity, unsigned int id)
+	{
+		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		TilemapRenderer& tilemapRenderer = ecs::GetComponent<TilemapRenderer>(entity);
 
 		if (!tilemapRenderer.tilemap)
@@ -142,9 +149,9 @@ namespace une::renderer
 		int modelLoc = glGetUniformLocation(shader->ID, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		int viewLoc = glGetUniformLocation(shader->ID, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
 		int projLoc = glGetUniformLocation(shader->ID, "projection");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
 		int tileSizeLoc = glGetUniformLocation(shader->ID, "tileSize");
 		glUniform2ui(tileSizeLoc, tilemapRenderer.tilemap->tileSize.x, tilemapRenderer.tilemap->tileSize.y);
 		int tilesetSizeLoc = glGetUniformLocation(shader->ID, "tilesetSize");
@@ -157,12 +164,6 @@ namespace une::renderer
 		layer->DrawSubsets(tilesetSizeLoc);
 
 		glBindVertexArray(0);
-	}
-
-	//Static version of DrawLayer for renderable
-	void TilemapRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
-	{
-		ecs::GetSystem<TilemapRenderSystem>()->DrawLayer(r.entity, cam, r.index);
 	}
 
 	const std::vector<Renderable>& TilemapRenderSystem::GetTransparentWorldLayers()

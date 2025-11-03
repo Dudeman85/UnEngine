@@ -39,7 +39,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Unify model, sprite, text, tilemap, and primitive renderers
   - [x] Improve tilemap rendering
   - [x] Fix sprite scaling
-- [ ] Redo camera for ecs
+- [x] Redo camera for ecs
 - [ ] Redo UI system
 - [x] Redo window and context system
 
@@ -67,8 +67,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Add Hexagonal tilemap support
 - [x] More robust logging system
 - [ ] Add TOML or similar config support
-- [ ] Add multithreading support
-- [ ] Add multi camera support
+- [x] Add multi camera support
 
 ## Low Priority
 ### Improvements
@@ -85,6 +84,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 ### New Features
 - [ ] Create a particle system
 - [ ] Add 3D animation support
+- [ ] Add multithreading support
 - [ ] Add debug tools
   - [ ] Camera
   - [ ] Frame advance

@@ -62,7 +62,7 @@ namespace une
 		enum class LayerInteraction { all, none, collisions, triggers };
 
 		//Called every frame
-		void Update(Camera* camera);
+		void Update();
 
 		//Checks collision between entity a and every other entity and tilemap, Returns the collisions from the perspective of a, and calls every applicable callback function
 		std::vector<Collision> CheckCollision(ecs::Entity a);

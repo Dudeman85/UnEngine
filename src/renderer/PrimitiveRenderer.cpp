@@ -220,43 +220,45 @@ namespace une
 		}
 
 		//Draws all entities in the opaqueWorldEntities list
-		void PrimitiveRenderSystem::DrawOpaqueWorldEntities(Camera *cam)
+		void PrimitiveRenderSystem::DrawOpaqueWorldEntities(ecs::Entity cameraEntity)
 		{
 			for (ecs::Entity entity : opaqueWorldEntities)
 			{
-				DrawEntity(entity, cam);
+				DrawEntity(entity, cameraEntity);
 			}
 		}
 
 		//Draws all entities in the opaqueUIEntities list, expects depth buffer to be reset
-		void PrimitiveRenderSystem::DrawOpaqueUIEntities(Camera* cam)
+		void PrimitiveRenderSystem::DrawOpaqueUIEntities(ecs::Entity cameraEntity)
 		{
 			for (ecs::Entity entity : opaqueUIEntities)
 			{
-				DrawEntity(entity, cam);
+				DrawEntity(entity, cameraEntity);
 			}
 		}
 
 		//Static version of DrawEntity for renderer
-		void PrimitiveRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+		void PrimitiveRenderSystem::DrawRenderable(const Renderable& r, ecs::Entity cameraEntity)
 		{
-			ecs::GetSystem<PrimitiveRenderSystem>()->DrawEntity(r.entity, cam);
+			ecs::GetSystem<PrimitiveRenderSystem>()->DrawEntity(r.entity, cameraEntity);
 		}
 
 		//Draw a primitive to the screen
-		void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+		void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 		{
 			Transform transform = TransformSystem::GetGlobalTransform(entity);
 			PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
 
-			DrawPrimitive(primitiveRenderer.primitive, cam, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
+			DrawPrimitive(primitiveRenderer.primitive, cameraEntity, primitiveRenderer.color, primitiveRenderer.uiElement ? ui : normal,
 				transform.position, transform.rotation, transform.scale);
 		}
 
 		//Draw a primitive to the screen, does not require an entity
-		void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, Camera* cam, const Color& color, DrawPriority prio,
+		void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, ecs::Entity cameraEntity, const Color& color, DrawPriority prio,
 			Vector3 position, Vector3 rotation, Vector3 scale)
 		{
+			Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
+
 			shader->Use();
 
 			glBindVertexArray(primitive->VAO);
@@ -296,8 +298,8 @@ namespace une
 				if (prio == DrawPriority::aboveAll)
 					glDisable(GL_DEPTH_BUFFER_BIT);
 				//Render World entities based on camera's view and projection
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
+				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
 			}
 
 			//TODO: Fix filled draw

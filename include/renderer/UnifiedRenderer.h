@@ -8,11 +8,11 @@ namespace une::renderer
 {
     void Init();
     void UnifiedRenderPrepass();
-    void UnifiedRenderPass(Camera* cam);
+    void UnifiedRenderPass(ecs::Entity cameraEntity);
 
     //Draws a list of renderable entities that need to be sorted based on distance
-    void DrawOrderedEntities(std::vector<Renderable> entities, Camera* cam);
+    void DrawOrderedEntities(std::vector<Renderable> entities, ecs::Entity cameraEntity);
 
     //Set the window clear color to given rgb(a) 0-255
-    void SetBackgroundColor(Color c);
+    void SetBackgroundColor(const Color& c);
 }

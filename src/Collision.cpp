@@ -5,7 +5,7 @@
 namespace une
 {
 	///Called every frame
-	void CollisionSystem::Update(Camera* camera)
+	void CollisionSystem::Update()
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
 

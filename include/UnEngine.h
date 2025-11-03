@@ -34,6 +34,7 @@ namespace une
 	inline std::shared_ptr<PhysicsSystem> physicsSystem;
 	inline std::shared_ptr<SoundSystem> soundSystem;
 	inline std::shared_ptr<AnimationSystem> animationSystem;
+	inline std::shared_ptr<CameraSystem> cameraSystem;
 	inline std::shared_ptr<renderer::PrimitiveRenderSystem> primitiveRenderSystem;
 	inline std::shared_ptr<renderer::SpriteRenderSystem> spriteRenderSystem;
 	inline std::shared_ptr<renderer::ModelRenderSystem> modelRenderSystem;
@@ -43,5 +44,5 @@ namespace une
 	void EngineInit();
 
 	//Updates all default engine systems, returns delta time
-	double Update(Camera* cam);
+	double Update();
 }

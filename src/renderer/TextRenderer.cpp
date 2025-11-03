@@ -76,14 +76,15 @@ namespace une::renderer
 	}
 
 	//Static version of DrawEntity for renderer
-	void TextRenderSystem::DrawRenderable(const Renderable& r, Camera* cam)
+	void TextRenderSystem::DrawRenderable(const Renderable& r, ecs::Entity cameraEntity)
 	{
-		ecs::GetSystem<TextRenderSystem>()->DrawEntity(r.entity, cam);
+		ecs::GetSystem<TextRenderSystem>()->DrawEntity(r.entity, cameraEntity);
 	}
 
 	//Draw a sprite to the screen, expects bound VAO
-	void TextRenderSystem::DrawEntity(ecs::Entity entity, Camera* cam)
+	void TextRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 	{
+		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		TextRenderer& textRenderer = ecs::GetComponent<TextRenderer>(entity);
 
 		if (!textRenderer.font)
@@ -113,8 +114,8 @@ namespace une::renderer
 		else
 		{
 			//Render World entities based on camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam->GetViewMatrix()));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam->GetProjectionMatrix()));
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
 		}
 
 		Color srgb = textRenderer.color.AsSRGB();

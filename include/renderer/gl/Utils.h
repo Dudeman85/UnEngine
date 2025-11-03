@@ -12,12 +12,12 @@ namespace une::renderer
 	{
 		ecs::Entity entity = 0;
 		Vector3 position;
-		std::function<void(Renderable, Camera*)> render;
+		std::function<void(Renderable, ecs::Entity cameraEntity)> render;
 
 		//Extra data
 		unsigned int index = 0; //Tilemap
 
 		//Renderer implementation internal
-		float distToCamera = INFINITY;
+		double distToCamera = INFINITY;
 	};
 }
