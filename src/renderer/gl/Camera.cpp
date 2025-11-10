@@ -1,6 +1,6 @@
 #include "renderer/gl/Camera.h"
 
-#include <glm/gtc/matrix_transform.hpp>
+#include "glm/gtc/matrix_transform.hpp"
 
 #include "renderer/gl/Window.h"
 #include "renderer/UnifiedRenderer.h"
@@ -91,7 +91,7 @@ namespace une
 
 		if (cam.perspective)
 		{
-			const double aspectRatio = (cam.viewport.x2 - cam.viewport.x1) / (cam.viewport.y2 - cam.viewport.y1);
+			const double aspectRatio = (double)(cam.viewport.x2 - cam.viewport.x1) / (double)(cam.viewport.y2 - cam.viewport.y1);
 			cam.projection = glm::perspective(glm::radians(cam.fov), (float)aspectRatio, cam.nearPlane, cam.farPlane);
 		}
 		else

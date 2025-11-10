@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Networking.h"
+#include "renderer/UserInterface.h"
 
 struct Foo
 {
@@ -42,13 +43,14 @@ int main()
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
 
 	ecs::Entity camera = ecs::NewEntity();
-	ecs::AddComponent(camera, une::Camera{.viewport = {0, 0, 400, 600}});
+	ecs::AddComponent(camera, une::Camera{.viewport = {0, 0, 800, 600}});
 	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 3000}});
-	une::CameraSystem::MakeOrtho(camera, 400, 600);
+	une::CameraSystem::MakeOrtho(camera, 800, 600);
+	/*
 	ecs::Entity camera2 = ecs::NewEntity();
 	ecs::AddComponent(camera2, une::Camera{.viewport = {400, 0, 800, 600}});
 	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 3000}});
-	une::CameraSystem::MakeOrtho(camera2, 400, 600);
+	une::CameraSystem::MakeOrtho(camera2, 800, 600);*/
 
 	std::string assets = "../../../examples/assets/";
 	une::Texture texture(assets + "strawberry.png");
@@ -58,9 +60,12 @@ int main()
 	une::Tilemap tilemap(assets + "testMap.tmx");
 	une::Primitive square = une::Primitive::Rectangle();
 
+	une::UICanvas canvas(200, 600);
+
 	ecs::Entity e0 = ecs::NewEntity();
-	//ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});
-	ecs::AddComponent(e0, une::Transform{.position = {-50, 30, -10}, .scale = 150});
+	ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});
+	ecs::AddComponent(e0, une::Transform{.position = {-100, 0, 10}, .scale = 5});
+	ecs::AddComponent(e0, une::UIElement{&canvas});
 
 	ecs::Entity e1 = ecs::NewEntity();
 	//ecs::AddComponent(e1, une::SpriteRenderer{.texture = &transparentTexture, .enabled = true});
@@ -68,7 +73,7 @@ int main()
 
 	ecs::Entity e2 = ecs::NewEntity();
 	ecs::AddComponent(e2, une::SpriteRenderer{.texture = &texture});
-	ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
+	//ecs::AddComponent(e2, une::ModelRenderer{.model = &model});
 	//ecs::AddComponent(e2, une::PrimitiveRenderer{.primitive = &square, .color = une::Color(250, 50, 250, 100)});
 	//ecs::AddComponent(e2, une::TextRenderer{.font = &font, .text = "Helloqp  World!", .color = une::Color(0, 0, 0, 255)});
 	ecs::AddComponent(e2, une::TilemapRenderer{.tilemap = &tilemap});
@@ -123,6 +128,13 @@ int main()
 		if (glfwGetKey(window->glWindow, GLFW_KEY_D))
 		{
 			une::TransformSystem::Translate(camera, 10, 0, 0);
+		}
+		if (glfwGetKey(window->glWindow, GLFW_KEY_F))
+		{
+			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
+			cam.viewport.x2--;
+			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, 600);
+			//canvas.SetSize(cam.viewport.x2, 600);
 		}
 
 		une::Update();

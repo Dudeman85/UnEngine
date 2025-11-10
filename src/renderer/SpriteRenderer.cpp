@@ -181,10 +181,18 @@ namespace une::renderer
 
 		if (ecs::HasComponent<UIElement>(entity))
 		{
-			//TODO: redo ui
-			//Render UI elements independent of camera's view and projection
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+			UIElement& ui = ecs::GetComponent<UIElement>(entity);
+			if (ui.canvas)
+			{
+				//TODO: redo ui
+				//Render UI elements independent of camera's view and projection
+				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetProjection()));
+			}
+			else
+			{
+				debug::LogWarning("No canvas given for UIElement of entity " + std::to_string(entity));
+			}
 		}
 		else
 		{

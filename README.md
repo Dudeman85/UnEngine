@@ -41,10 +41,12 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [x] Fix sprite scaling
 - [x] Redo camera for ecs
 - [ ] Redo UI system
+  - How do we handle scaling?
 - [x] Redo window and context system
 
 ### New Features
 - [ ] Implement UPnP for automatic port forwarding
+  - https://edgl.dev/blog/intro-to-upnp/
 - [ ] Add Hexagonal tilemap support
 - [x] Implement enet (was already implemented)
 - [x] Component serialization support

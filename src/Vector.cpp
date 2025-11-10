@@ -2,6 +2,8 @@
 
 #include "Vector.h"
 
+#include <cinttypes>
+
 #include "Color.h"
 
 namespace une
@@ -159,7 +161,7 @@ namespace une
 	std::string Vector2Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%lld, %lld)", x, y);
+		std::snprintf(buff, sizeof(buff) - 1, "(%" PRId64 ", %" PRId64 ")", x, y);
 		return std::string(buff);
 	}
 
@@ -309,7 +311,7 @@ namespace une
 	}
 	double Vector2::Dot(const Vector2& b) const
 	{
-		return (x * b.x) + (y * b.y);
+		return x * b.x + y * b.y;
 	}
 	Vector2 Vector2::LeftNormal() const
 	{
@@ -479,7 +481,7 @@ namespace une
 	std::string Vector3Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%lld, %lld, %lld)", x, y, z);
+		std::snprintf(buff, sizeof(buff) - 1, "(%" PRId64 ", %" PRId64 ", %" PRId64 ")", x, y, z);
 		return std::string(buff);
 	}
 
@@ -671,19 +673,19 @@ namespace une
 	}
 	Vector3 Vector3::Normalize() const
 	{
-		double length = sqrt(x * x + y * y + z * z);
+		const double length = sqrt(x * x + y * y + z * z);
 		return Vector3(x / length, y / length, z / length);
 	}
-	double Vector3::Dot(Vector3 b) const
+	double Vector3::Dot(const Vector3& b) const
 	{
 		return (x * b.x) + (y * b.y) + (z * b.z);
 	}
-	Vector3 Vector3::Cross(Vector3 b) const
+	Vector3 Vector3::Cross(const Vector3& b) const
 	{
 		return Vector3((y * b.z) - (z * b.y), (z * b.x) - (x * b.z), (x * b.y) - (y * b.x));
 	}
 	//Distance from this point to another
-	double Vector3::Distance(Vector3 b) const
+	double Vector3::Distance(const Vector3& b) const
 	{
 		return sqrt((b.x - x) * (b.x - x) + (b.y - y) * (b.y - y) + (b.z - z) * (b.z - z));
 	}

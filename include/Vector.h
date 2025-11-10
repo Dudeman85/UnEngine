@@ -214,11 +214,11 @@ namespace une
 		//Returns a normalized version of this vector with a lenght of 1
 		Vector3 Normalize() const;
 		//Dot product of this vector and vector b
-		double Dot(Vector3 b) const;
+		double Dot(const Vector3& b) const;
 		//Cross product of this vector and vector b
-		Vector3 Cross(Vector3 b) const;
+		Vector3 Cross(const Vector3& b) const;
 		//Distance from this point to another
-		double Distance(Vector3 b) const;
+		double Distance(const Vector3& b) const;
 
 		//Returns a glm vec3
 		glm::vec3 ToGlm() const;
