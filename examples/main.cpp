@@ -60,11 +60,11 @@ int main()
 	une::Tilemap tilemap(assets + "testMap.tmx");
 	une::Primitive square = une::Primitive::Rectangle();
 
-	une::UICanvas canvas(200, 600);
+	une::UICanvas canvas(800, 600);
 
 	ecs::Entity e0 = ecs::NewEntity();
 	ecs::AddComponent(e0, une::SpriteRenderer{.texture = &texture});
-	ecs::AddComponent(e0, une::Transform{.position = {-100, 0, 10}, .scale = 5});
+	ecs::AddComponent(e0, une::Transform{.position = {0, 0, 0}, .scale = 5});
 	ecs::AddComponent(e0, une::UIElement{&canvas});
 
 	ecs::Entity e1 = ecs::NewEntity();
@@ -133,8 +133,15 @@ int main()
 		{
 			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
 			cam.viewport.x2--;
-			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, 600);
-			//canvas.SetSize(cam.viewport.x2, 600);
+			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
+			canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
+		}
+		if (glfwGetKey(window->glWindow, GLFW_KEY_G))
+		{
+			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
+			cam.viewport.y2--;
+			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
+			canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
 		}
 
 		une::Update();

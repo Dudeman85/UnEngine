@@ -20,8 +20,8 @@ namespace une
 		Vector4 GetSize() const;
 		Vector3 GetPosition() const;
 		Vector3 GetRotation() const;
-		glm::mat4 GetView() const;
 		glm::mat4 GetProjection() const;
+		static glm::mat4 GetTransformForEntity(ecs::Entity entity);
 	private:
 		void RecalculateView();
 		void RecalculateProjection();
@@ -38,5 +38,7 @@ namespace une
 	struct UIElement
 	{
 		UICanvas* canvas;
+		//A point inside the canvas in ndc. Transform will be relative to it.
+		Vector2 anchor;
 	};
 }

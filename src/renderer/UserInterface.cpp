@@ -1,5 +1,6 @@
 #include "renderer/UserInterface.h"
 
+#include "Transform.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace une
@@ -51,9 +52,12 @@ namespace une
 	{
 		return rotation;
 	}
-	glm::mat4 UICanvas::GetView() const
+	glm::mat4 UICanvas::GetTransformForEntity(ecs::Entity entity)
 	{
-		return view;
+		UIElement& ui = ecs::GetComponent<UIElement>(entity);
+		Transform& transform = ecs::GetComponent<Transform>(entity);
+
+
 	}
 	glm::mat4 UICanvas::GetProjection() const
 	{
