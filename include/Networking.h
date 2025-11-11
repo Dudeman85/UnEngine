@@ -5,6 +5,8 @@
 #include <unordered_map>
 
 #include "enet/enet.h"
+#include "miniupnpc.h"
+
 #include "Serialization.h"
 
 namespace une::enet
@@ -54,4 +56,18 @@ namespace une::enet
 	void OnDisconnect(const std::function<void(const PeerInfo&)>& callback);
 	//Set a function to call when a packet is received
 	void OnReceive(const std::function<void(const PeerInfo&, const Packet&)>& callback);
+
+	struct UPNPPortInfo
+	{
+		UPNPUrls upnpUrls;
+		IGDdatas igdData;
+		std::string port;
+	};
+
+	//Attempt to open a upd port
+	bool UPNPMapPort(const std::string& port, const std::string& name);
+	//Attempt to delete a udp port mapping by its name
+	bool UPNPUnmapPort(const std::string& name);
+	//Attempt to delete all upd ports mapped by this program
+	void UPNPUnmapAllPorts();
 }

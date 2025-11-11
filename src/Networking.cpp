@@ -1,5 +1,8 @@
 #include "Networking.h"
 
+#include "upnpcommands.h"
+#include "upnperrors.h"
+
 namespace une::enet
 {
 	//Initalize the ENet library
@@ -199,5 +202,82 @@ namespace une::enet
 	void OnReceive(const std::function<void(const PeerInfo&, const Packet&)>& callback)
 	{
 		onReceiveFunc = callback;
+	}
+
+	//A list of all currently mapped ports by name
+	std::unordered_map<std::string, UPNPPortInfo> mappedPorts;
+
+	//Attempt to open a upd port
+	bool UPNPMapPort(const std::string& port, const std::string& name)
+	{
+		//Find a upnp enabled router on the network
+		UPNPDev* upnpDevices = nullptr;
+		int ret = UPNPCOMMAND_SUCCESS;
+		upnpDevices = upnpDiscover(2000, nullptr, nullptr, UPNP_LOCAL_PORT_ANY, 0, 2, &ret);
+		if (ret != UPNPCOMMAND_SUCCESS)
+		{
+			debug::LogWarning("Failed to discover UPNP devices: " + std::string(strupnperror(ret)));
+			return false;
+		}
+
+		UPNPUrls upnpUrls;
+		IGDdatas igdData;
+		char lanAddress[64];
+		char wanAddress[64];
+		//Retrieve the Internet Gateway Devide of the router
+		ret = UPNP_GetValidIGD(upnpDevices, &upnpUrls, &igdData, lanAddress, sizeof(lanAddress), wanAddress, sizeof(wanAddress));
+		freeUPNPDevlist(upnpDevices);
+		if (ret == UPNP_CONNECTED_IGD)
+		{
+			//Configure the port mapping to open it
+			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, port.c_str(), port.c_str(), lanAddress, name.c_str(), "UDP", 0, 0);
+			if (ret != UPNPCOMMAND_SUCCESS)
+			{
+				debug::LogWarning("Failed to map port: " + std::string(strupnperror(ret)));
+				return false;
+			}
+		}
+		else
+		{
+			debug::LogWarning("No valid IGD found");
+			return false;
+		}
+
+		mappedPorts[name] = UPNPPortInfo{upnpUrls, igdData, port};
+		debug::LogInfo("Succesfully mapped port " + port + " with name " + name);
+		return true;
+	}
+
+	//Attempt to delete a udp port mapping by its name
+	bool UPNPUnmapPort(const std::string& name)
+	{
+		if (!mappedPorts.contains(name))
+		{
+			debug::LogWarning("No mapped port named " + name);
+			return false;
+		}
+
+		//Delete the port mapping
+		UPNPPortInfo& info = mappedPorts[name];
+		int ret = UPNP_DeletePortMapping(info.upnpUrls.controlURL, info.igdData.first.servicetype, info.port.c_str(), "UDP", 0);
+		if (ret != UPNPCOMMAND_SUCCESS)
+		{
+			debug::LogWarning("Failed to delete port: " + std::string(strupnperror(ret)));
+			return false;
+		}
+
+		debug::LogInfo("Deleted mapping on port " + info.port + " with name " + name);
+		FreeUPNPUrls(&info.upnpUrls);
+		mappedPorts.erase(name);
+		return true;
+	}
+
+	//Attempt to delete all upd ports mapped by this program
+	void UPNPUnmapAllPorts()
+	{
+		for (auto& port : mappedPorts)
+		{
+			UPNPUnmapPort(port.first);
+		}
 	}
 }

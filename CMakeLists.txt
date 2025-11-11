@@ -22,6 +22,7 @@ include_directories("include")
 include_directories("ext")
 include_directories("ext/glad")
 include_directories("ext/enet/include")
+include_directories("ext/miniupnp/miniupnpc/include")
 
 add_subdirectory("ext/enet")
 add_subdirectory("ext/freetype")
@@ -29,6 +30,7 @@ add_subdirectory("ext/assimp")
 add_subdirectory("ext/tmxlite/tmxlite")
 add_subdirectory("ext/glfw")
 add_subdirectory("ext/glm")
+add_subdirectory("ext/miniupnp/miniupnpc")
 
 set(GLAD_GL "ext/glad/gl.h" "ext/glad/gl.c")
 

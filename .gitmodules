@@ -16,3 +16,6 @@
 [submodule "ext/tmxlite"]
 	path = ext/tmxlite
 	url = https://github.com/fallahn/tmxlite
+[submodule "ext/miniupnp"]
+	path = ext/miniupnp
+	url = https://github.com/miniupnp/miniupnp.git
