@@ -17,6 +17,11 @@ set(ASSIMP_BUILD_ASSIMP_VIEW OFF)
 set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_OBJ_IMPORTER ON)
+set(UPNPC_BUILD_SAMPLE ON)
+set(UPNPC_BUILD_SHARED OFF)
+set(UPNPC_BUILD_TESTS OFF)
+set(UPNPC_NO_INSTALL ON)
+set(NO_GETADDRINFO ON)
 
 include_directories("include")
 include_directories("ext")
@@ -39,7 +44,7 @@ file(GLOB_RECURSE ENGINE_SOURCE_FILES "./src/*.cpp")
 file(GLOB_RECURSE ENGINE_HEADER_FILES "./include/*.h")
 add_library(UnEngine ${ENGINE_SOURCE_FILES} ${ENGINE_HEADER_FILES} ${GLAD_GL})
 
-target_link_libraries(UnEngine glfw glm assimp tmxlite freetype enet)
+target_link_libraries(UnEngine glfw glm assimp tmxlite freetype enet libminiupnpc-static)
 	
 target_include_directories(UnEngine PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -1,5 +1,7 @@
 #include "Color.h"
 
+#include <algorithm>
+
 namespace une
 {
     Color::Color(int red, int green, int blue, int alpha)

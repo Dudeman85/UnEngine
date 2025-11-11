@@ -57,7 +57,7 @@ namespace une
 		UIElement& ui = ecs::GetComponent<UIElement>(entity);
 		Transform& transform = ecs::GetComponent<Transform>(entity);
 
-
+		return 0;
 	}
 	glm::mat4 UICanvas::GetProjection() const
 	{

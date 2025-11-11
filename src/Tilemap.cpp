@@ -1,7 +1,10 @@
+#include "Tilemap.h"
+
+#include <algorithm>
+
 #include "tmxlite/Map.hpp"
 #include "tmxlite/TileLayer.hpp"
 
-#include "Tilemap.h"
 #include "Vector.h"
 #include "Debug.h"
 #include "ECS.h"

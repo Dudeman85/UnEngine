@@ -51,8 +51,8 @@ int main()
 	ecs::AddComponent(camera2, une::Camera{.viewport = {400, 0, 800, 600}});
 	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 3000}});
 	une::CameraSystem::MakeOrtho(camera2, 800, 600);*/
-
-	std::string assets = "../../../examples/assets/";
+	
+	std::string assets = UNENGINE_EXAMPLE_PROJECT_LOCATION "/assets/";
 	une::Texture texture(assets + "strawberry.png");
 	une::Texture transparentTexture(assets + "Transparent.png");
 	une::Model model(assets + "Achelous.obj");
@@ -134,18 +134,19 @@ int main()
 			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
 			cam.viewport.x2--;
 			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-			canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
+			//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_G))
 		{
 			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
 			cam.viewport.y2--;
 			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-			canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
+			//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
 		}
 
 		une::Update();
 	}
 
+	une::enet::UPNPUnmapAllPorts();
 	return 0;
 }

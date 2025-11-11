@@ -1,2 +1,3 @@
 add_executable(ExampleScene main.cpp)
 target_link_libraries(ExampleScene UnEngine)
+add_compile_definitions(UNENGINE_EXAMPLE_PROJECT_LOCATION="${CMAKE_CURRENT_LIST_DIR}")

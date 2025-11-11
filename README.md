@@ -45,8 +45,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Redo window and context system
 
 ### New Features
-- [ ] Implement UPnP for automatic port forwarding
-  - https://edgl.dev/blog/intro-to-upnp/
+- [x] Implement UPnP for automatic port forwarding
 - [ ] Add Hexagonal tilemap support
 - [x] Implement enet (was already implemented)
 - [x] Component serialization support

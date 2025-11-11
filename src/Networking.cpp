@@ -206,10 +206,25 @@ namespace une::enet
 
 	//A list of all currently mapped ports by name
 	std::unordered_map<std::string, UPNPPortInfo> mappedPorts;
+	bool _wsaInitialized = false;
 
 	//Attempt to open a upd port
 	bool UPNPMapPort(const std::string& port, const std::string& name)
 	{
+#ifdef _WIN32
+		if (!_wsaInitialized)
+		{
+			WSADATA wsaData;
+			int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (ret != UPNPCOMMAND_SUCCESS)
+			{
+				debug::LogError("WSAStartup failed with error " + std::string(strupnperror(ret)));
+				return false;
+			}
+			_wsaInitialized = true;
+		}
+#endif
+
 		//Find a upnp enabled router on the network
 		UPNPDev* upnpDevices = nullptr;
 		int ret = UPNPCOMMAND_SUCCESS;
@@ -230,7 +245,7 @@ namespace une::enet
 		if (ret == UPNP_CONNECTED_IGD)
 		{
 			//Configure the port mapping to open it
-			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, port.c_str(), port.c_str(), lanAddress, name.c_str(), "UDP", 0, 0);
+			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, port.c_str(), port.c_str(), lanAddress, name.c_str(), "UDP", "", "0");
 			if (ret != UPNPCOMMAND_SUCCESS)
 			{
 				debug::LogWarning("Failed to map port: " + std::string(strupnperror(ret)));

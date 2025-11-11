@@ -1,5 +1,7 @@
 #include "renderer/gl/Camera.h"
 
+#include <algorithm>
+
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "renderer/gl/Window.h"

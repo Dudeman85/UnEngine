@@ -51,7 +51,7 @@ namespace une::renderer
 
 					if (tileID < 65535u)
 					{
-						vec2 position = vec2(tileID % tilesetSize.x, floor(tileID / tilesetSize.x)) / tilesetSize;
+						vec2 position = vec2(tileID % tilesetSize.x, tileID / tilesetSize.x) / tilesetSize;
 
 						vec2 texelSize = vec2(1.0) / textureSize(lookupTexture, 0);
 						vec2 offset = mod(TexCoord, texelSize);

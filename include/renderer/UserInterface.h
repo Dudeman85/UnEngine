@@ -4,6 +4,10 @@
 #include "Vector.h"
 #include "glm/mat4x4.hpp"
 
+//Fix win32 bs
+#undef near
+#undef far
+
 namespace une
 {
 	class UICanvas
@@ -26,8 +30,7 @@ namespace une
 		void RecalculateView();
 		void RecalculateProjection();
 
-		float width, height;
-		float near, far;
+		float width, height, near, far;
 		Vector3 position;
 		Vector3 rotation;
 		glm::mat4 view;

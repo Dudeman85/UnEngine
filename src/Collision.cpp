@@ -205,6 +205,7 @@ namespace une
 		}
 
 		return collisions;*/
+		return std::vector<Collision>();
 	}
 
 	///Check Entity-Entity collision. Does not call callbacks

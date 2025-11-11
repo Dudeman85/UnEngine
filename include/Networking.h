@@ -4,6 +4,7 @@
 #include <functional>
 #include <unordered_map>
 
+#define NO_IPV6
 #include "enet/enet.h"
 #include "miniupnpc.h"
 
