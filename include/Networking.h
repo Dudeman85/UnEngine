@@ -31,19 +31,18 @@ namespace une::enet
 	};
 
 	//How many channels should the enet host have
-	inline uint32_t numChannels = 2;
 	inline std::function<bool(const PeerInfo&)> onConnectFunc;
 	inline std::function<void(const PeerInfo&)> onDisconnectFunc;
-	inline std::function<void(const PeerInfo&, const Packet&)> onReceiveFunc;
+	inline std::function<void(const PeerInfo&, Packet&)> onReceiveFunc;
 
 	//Initalize the ENet library
 	bool Init();
 	//Create an ENet server host
 	Connection CreateServer(uint16_t port, size_t maxPeers, size_t channelLimit = 2);
 	//Create an ENet client host
-	Connection CreateClient();
-	//Connect to a server
-	bool ConnectToServer(Connection& conn, const std::string& ip, uint16_t port);
+	Connection CreateClient(size_t channelLimit = 2);
+	//Connect to an ENet server at ip:port, returns server's peer id on success
+	int ConnectToServer(Connection& conn, const std::string& ip, uint16_t port, size_t numChannels = 2);
 	//Close this connection and disconnect all peers, no disconnect events will be received
 	void CloseConnection(Connection& conn);
 	//Update Enet, sends any queued packets, receives any pending packets, and calls the appropriate callbacs 
@@ -56,7 +55,7 @@ namespace une::enet
 	//Set a function to call when a peer is disconnected
 	void OnDisconnect(const std::function<void(const PeerInfo&)>& callback);
 	//Set a function to call when a packet is received
-	void OnReceive(const std::function<void(const PeerInfo&, const Packet&)>& callback);
+	void OnReceive(const std::function<void(const PeerInfo&, Packet&)>& callback);
 
 	struct UPNPPortInfo
 	{
@@ -66,7 +65,7 @@ namespace une::enet
 	};
 
 	//Attempt to open a upd port
-	bool UPNPMapPort(const std::string& port, const std::string& name);
+	bool UPNPMapPort(uint16_t port, const std::string& name);
 	//Attempt to delete a udp port mapping by its name
 	bool UPNPUnmapPort(const std::string& name);
 	//Attempt to delete all upd ports mapped by this program

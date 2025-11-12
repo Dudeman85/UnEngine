@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(UnEngine)
 
-option(UNENGINE_BUILD_EXAMPLES "Build example scene" OFF)
+option(UNENGINE_BUILD_EXAMPLES "Build example scenes" ON)
 
 add_compile_definitions(NOMINMAX)
 

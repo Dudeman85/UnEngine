@@ -19,13 +19,13 @@ namespace une::enet
 	}
 
 	//Create an ENet server host
-	Connection CreateServer(uint16_t port, size_t maxPeers)
+	Connection CreateServer(uint16_t port, size_t maxPeers, size_t channelLimit)
 	{
 		Connection conn;
 		conn.isServer = true;
 		conn.address.host = ENET_HOST_ANY;
 		conn.address.port = port;
-		conn.host = enet_host_create(&conn.address, maxPeers, numChannels, 0, 0);
+		conn.host = enet_host_create(&conn.address, maxPeers, channelLimit, 0, 0);
 
 		if (!conn.host)
 		{
@@ -39,13 +39,13 @@ namespace une::enet
 	}
 
 	//Create an ENet client host
-	Connection CreateClient()
+	Connection CreateClient(size_t channelLimit)
 	{
 		Connection conn;
 		conn.isServer = false;
 		conn.address.host = ENET_HOST_ANY;
 		conn.address.port = ENET_PORT_ANY;
-		conn.host = enet_host_create(nullptr, 1, numChannels, 0, 0);
+		conn.host = enet_host_create(nullptr, 1, channelLimit, 0, 0);
 
 		if (!conn.host)
 		{
@@ -57,14 +57,14 @@ namespace une::enet
 		return conn;
 	}
 
-	//Connect to an ENet server at ip:port, returns true on success
-	bool ConnectToServer(Connection& conn, const std::string& ip, uint16_t port)
+	//Connect to an ENet server at ip:port, returns server's peer id on success
+	int ConnectToServer(Connection& conn, const std::string& ip, uint16_t port, size_t numChannels)
 	{
 		//Resolve the host ip
 		if (enet_address_set_host(&conn.address, ip.c_str()) < 0)
 		{
 			debug::LogError("Failed to resolve host " + ip);
-			return false;
+			return -1;
 		}
 		conn.address.port = port;
 
@@ -74,12 +74,12 @@ namespace une::enet
 		if (!server)
 		{
 			debug::LogError("No available peers at " + ip + ":" + std::to_string(port));
-			return false;
+			return -1;
 		}
 		conn.peers[conn.nextPeerId++] = server;
 		conn.closed = false;
 		debug::LogInfo("Successfully connected to host at " + ip + ":" + std::to_string(port));
-		return true;
+		return conn.nextPeerId - 1;
 	}
 
 	//Update Enet, sends any queued packets, receives any pending packets, and calls the appropriate callbacs
@@ -113,7 +113,7 @@ namespace une::enet
 					enet_address_get_host_ip(&event.peer->address, info->ip, sizeof(info->ip) - 1);
 					event.peer->data = info;
 					conn.peers[info->id] = event.peer;
-					std::string infoString = conn.isServer ? "client: " : "server: " + std::string(info->ip) + ":" + std::to_string(info->port);
+					std::string infoString = (conn.isServer ? "client: " : "server: ") + std::string(info->ip) + ":" + std::to_string(info->port);
 
 					//Call OnConnect if applicable
 					if (onConnectFunc)
@@ -199,7 +199,7 @@ namespace une::enet
 		onDisconnectFunc = callback;
 	}
 	//Set a function to call when a packet is received
-	void OnReceive(const std::function<void(const PeerInfo&, const Packet&)>& callback)
+	void OnReceive(const std::function<void(const PeerInfo&, Packet&)>& callback)
 	{
 		onReceiveFunc = callback;
 	}
@@ -209,8 +209,9 @@ namespace une::enet
 	bool _wsaInitialized = false;
 
 	//Attempt to open a upd port
-	bool UPNPMapPort(const std::string& port, const std::string& name)
+	bool UPNPMapPort(uint16_t port, const std::string& name)
 	{
+		std::string sPort = std::to_string(port);
 #ifdef _WIN32
 		if (!_wsaInitialized)
 		{
@@ -245,7 +246,7 @@ namespace une::enet
 		if (ret == UPNP_CONNECTED_IGD)
 		{
 			//Configure the port mapping to open it
-			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, port.c_str(), port.c_str(), lanAddress, name.c_str(), "UDP", "", "0");
+			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, sPort.c_str(), sPort.c_str(), lanAddress, name.c_str(), "UDP", "", "0");
 			if (ret != UPNPCOMMAND_SUCCESS)
 			{
 				debug::LogWarning("Failed to map port: " + std::string(strupnperror(ret)));
@@ -258,8 +259,8 @@ namespace une::enet
 			return false;
 		}
 
-		mappedPorts[name] = UPNPPortInfo{upnpUrls, igdData, port};
-		debug::LogInfo("Succesfully mapped port " + port + " with name " + name);
+		mappedPorts[name] = UPNPPortInfo{upnpUrls, igdData, sPort };
+		debug::LogInfo("Succesfully mapped port " + sPort + " with name " + name);
 		return true;
 	}
 
