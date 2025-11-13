@@ -12,12 +12,12 @@ enum class MessageType : int8_t { AddPlayer, RemovePlayer, ConnectionReceived, P
 
 int main()
 {
-	const bool isHost = false;
+	const bool isHost = true;
 	const uint16_t port = 54321;
 	const std::string ip = "192.168.1.100";
 
 	debug::logOutputs.push_back({ new std::ofstream{"log.txt"}, false });
-	debug::logOutputs[0].second = false;
+	debug::logOutputs[0].second = true;
 	debug::verbosity = debug::Verbosity::Info;
 
 	une::Window* window = une::CreateMainWindow(800, 600, "Window");

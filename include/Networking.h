@@ -57,6 +57,9 @@ namespace une::enet
 	//Set a function to call when a packet is received
 	void OnReceive(const std::function<void(const PeerInfo&, Packet&)>& callback);
 
+	//Returns the ipv4 addres of the first lan adapter, empty if none is found
+	std::string GetLanIPv4();
+
 	struct UPNPPortInfo
 	{
 		UPNPUrls upnpUrls;

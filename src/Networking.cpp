@@ -1,5 +1,15 @@
 #include "Networking.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <iphlpapi.h>
+#pragma comment(lib, "IPHLPAPI.lib")
+#else
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
+
 #include "upnpcommands.h"
 #include "upnperrors.h"
 
@@ -91,58 +101,58 @@ namespace une::enet
 		{
 			switch (event.type)
 			{
-				case ENET_EVENT_TYPE_RECEIVE: {
-					//Parse peer info
-					PeerInfo info;
-					memcpy(&info, event.peer->data, sizeof(PeerInfo));
-					//Parse event packet into Packet class
-					Packet packet((char*) event.packet->data, event.packet->dataLength);
-					packet.flags = (Packet::Flag) event.packet->flags;
-					packet.chanelID = event.channelID;
-					enet_packet_destroy(event.packet);
+			case ENET_EVENT_TYPE_RECEIVE: {
+				//Parse peer info
+				PeerInfo info;
+				memcpy(&info, event.peer->data, sizeof(PeerInfo));
+				//Parse event packet into Packet class
+				Packet packet((char*)event.packet->data, event.packet->dataLength);
+				packet.flags = (Packet::Flag)event.packet->flags;
+				packet.chanelID = event.channelID;
+				enet_packet_destroy(event.packet);
 
-					//Call OnReceive if applicable
-					if (onReceiveFunc)
-						onReceiveFunc(info, packet);
-					break;
-				}
+				//Call OnReceive if applicable
+				if (onReceiveFunc)
+					onReceiveFunc(info, packet);
+				break;
+			}
 
-				case ENET_EVENT_TYPE_CONNECT: {
-					//Get the peer id, ip, and port
-					PeerInfo* info = new PeerInfo{.id = conn.nextPeerId++, .port = event.peer->address.port};
-					enet_address_get_host_ip(&event.peer->address, info->ip, sizeof(info->ip) - 1);
-					event.peer->data = info;
-					conn.peers[info->id] = event.peer;
-					std::string infoString = (conn.isServer ? "client: " : "server: ") + std::string(info->ip) + ":" + std::to_string(info->port);
+			case ENET_EVENT_TYPE_CONNECT: {
+				//Get the peer id, ip, and port
+				PeerInfo* info = new PeerInfo{ .id = conn.nextPeerId++, .port = event.peer->address.port };
+				enet_address_get_host_ip(&event.peer->address, info->ip, sizeof(info->ip) - 1);
+				event.peer->data = info;
+				conn.peers[info->id] = event.peer;
+				std::string infoString = (conn.isServer ? "client: " : "server: ") + std::string(info->ip) + ":" + std::to_string(info->port);
 
-					//Call OnConnect if applicable
-					if (onConnectFunc)
+				//Call OnConnect if applicable
+				if (onConnectFunc)
+				{
+					if (!onConnectFunc(*info))
 					{
-						if (!onConnectFunc(*info))
-						{
-							debug::LogWarning("Failed to connect to " + infoString + ", OnConnect returned false.");
-							enet_peer_disconnect(event.peer, 0);
-							return;
-						}
+						debug::LogWarning("Failed to connect to " + infoString + ", OnConnect returned false.");
+						enet_peer_disconnect(event.peer, 0);
+						return;
 					}
-					debug::LogInfo("Connected to " + infoString);
-					break;
 				}
+				debug::LogInfo("Connected to " + infoString);
+				break;
+			}
 
-				case ENET_EVENT_TYPE_DISCONNECT: {
-					//Parse peer info
-					PeerInfo info;
-					memcpy(&info, event.peer->data, sizeof(PeerInfo));
+			case ENET_EVENT_TYPE_DISCONNECT: {
+				//Parse peer info
+				PeerInfo info;
+				memcpy(&info, event.peer->data, sizeof(PeerInfo));
 
-					//Remove the peer
-					onDisconnectFunc(info);
-					conn.peers.erase(info.id);
-					debug::LogInfo("Peer " + std::to_string(info.id) + " with ip " + info.ip + " disconnected");
-					break;
-				}
+				//Remove the peer
+				onDisconnectFunc(info);
+				conn.peers.erase(info.id);
+				debug::LogInfo("Peer " + std::to_string(info.id) + " with ip " + info.ip + " disconnected");
+				break;
+			}
 
-				case ENET_EVENT_TYPE_NONE:
-					return;
+			case ENET_EVENT_TYPE_NONE:
+				return;
 			}
 		}
 	}
@@ -153,7 +163,7 @@ namespace une::enet
 		if (conn.host)
 		{
 			debug::LogInfo("Closing ENet connection and disconnecting all peers");
-			for (auto peer: conn.peers)
+			for (auto peer : conn.peers)
 				enet_peer_disconnect(peer.second, 0);
 			conn.peers.clear();
 			enet_host_flush(conn.host);
@@ -204,6 +214,71 @@ namespace une::enet
 		onReceiveFunc = callback;
 	}
 
+	//Returns the ipv4 addres of the first lan adapter with a default gateway, empty if none is found
+	std::string GetLanIPv4()
+	{
+#ifdef _WIN32
+		//Attempt to retrieve all network adapter addresses
+		ULONG bufferSize = 20000;
+		IP_ADAPTER_ADDRESSES* adapters = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
+		ULONG ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_GATEWAYS, NULL, adapters, &bufferSize);
+
+		if (ret == NO_ERROR)
+		{
+			//Iterate the returned liked list of adapter addresses
+			IP_ADAPTER_ADDRESSES* current = adapters;
+			while (current)
+			{
+				if (current->FirstGatewayAddress)
+				{
+					//Iterate through 
+					IP_ADAPTER_UNICAST_ADDRESS* ua = current->FirstUnicastAddress;
+					while (ua)
+					{
+						SOCKADDR_IN* sa = (SOCKADDR_IN*)ua->Address.lpSockaddr;
+						std::string addr(inet_ntoa(sa->sin_addr));
+
+						//Skip reserved ips
+						if(addr.find("127.") == std::string::npos && addr.find("169.254") == std::string::npos)
+							return addr;
+
+						ua = ua->Next;
+					}
+				}
+
+				current = current->Next;
+			}
+		}
+		else
+		{
+			debug::LogError("Failed to get LAN IP, GetAdaptersAddresses returned " + ret);
+		}
+
+		if (adapters)
+			free(adapters);
+#else
+		struct ifaddrs* ifaddr, * ifa;
+		if (getifaddrs(&ifaddr) == -1) return NULL;
+		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+		{
+			if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET)
+			{
+				char addr[INET_ADDRSTRLEN];
+				struct sockaddr_in* sa = (struct sockaddr_in*)ifa->ifa_addr;
+				inet_ntop(AF_INET, &sa->sin_addr, addr, sizeof(addr));
+				if (is_private_ipv4(addr))
+				{
+					strncpy(ipbuf, addr, sizeof(ipbuf) - 1);
+					freeifaddrs(ifaddr);
+					return ipbuf;
+				}
+			}
+		}
+		freeifaddrs(ifaddr);
+#endif
+		return "";
+	}
+
 	//A list of all currently mapped ports by name
 	std::unordered_map<std::string, UPNPPortInfo> mappedPorts;
 	bool _wsaInitialized = false;
@@ -229,7 +304,8 @@ namespace une::enet
 		//Find a upnp enabled router on the network
 		UPNPDev* upnpDevices = nullptr;
 		int ret = UPNPCOMMAND_SUCCESS;
-		upnpDevices = upnpDiscover(2000, nullptr, nullptr, UPNP_LOCAL_PORT_ANY, 0, 2, &ret);
+		std::string lanIp = GetLanIPv4();
+		upnpDevices = upnpDiscover(2000, lanIp.empty() ? nullptr : lanIp.c_str(), nullptr, UPNP_LOCAL_PORT_ANY, 0, 2, &ret);
 		if (ret != UPNPCOMMAND_SUCCESS)
 		{
 			debug::LogWarning("Failed to discover UPNP devices: " + std::string(strupnperror(ret)));
@@ -240,6 +316,7 @@ namespace une::enet
 		IGDdatas igdData;
 		char lanAddress[64];
 		char wanAddress[64];
+
 		//Retrieve the Internet Gateway Devide of the router
 		ret = UPNP_GetValidIGD(upnpDevices, &upnpUrls, &igdData, lanAddress, sizeof(lanAddress), wanAddress, sizeof(wanAddress));
 		freeUPNPDevlist(upnpDevices);
@@ -255,11 +332,11 @@ namespace une::enet
 		}
 		else
 		{
-			debug::LogWarning("No valid IGD found");
+			debug::LogWarning("No valid IGD found from ip " + lanIp);
 			return false;
 		}
 
-		mappedPorts[name] = UPNPPortInfo{upnpUrls, igdData, sPort };
+		mappedPorts[name] = UPNPPortInfo{ upnpUrls, igdData, sPort };
 		debug::LogInfo("Succesfully mapped port " + sPort + " with name " + name);
 		return true;
 	}
