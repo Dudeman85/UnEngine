@@ -25,25 +25,19 @@ namespace une
 		for (ecs::Entity entity : sortedEntities)
 		{
 			Camera& cam = ecs::GetComponent<Camera>(entity);
-			Transform& t = ecs::GetComponent<Transform>(entity);
+			Transform& tf = ecs::GetComponent<Transform>(entity);
 
 			if (!cam.enabled)
 				continue;
 
-			const int64_t viewportWidth = cam.viewport.x2 - cam.viewport.x1;
-			const int64_t viewportHeight = cam.viewport.y2 - cam.viewport.y1;
-			//Use default viewport if none is set
-			if (viewportWidth <= 0 || viewportHeight <= 0)
-			{
-				const Vector2Int windowSize = mainWindow->GetSize();
-				glViewport(0, 0, (int)windowSize.x, (int)windowSize.y);
-			}
-			else
-			{
-				glViewport((int)cam.viewport.x1, (int)cam.viewport.y1, (int)viewportWidth, (int)viewportHeight);
-			}
+			//Set the viewport pixel size
+			const double viewportWidth = cam.viewport.x2 - cam.viewport.x1;
+			const double viewportHeight = cam.viewport.y2 - cam.viewport.y1;
+			const Vector2 windowSize = mainWindow->GetSize();
+			glViewport(std::floor(cam.viewport.x1 * windowSize.x), std::floor(cam.viewport.y1 * windowSize.y),
+				std::floor(viewportWidth * windowSize.x), std::floor(viewportHeight * windowSize.y));
 
-			if (t.staleCache)
+			if (tf.staleCache)
 				RecalculateView(entity);
 
 			renderer::UnifiedRenderPass(entity);

@@ -27,7 +27,7 @@ int main()
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
 
 	ecs::Entity camera = ecs::NewEntity();
-	ecs::AddComponent(camera, une::Camera{ .viewport = {0, 0, 800, 600} });
+	ecs::AddComponent(camera, une::Camera{ .viewport = {0, 0, 1, 1} });
 	ecs::AddComponent(camera, une::Transform{ .position = {0, 0, 3000} });
 	une::CameraSystem::MakeOrtho(camera, 800, 600);
 	/*

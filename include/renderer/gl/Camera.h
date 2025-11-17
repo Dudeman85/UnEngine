@@ -22,8 +22,8 @@ namespace une
 		float farPlane = 10000;
 		//Cameras with a lower number draw to the canvas first
 		int drawOrder = 0;
-		//The area of the screen to draw on. From bottom-left to top-right in pixels. If 0, uses canvas size
-		RectInt viewport;
+		//The area of the screen to draw on. From bottom-left(0, 0) to top-right(1, 1) in ndc.
+		Rect viewport = {0, 0, 1, 1};
 
 		bool enabled = true;
 
