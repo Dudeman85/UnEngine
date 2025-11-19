@@ -227,11 +227,11 @@ namespace une
 			return Collision{ .type = Collision::Type::miss, .a = a, .b = b };
 
 		//Rotate and scale every vertex of a, movement is handled later
-		float aRotation = aCollider.rotationOverride >= 0 ? aCollider.rotationOverride : aTransform.rotation.z;
-		std::vector<Vector2> aVerts = TransformSystem::ApplyTransforms2D(aCollider.vertices, aRotation, aTransform.scale, aTransform.position);
+		const double aRotation = aCollider.rotationOverride >= 0 ? aCollider.rotationOverride : aTransform.rotation.z;
+		std::vector<Vector2> aVerts = TransformSystem::ApplyTransforms2D(aCollider.vertices, aTransform, aRotation);
 		//Rotate and scale every vertex of b, movement is handled later
-		float bRotation = bCollider.rotationOverride >= 0 ? bCollider.rotationOverride : bTransform.rotation.z;
-		std::vector<Vector2> bVerts = TransformSystem::ApplyTransforms2D(bCollider.vertices, bRotation, bTransform.scale, bTransform.position);
+		const double bRotation = bCollider.rotationOverride >= 0 ? bCollider.rotationOverride : bTransform.rotation.z;
+		std::vector<Vector2> bVerts = TransformSystem::ApplyTransforms2D(bCollider.vertices, aTransform, bRotation);
 
 		//Check SAT collision
 		Collision collision = SATIntersect(aVerts, bVerts);
@@ -429,8 +429,8 @@ namespace une
 		std::array<float, 4> bounds{ -INFINITY, -INFINITY, INFINITY, INFINITY };
 
 		//Apply transforms to collider vertices
-		float rotation = collider.rotationOverride >= 0 ? collider.rotationOverride : transform.rotation.z;
-		std::vector<Vector2> transformedVerts = TransformSystem::ApplyTransforms2D(collider.vertices, rotation, transform.scale, transform.position);
+		const double rotation = collider.rotationOverride >= 0 ? collider.rotationOverride : transform.rotation.z;
+		std::vector<Vector2> transformedVerts = TransformSystem::ApplyTransforms2D(collider.vertices, transform, rotation);
 
 		//For each vertice apply the transform and calculate min and max bounds
 		for (const Vector2& transformedVert : transformedVerts)

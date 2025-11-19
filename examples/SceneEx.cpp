@@ -33,19 +33,23 @@ int main()
 
 	//Make the camera and UI canvas
 	ecs::Entity camera = ecs::NewEntity();
-	ecs::AddComponent(camera, une::Camera{.viewport = {0, 0, 1, 1}});
-	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 3000}});
+	ecs::AddComponent(camera, une::Camera{});
+	ecs::AddComponent(camera, une::Transform{});
 	une::CameraSystem::MakeOrtho(camera, 800, 600);
-	une::UICanvas canvas(800, 600);
+	une::UICanvas canvas;
 
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = &texture});
-	ecs::AddComponent(player, une::Transform{.position = {0, 0, 0}, .scale = 5});
+	ecs::AddComponent(player, une::Transform{.position = {0, 0, 0}, .scale = 10, .pivot = {-5, -6.5, 0}});
 
 	ecs::Entity uiSprite = ecs::NewEntity();
-	ecs::AddComponent(uiSprite, une::SpriteRenderer{.texture = &texture});
-	ecs::AddComponent(uiSprite, une::Transform{.position = {50, -50, 0}});
+	ecs::AddComponent(uiSprite, une::TextRenderer{.font = &font, .text = "Health: 9000"});
+	ecs::AddComponent(uiSprite, une::Transform{.position = {20, -50, 0}, .scale = 2});
 	ecs::AddComponent(uiSprite, une::UIElement{.canvas = &canvas, .anchor = {-1, 1}});
+	ecs::Entity uiSprite2 = ecs::NewEntity();
+	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = &texture});
+	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
+	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
 
 	//Game loop
 	while (!window->ShouldClose())
@@ -68,11 +72,11 @@ int main()
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_KP_ADD))
 		{
-			une::TransformSystem::Translate(camera, 0, 0, -10);
+			une::TransformSystem::Rotate(player, 0, 0, 2);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_KP_SUBTRACT))
 		{
-			window->SetSize({800, 600});
+			une::TransformSystem::Rotate(player, 0, 0, -2);
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_W))
 		{
@@ -90,20 +94,10 @@ int main()
 		{
 			une::TransformSystem::Translate(camera, 10, 0, 0);
 		}
-		if (glfwGetKey(window->glWindow, GLFW_KEY_F))
-		{
-			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
-			cam.viewport.x2--;
-			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-			//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
-		}
-		if (glfwGetKey(window->glWindow, GLFW_KEY_G))
-		{
-			une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
-			cam.viewport.y2--;
-			une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-			//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
-		}
+
+		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
+		//TODO move to window resize func
+		canvas.SetScale(canvas.GetScale());
 
 		//Update engine libraries and render everything
 		une::Update();

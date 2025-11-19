@@ -104,7 +104,22 @@ namespace une
 
 		transform.staleCache = true;
 	}
+	//Set the origin/pivot point of an entity
+	void TransformSystem::SetPivot(ecs::Entity entity, float x, float y, float z)
+	{
+		Transform& transform = ecs::GetComponent<Transform>(entity);
+		transform.pivot = {x, y, z};
 
+		transform.staleCache = true;
+	}
+	//Set the origin/pivot point of an entity
+	void TransformSystem::SetPivot(ecs::Entity entity, Vector3 pivot)
+	{
+		Transform& transform = ecs::GetComponent<Transform>(entity);
+		transform.pivot = pivot;
+
+		transform.staleCache = true;
+	}
 	//Scale an entity by dx, dy, and dz
 	void TransformSystem::Scale(ecs::Entity entity, float dx, float dy, float dz)
 	{
@@ -268,6 +283,8 @@ namespace une
 		ApplyRotation(transformMatrix, transform.rotation, transform.rotationOrder);
 		//Scale
 		transformMatrix = glm::scale(transformMatrix, transform.scale.ToGlm());
+		//Pivot
+		transformMatrix = glm::translate(transformMatrix, -transform.pivot.ToGlm());
 
 		return transformMatrix;
 	}
@@ -301,24 +318,25 @@ namespace une
 	}
 
 	//Applies transforms to vertices and returns the transformed vertices, takes rotation in degrees
-	std::vector<Vector3> TransformSystem::ApplyTransforms(const std::vector<Vector3>& vertices, Vector3 rotation,
-	                                                      Vector3 scale, Vector3 position, RotationOrder rotationOrder)
+	std::vector<Vector3> TransformSystem::ApplyTransforms(const std::vector<Vector3>& vertices, const Transform& transform)
 	{
 		//Create the transform matrix
-		glm::mat4 transform = glm::mat4(1.0f);
+		glm::mat4 transformMatrix = glm::mat4(1.0f);
 		//Position
-		transform = glm::translate(transform, position.ToGlm());
+		transformMatrix = glm::translate(transformMatrix, transform.position.ToGlm());
 		//Apply euler rotations in desired order
-		ApplyRotation(transform, rotation, rotationOrder);
+		ApplyRotation(transformMatrix, transform.rotation, transform.rotationOrder);
 		//Scale
-		transform = glm::scale(transform, scale.ToGlm());
+		transformMatrix = glm::scale(transformMatrix, transform.scale.ToGlm());
+		//Pivot
+		transformMatrix = glm::translate(transformMatrix, -transform.pivot.ToGlm());
 
 		std::vector<Vector3> transformedVerts;
 		//For each vertice apply the transforms
 		for (int i = 0; i < vertices.size(); i++)
 		{
 			//Many type conversions later we have applied transform matrix
-			glm::vec3 glmVert = glm::vec3(glm::vec4(vertices[i].ToGlm(), 0) * transform);
+			glm::vec3 glmVert = glm::vec3(glm::vec4(vertices[i].ToGlm(), 0) * transformMatrix);
 			Vector3 vert(glmVert.x, glmVert.y, glmVert.z);
 			transformedVerts.push_back(vert);
 		}
@@ -326,9 +344,8 @@ namespace une
 		return transformedVerts;
 	}
 
-	//Applies transforms to 2D vertices and returns the transformed vertices, takes rotation in degrees
-	std::vector<Vector2> TransformSystem::ApplyTransforms2D(const std::vector<Vector2>& vertices, float rotation,
-	                                                        Vector2 scale, Vector2 position)
+	//Applies transforms to 2D vertices and returns the transformed vertices, takes z rotation in degrees
+	std::vector<Vector2> TransformSystem::ApplyTransforms2D(const std::vector<Vector2>& vertices, const Transform& transform, double rotation)
 	{
 		std::vector<Vector2> transformedVerts;
 		//For each vertice apply scale and rotation
@@ -336,14 +353,16 @@ namespace une
 		{
 			//Apply transform to the polygon collider
 			Vector2 transformedVert = vertices[i];
+			//Pivot
+			transformedVert -= transform.pivot;
 			//Rotate
 			const float angle = Radians(rotation);
 			transformedVert.x = vertices[i].x * cosf(angle) - vertices[i].y * sinf(angle);
 			transformedVert.y = vertices[i].x * sinf(angle) + vertices[i].y * cosf(angle);
 			//Scale
-			transformedVert *= scale;
+			transformedVert *= transform.scale;
 			//Move
-			transformedVert += position;
+			transformedVert += transform.position;
 
 			transformedVerts.push_back(transformedVert);
 		}

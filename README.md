@@ -40,7 +40,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [x] Improve tilemap rendering
   - [x] Fix sprite scaling
 - [x] Redo camera for ecs
-- [ ] Redo UI system
+- [x] Redo UI system
   - How do we handle scaling?
 - [x] Redo window and context system
 
@@ -56,7 +56,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Update the vector library
 - [ ] Expand and improve the timing system
 - [ ] Improve resource loading and management
-- [ ] Add an option to change the transform pivot
+- [x] Add an option to change the transform pivot
 - [ ] Improve animation system
 - [ ] Rethink the transform hierarchy
 - [x] Fix text resolution scaling
@@ -65,8 +65,12 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Fix tilemaps with multiple tilesets
 
 ### New features
+- [ ] Add debug tools
+  - [ ] Camera
+  - [ ] Frame advance
+  - [x] Better Logging
+  - [ ] Info
 - [ ] Add animation support to tilemap
-- [x] More robust logging system
 - [ ] Add TOML or similar config support
 - [x] Add multi camera support
 
@@ -86,11 +90,6 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Create a particle system
 - [ ] Add 3D animation support
 - [ ] Add multithreading support
-- [ ] Add debug tools
-  - [ ] Camera
-  - [ ] Frame advance
-  - [x] Logging
-  - [ ] Info
 - [ ] Copy entity function
 - [ ] Add angular momentum
 - [ ] Add restraints

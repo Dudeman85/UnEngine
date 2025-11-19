@@ -182,25 +182,15 @@ namespace une::renderer
 		if (ecs::HasComponent<UIElement>(entity))
 		{
 			UIElement& ui = ecs::GetComponent<UIElement>(entity);
-			Transform& transform = ecs::GetComponent<Transform>(entity);
-			if (ui.canvas)
-			{
-				//TODO: redo ui
-				glm::mat4 view = glm::mat4(1.0);
-				//Translate based on anchor pos in canvas
-				view = glm::translate(view, ui.canvas->GetPosition().ToGlm());
-				view = glm::translate(view, glm::vec3(ui.anchor.x * (ui.canvas->GetSize().x / 2), ui.anchor.y * (ui.canvas->GetSize().y / 2), 0));
-				view = glm::translate(view, glm::vec3(transform.position.x, transform.position.y, 0));
-
-				//Render UI elements independent of camera's view and projection
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetProjection()));
-			}
-			else
+			if (!ui.canvas)
 			{
 				debug::LogWarning("No canvas given for UIElement of entity " + std::to_string(entity));
 				return;
 			}
+			//TODO: redo ui
+			//Render UI elements independent of camera's view and projection
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetTransformForEntity(entity)));
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetProjection()));
 		}
 		else
 		{

@@ -13,27 +13,28 @@ namespace une
 	class UICanvas
 	{
 	public:
-		UICanvas(float width, float height, const Vector3& pos = 0, const Vector3& rot = 0, float near = -1000, float far = 1000);
+		UICanvas(const Vector3& pos = 0, const Vector3& rot = 0, const Vector3& scale = 1, float near = -1000, float far = 1000);
 
-		void SetSize(float width, float height);
-		void SetSize(float width, float height, float near, float far);
+		void SetScale(const Vector3& s);
 		void SetPosition(const Vector3& pos);
 		void SetRotation(const Vector3& rot);
+		void SetNearFar(float near, float far);
 
-		//Returns size where x = width, y = height, z = near, w = far
-		Vector4 GetSize() const;
+		Vector3 GetScale() const;
 		Vector3 GetPosition() const;
 		Vector3 GetRotation() const;
+		Vector2 GetNearFar() const;
 		glm::mat4 GetProjection() const;
+
 		static glm::mat4 GetTransformForEntity(ecs::Entity entity);
 
 	private:
-		void RecalculateView();
 		void RecalculateProjection();
 
-		float width, height, near, far;
+		float near, far;
 		Vector3 position;
 		Vector3 rotation;
+		Vector3 scale;
 		glm::mat4 view;
 		glm::mat4 projection;
 	};

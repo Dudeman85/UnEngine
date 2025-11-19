@@ -2,30 +2,27 @@
 
 #include "Transform.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "renderer/gl/Window.h"
 
 namespace une
 {
-	UICanvas::UICanvas(float width, float height, const Vector3& pos, const Vector3& rot, float near, float far)
+	UICanvas::UICanvas(const Vector3& pos, const Vector3& rot, const Vector3& scale, float near, float far)
 	{
-		this->width = width;
-		this->height = height;
 		this->position = pos;
 		this->rotation = rot;
+		this->scale = scale;
 		this->near = near;
 		this->far = far;
 		RecalculateProjection();
 	}
 
-	void UICanvas::SetSize(float width, float height)
+	void UICanvas::SetScale(const Vector3& s)
 	{
-		this->width = width;
-		this->height = height;
+		this->scale = s;
 		RecalculateProjection();
 	}
-	void UICanvas::SetSize(float width, float height, float near, float far)
+	void UICanvas::SetNearFar(float near, float far)
 	{
-		this->width = width;
-		this->height = height;
 		this->near = near;
 		this->far = far;
 		RecalculateProjection();
@@ -39,10 +36,9 @@ namespace une
 		this->rotation = rot;
 	}
 
-	//Returns size where x = width, y = height, z = near, w = far
-	Vector4 UICanvas::GetSize() const
+	Vector3 UICanvas::GetScale() const
 	{
-		return Vector4(width, height, near, far);
+		return scale;
 	}
 	Vector3 UICanvas::GetPosition() const
 	{
@@ -52,28 +48,32 @@ namespace une
 	{
 		return rotation;
 	}
-	glm::mat4 UICanvas::GetTransformForEntity(ecs::Entity entity)
+	Vector2 UICanvas::GetNearFar() const
 	{
-		UIElement& ui = ecs::GetComponent<UIElement>(entity);
-		Transform& transform = ecs::GetComponent<Transform>(entity);
-
-		return 0;
+		return {near, far};
 	}
 	glm::mat4 UICanvas::GetProjection() const
 	{
 		return projection;
 	}
 
-	void UICanvas::RecalculateView()
+	glm::mat4 UICanvas::GetTransformForEntity(ecs::Entity entity)
 	{
-		view = glm::mat4(1.0f);
-		view = glm::translate(view, position.ToGlm());
-		view = glm::rotate(view, (float)glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::rotate(view, (float)glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		view = glm::rotate(view, (float)glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		const UIElement& ui = ecs::GetComponent<UIElement>(entity);
+
+		glm::mat4 transformMatrix = glm::mat4(1.0);
+		transformMatrix = glm::translate(transformMatrix, ui.canvas->GetPosition().ToGlm());
+		TransformSystem::ApplyRotation(transformMatrix, ui.canvas->GetRotation(), XYZ);
+		Vector3 anchorPos = ui.anchor * (ui.canvas->GetScale() * mainWindow->GetSize() / 2);
+		transformMatrix = glm::translate(transformMatrix, anchorPos.ToGlm());
+
+		return transformMatrix;
 	}
+
 	void UICanvas::RecalculateProjection()
 	{
+		const float width = scale.x * mainWindow->GetSize().x;
+		const float height = scale.y * mainWindow->GetSize().y;
 		projection = glm::ortho(-width / 2, width / 2, -height / 2, height / 2, near, far);
 	}
 }

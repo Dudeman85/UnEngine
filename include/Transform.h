@@ -20,6 +20,8 @@ namespace une
 		Vector3 rotation;
 		//The local scale, relative to parent
 		Vector3 scale = Vector3(1.0f);
+		//The origin/pivot point offset
+		Vector3 pivot;
 
 		//The parent entity of this entity, If set this transform will be relative to the parent
 		ecs::Entity parent = 0;
@@ -59,7 +61,10 @@ namespace une
 		static void SetRotation(ecs::Entity entity, float x, float y, float z = 0);
 		//Set the euler rotation of an entity
 		static void SetRotation(ecs::Entity entity, Vector3 rotation);
-
+		//Set the origin/pivot point of an entity
+		static void SetPivot(ecs::Entity entity, float x, float y, float z = 0);
+		//Set the origin/pivot point of an entity
+		static void SetPivot(ecs::Entity entity, Vector3 pivot);
 		//Scale an entity by dx, dy, and dz
 		static void Scale(ecs::Entity entity, float dx, float dy, float dz = 0);
 		//Scale an entity by ds
@@ -96,13 +101,12 @@ namespace une
 		//Get the global Transform matrix of an entity after all parent transforms have been applied
 		static glm::mat4 GetGlobalTransformMatrix(ecs::Entity entity);
 
-		//Applies transforms to vertices and returns the transformed vertices, takes rotation in degrees
-		static std::vector<Vector3> ApplyTransforms(const std::vector<Vector3>& vertices, Vector3 rotation, Vector3 scale, Vector3 position, RotationOrder rotationOrder = XYZ);
+		//Applies transforms to vertices and returns the transformed vertices
+		static std::vector<Vector3> ApplyTransforms(const std::vector<Vector3>& vertices, const Transform& transform);
 
-		//Applies transforms to 2D vertices and returns the transformed vertices, takes rotation in degrees
-		static std::vector<Vector2> ApplyTransforms2D(const std::vector<Vector2>& vertices, float rotation, Vector2 scale, Vector2 position);
+		//Applies transforms to 2D vertices and returns the transformed vertices, takes z rotation in degrees
+		static std::vector<Vector2> ApplyTransforms2D(const std::vector<Vector2>& vertices, const Transform& transform, double rotation);
 
-	private:
 		static inline void ApplyRotation(glm::mat4& mat, Vector3 eulers, RotationOrder order);
 	};
 }
