@@ -257,6 +257,9 @@ namespace une::enet
 		if (adapters)
 			free(adapters);
 #else
+		//TODO: Implement for linux
+#error not implemented
+		/*
 		struct ifaddrs* ifaddr, * ifa;
 		if (getifaddrs(&ifaddr) == -1) return NULL;
 		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
@@ -275,6 +278,7 @@ namespace une::enet
 			}
 		}
 		freeifaddrs(ifaddr);
+		*/
 #endif
 		return "";
 	}

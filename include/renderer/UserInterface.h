@@ -26,6 +26,7 @@ namespace une
 		Vector3 GetRotation() const;
 		glm::mat4 GetProjection() const;
 		static glm::mat4 GetTransformForEntity(ecs::Entity entity);
+
 	private:
 		void RecalculateView();
 		void RecalculateProjection();
@@ -40,7 +41,7 @@ namespace une
 	ECS_REGISTER_COMPONENT(UIElement)
 	struct UIElement
 	{
-		UICanvas* canvas;
+		UICanvas* canvas = nullptr;
 		//A point inside the canvas in ndc. Transform will be relative to it.
 		Vector2 anchor;
 	};

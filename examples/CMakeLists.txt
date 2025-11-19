@@ -1,3 +1,7 @@
-add_executable(ExampleScene main.cpp)
-target_link_libraries(ExampleScene UnEngine)
-add_compile_definitions(UNENGINE_EXAMPLE_PROJECT_LOCATION="${CMAKE_CURRENT_LIST_DIR}")
+add_executable(UnEngine_SceneExample SceneEx.cpp)
+target_link_libraries(UnEngine_SceneExample UnEngine)
+
+add_executable(UnEngine_NetworkingExample NetworkingEx.cpp)
+target_link_libraries(UnEngine_NetworkingExample UnEngine)
+
+add_compile_definitions(UNE_EXAMPLE_PROJECT_LOCATION="${CMAKE_CURRENT_LIST_DIR}")

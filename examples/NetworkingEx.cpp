@@ -8,18 +8,41 @@
 #include "Networking.h"
 #include "renderer/UserInterface.h"
 
+//Determines what kind of packet is sent or received
 enum class MessageType : int8_t { AddPlayer, RemovePlayer, ConnectionReceived, PositionInfo, AllPositionInfo };
 
 int main()
 {
-	const bool isHost = true;
-	const uint16_t port = 54321;
-	const std::string ip = "192.168.1.100";
-
+	//Set logging level and outputs
 	debug::logOutputs.push_back({ new std::ofstream{"log.txt"}, false });
 	debug::logOutputs[0].second = true;
 	debug::verbosity = debug::Verbosity::Info;
 
+	bool isHost = false;
+	uint16_t port = 0;
+	std::string ip;
+	std::string buff;
+
+	//Get server info from user
+	std::cout << "Are you hosting? (y/n) ";
+	std::cin >> buff;
+	isHost = buff == "y";
+	if (!isHost)
+	{
+		std::cout << "Enter server ip: ";
+		std::cin >> ip;
+		std::cout << "Enter server port: ";
+		std::cin >> buff;
+		port = std::stoi(buff);
+	}
+	else
+	{
+		std::cout << "What port do you want to use? ";
+		std::cin >> buff;
+		port = std::stoi(buff);
+	}
+
+	//Setup une scene
 	une::Window* window = une::CreateMainWindow(800, 600, "Window");
 
 	une::EngineInit();
@@ -30,22 +53,12 @@ int main()
 	ecs::AddComponent(camera, une::Camera{ .viewport = {0, 0, 1, 1} });
 	ecs::AddComponent(camera, une::Transform{ .position = {0, 0, 3000} });
 	une::CameraSystem::MakeOrtho(camera, 800, 600);
-	/*
-	ecs::Entity camera2 = ecs::NewEntity();
-	ecs::AddComponent(camera2, une::Camera{.viewport = {400, 0, 800, 600}});
-	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 3000}});
-	une::CameraSystem::MakeOrtho(camera2, 800, 600);*/
 
-	std::string assets = UNENGINE_EXAMPLE_PROJECT_LOCATION "/assets/";
+	std::string assets = UNE_EXAMPLE_PROJECT_LOCATION "/assets/";
 	une::Texture texture(assets + "strawberry.png");
-	une::Texture transparentTexture(assets + "Transparent.png");
-	une::Model model(assets + "Achelous.obj");
 	une::Font font(assets + "Coolvetica Rg Cond.otf", 64);
-	une::Tilemap tilemap(assets + "testMap.tmx");
-	une::Primitive square = une::Primitive::Rectangle();
 
-	une::UICanvas canvas(800, 600);
-
+	//Networking code
 	std::unordered_map<uint16_t, ecs::Entity> playerEntities;
 	une::enet::Connection connection;
 	uint16_t playerId = UINT16_MAX;
@@ -59,7 +72,12 @@ int main()
 		playerEntities[UINT16_MAX] = player;
 		playerId = UINT16_MAX;
 
-		une::enet::UPNPMapPort(port, "UnEngineTest");
+		if (!une::enet::UPNPMapPort(port, "UnEngineTest"))
+		{
+			debug::LogError("Failed to open port, server could not be created");
+			system("pause");
+			return -1;
+		}
 		connection = une::enet::CreateServer(port, 16);
 
 		une::enet::OnConnect([&connection, &texture, &font, &playerEntities](const une::enet::PeerInfo& info)
@@ -115,8 +133,12 @@ int main()
 				switch (type)
 				{
 				case MessageType::PositionInfo:
+				{
 					une::Vector3 pos = packet.Read<une::Vector3>().first;
 					une::TransformSystem::SetPosition(playerEntities[info.id], pos);
+					break;
+				}
+				default:
 					break;
 				}
 			});
@@ -208,6 +230,7 @@ int main()
 			});
 	}
 
+	//Game loop
 	while (!window->ShouldClose())
 	{
 		if (playerEntities.contains(playerId))
@@ -228,14 +251,6 @@ int main()
 			{
 				une::TransformSystem::Translate(playerEntities[playerId], 0, -2, 0);
 			}
-			if (glfwGetKey(window->glWindow, GLFW_KEY_KP_ADD))
-			{
-				une::TransformSystem::Translate(camera, 0, 0, -10);
-			}
-			if (glfwGetKey(window->glWindow, GLFW_KEY_KP_SUBTRACT))
-			{
-				window->SetSize({ 800, 600 });
-			}
 			if (glfwGetKey(window->glWindow, GLFW_KEY_W))
 			{
 				une::TransformSystem::Translate(camera, 0, 10, 0);
@@ -252,21 +267,8 @@ int main()
 			{
 				une::TransformSystem::Translate(camera, 10, 0, 0);
 			}
-			if (glfwGetKey(window->glWindow, GLFW_KEY_F))
-			{
-				une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
-				cam.viewport.x2--;
-				une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-				//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
-			}
-			if (glfwGetKey(window->glWindow, GLFW_KEY_G))
-			{
-				une::Camera& cam = ecs::GetComponent<une::Camera>(camera);
-				cam.viewport.y2--;
-				une::CameraSystem::MakeOrtho(camera, cam.viewport.x2, cam.viewport.y2);
-				//canvas.SetSize(cam.viewport.x2, cam.viewport.y2);
-			}
 
+			//Send movement packets
 			if (isHost)
 			{
 				une::Packet packet;
@@ -288,8 +290,8 @@ int main()
 			}
 		}
 
+		//Update engine systems and receive enet packets
 		une::Update();
-
 		une::enet::UpdateEnet(connection);
 	}
 
