@@ -26,6 +26,7 @@ namespace une
 			}
 
 #ifdef _DEBUG
+			/*
 			//Draw the bounding box and polygon collider
 			if (collider.visualise)
 			{
@@ -39,7 +40,7 @@ namespace une
 				//Draw those vertices
 				//colliderPrimitive.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(0, 0, 0) });
 				//boundingBoxPrimitive.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(0, 0, 0) });
-			}
+			}*/
 #endif
 		}
 	}

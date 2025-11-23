@@ -364,7 +364,6 @@ namespace une::enet
 
 		debug::LogInfo("Deleted mapping on port " + info.port + " with name " + name);
 		FreeUPNPUrls(&info.upnpUrls);
-		mappedPorts.erase(name);
 		return true;
 	}
 
@@ -375,5 +374,6 @@ namespace une::enet
 		{
 			UPNPUnmapPort(port.first);
 		}
+		mappedPorts.clear();
 	}
 }
