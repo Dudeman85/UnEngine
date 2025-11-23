@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "enet/enet.h"
-#include "Debug.h"
+#include "debug/Logging.h"
 
 namespace une
 {

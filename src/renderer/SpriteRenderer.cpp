@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "ECS.h"
 #include "Transform.h"
 #include "renderer/UserInterface.h"

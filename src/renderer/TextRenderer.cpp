@@ -2,7 +2,7 @@
 
 #include <ft2build.h>
 
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "renderer/UserInterface.h"
 
 #include FT_FREETYPE_H

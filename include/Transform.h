@@ -107,6 +107,6 @@ namespace une
 		//Applies transforms to 2D vertices and returns the transformed vertices, takes z rotation in degrees
 		static std::vector<Vector2> ApplyTransforms2D(const std::vector<Vector2>& vertices, const Transform& transform, double rotation);
 
-		static inline void ApplyRotation(glm::mat4& mat, Vector3 eulers, RotationOrder order);
+		static void ApplyRotation(glm::mat4& mat, Vector3 eulers, RotationOrder order);
 	};
 }

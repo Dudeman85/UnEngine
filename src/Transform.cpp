@@ -369,7 +369,7 @@ namespace une
 		return transformedVerts;
 	}
 
-	inline void TransformSystem::ApplyRotation(glm::mat4& mat, Vector3 eulers, RotationOrder order)
+	void TransformSystem::ApplyRotation(glm::mat4& mat, Vector3 eulers, RotationOrder order)
 	{
 		switch (order)
 		{

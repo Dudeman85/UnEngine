@@ -2,7 +2,7 @@
 
 #include "glm/gtc/type_ptr.hpp"
 
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "renderer/TilemapRenderer.h"
 #include "renderer/gl/Shader.h"
 

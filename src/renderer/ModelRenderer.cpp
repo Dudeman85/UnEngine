@@ -1,6 +1,6 @@
 #include "renderer/ModelRenderer.h"
 
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "renderer/UserInterface.h"
 
 namespace une::renderer

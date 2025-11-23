@@ -1,7 +1,7 @@
 #include "glad/gl.h"
 
 #include "renderer/gl/Window.h"
-#include "Debug.h"
+#include "debug/Logging.h"
 
 namespace une
 {

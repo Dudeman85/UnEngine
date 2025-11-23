@@ -3,11 +3,10 @@
 #include <algorithm>
 
 #include "glm/gtc/matrix_transform.hpp"
+#include "glad/gl.h"
 
 #include "renderer/gl/Window.h"
 #include "renderer/UnifiedRenderer.h"
-
-
 
 namespace une
 {

@@ -6,7 +6,7 @@
 #include "tmxlite/TileLayer.hpp"
 
 #include "Vector.h"
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "ECS.h"
 #include "Transform.h"
 #include "renderer/gl/Texture.h"

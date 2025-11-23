@@ -4,7 +4,7 @@
 
 #include <assimp/postprocess.h>
 
-#include "Debug.h"
+#include "debug/Logging.h"
 
 namespace une
 {

@@ -1,6 +1,7 @@
 #include "renderer/gl/Shader.h"
 
-#include "Debug.h"
+#include "debug/Logging.h"
+#include "debug/DebugTiming.h"
 
 
 namespace une

@@ -1,6 +1,6 @@
 #include "renderer/gl/Font.h"
 
-#include "Debug.h"
+#include "debug/Logging.h"
 #include "renderer/TextRenderer.h"
 
 namespace une

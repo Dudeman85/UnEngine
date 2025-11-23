@@ -10,7 +10,7 @@
 #include <memory>
 #include <functional>
 
-#include "Debug.h"
+#include "debug/Logging.h"
 
 //Allow max components to be determined outside this file
 #ifndef ECS_MAX_COMPONENTS
