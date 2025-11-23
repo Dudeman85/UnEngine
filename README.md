@@ -117,3 +117,5 @@ struct UICanvas // not a component
 ```
 All ui elements will be transformed using a canvas instead of the camera's view, still have to figure out what to do about projection, probably just use ortho.
 This means the UI elements will use standard coordinates relative to the canvas instead of ndc like it was. Makes it easier to position things, make menus, simplify code, and hide/show things, also unifies ui element implementation instead of it being renderer specific.
+### Idea for new debugging camera 
+A camera for code debugging, which works by holding down a key and can be moved in any direction with the mouse; the key used at the moment is at the choice of the programmer in charge of making the tool
