@@ -19,3 +19,6 @@
 [submodule "ext/miniupnp"]
 	path = ext/miniupnp
 	url = https://github.com/miniupnp/miniupnp.git
+[submodule "ext/imgui"]
+	path = ext/imgui
+	url = https://github.com/ocornut/imgui
