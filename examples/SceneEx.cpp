@@ -55,16 +55,21 @@ int main()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(window->glWindow, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+	ImGui_ImplGlfw_InitForOpenGL(window->glWindow, true);
 	ImGui_ImplOpenGL3_Init();
+
+	bool show_demo_window = true;
 
 	//Game loop
 	while (!window->ShouldClose())
 	{
+		//Poll events
+		une::BeginFrame();
+
 		if (glfwGetKey(window->glWindow, GLFW_KEY_RIGHT))
 		{
 			une::TransformSystem::Translate(player, 2, 0, 0);
@@ -107,12 +112,32 @@ int main()
 		}
 
 		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
-		//TODO move to window resize func
+		//TODO: fix
 		canvas.SetScale(canvas.GetScale());
 
 		//Update engine libraries and render everything
 		une::Update();
+
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		//https://github.com/ocornut/imgui/blob/master/examples/example_glfw_opengl3/main.cpp
+		if (show_demo_window)
+			ImGui::ShowDemoWindow(&show_demo_window);
+
+		ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		//Swap screen buffers and calculate dt
+		une::EndFrame();
 	}
 
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	une::UnInit();
 	return 0;
 }
