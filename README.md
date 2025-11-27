@@ -41,7 +41,6 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [x] Fix sprite scaling
 - [x] Redo camera for ecs
 - [x] Redo UI system
-  - How do we handle scaling?
 - [x] Redo window and context system
 
 ### New Features
@@ -69,7 +68,12 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [ ] Camera
   - [ ] Frame advance
   - [x] Better Logging
-  - [ ] Info
+  - [ ] GUI
+    - [ ] Hierarchy
+    - [ ] Entity overview
+    - [ ] Transform tools
+    - [ ] Debug toggles
+    - [ ] Toolbar
 - [ ] Add animation support to tilemap
 - [ ] Add TOML or similar config support
 - [x] Add multi camera support

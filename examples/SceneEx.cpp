@@ -1,9 +1,6 @@
 #include "UnEngine.h"
 #include "Vector.h"
 #include "Serialization.h"
-
-#include <vector>
-
 #include "Networking.h"
 #include "renderer/UserInterface.h"
 

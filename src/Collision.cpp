@@ -80,20 +80,20 @@ namespace une
 			bToA.normal = Vector2() - entityCollision.normal;
 			bToA.mtv = Vector2() - entityCollision.mtv;
 
-			if (ecs::EntityExists(entityCollision.b))
-			{
-				//Call b's callback
-				if (bCollider.callback)
-					bCollider.callback(bToA);
-			}
 			if (ecs::EntityExists(entityCollision.a))
 			{
 				//Call a's callback
 				if (aCollider.callback)
 					aCollider.callback(entityCollision);
 			}
+			if (ecs::EntityExists(entityCollision.b))
+			{
+				//Call b's callback
+				if (bCollider.callback)
+					bCollider.callback(bToA);
+			}
 		}
-		//For each tilemap collision call a's destructor
+		//For each tilemap collision call a's callback
 		for (const Collision& tilemapCollision : tilemapCollisions)
 		{
 			if (ecs::EntityExists(tilemapCollision.a))

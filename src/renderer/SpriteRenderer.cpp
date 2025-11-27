@@ -187,7 +187,7 @@ namespace une::renderer
 				debug::LogWarning("No canvas given for UIElement of entity " + std::to_string(entity));
 				return;
 			}
-			//TODO: redo ui
+
 			//Render UI elements independent of camera's view and projection
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetTransformForEntity(entity)));
 			glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(ui.canvas->GetProjection()));
