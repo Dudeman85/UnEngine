@@ -31,9 +31,6 @@ namespace une::renderer
 
 	void UnifiedRenderPrepass()
 	{
-		//Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		primitiveRenderSystem->Prepass();
 		spriteRenderSystem->Prepass();
 		modelRenderSystem->Prepass();

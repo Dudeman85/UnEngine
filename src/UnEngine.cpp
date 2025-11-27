@@ -5,6 +5,8 @@
 
 namespace une
 {
+	std::string frameTimerString;
+
 	void EngineInit()
 	{
 		assert(mainWindow && "Make sure to create the main window before initializing the engine.");
@@ -27,11 +29,22 @@ namespace une
 		renderer::Init();
 	}
 
-	//Updates all default engine systems, returns delta time
-	double Update()
+	//Setup a new frame. Should be called at the very beginning of a frame
+	void BeginFrame()
+	{
+		debug::StartTimer("FrameStart");
+		glfwPollEvents();
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
+	//Updates all default engine systems
+	void Update()
 	{
 		debug::StartTimer("EngineUpdate");
-		std::string debugString = "Completed engine update for frame " + std::to_string(frameCount) + ".";
+		frameTimerString = "Completed engine update for frame " + std::to_string(frameCount)
+			+ ". Game took " + std::to_string(debug::EndTimer("FrameStart")) + "ms,";
 
 		//Update engine systems
 		debug::StartTimer("SystemsTimer");
@@ -39,7 +52,7 @@ namespace une
 		if (enablePhysics)
 		{
 			physicsSystem->Update();
-			debugString += " Physics took " + std::to_string(debug::ResetTimer("SystemsTimer")) + "ms,";
+			frameTimerString += " Physics took " + std::to_string(debug::ResetTimer("SystemsTimer")) + "ms,";
 		}
 		//Animation must be before sprite rendering
 		if (enableAnimation)
@@ -48,7 +61,7 @@ namespace une
 		{
 			renderer::UnifiedRenderPrepass();
 			cameraSystem->Update();
-			debugString += " Rendering took " + std::to_string(debug::EndTimer("SystemsTimer")) + "ms,";
+			frameTimerString += " Rendering took " + std::to_string(debug::EndTimer("SystemsTimer")) + "ms,";
 		}
 		soundSystem->Update();
 		//Collision system should be after rendering
@@ -56,15 +69,22 @@ namespace une
 			collisionSystem->Update();
 		//Transform must be after physics, collision and rendering
 		transformSystem->Update();
-		//Timer must be last
+	}
+
+	//Runs everything that should happen at the very end of a frame, returns deltaTime
+	double EndFrame()
+	{
+		ecs::Update();
+		glfwSwapBuffers(mainWindow->glWindow);
 		timerSystem->Update(enablePhysics);
 
-		ecs::Update();
+		debug::LogSpam(frameTimerString + " Total: " + std::to_string(debug::EndTimer("EngineUpdate")) + "ms");
 
-		glfwSwapBuffers(mainWindow->glWindow);
-		glfwPollEvents();
-
-		debug::LogSpam(debugString + " Total: " + std::to_string(debug::EndTimer("EngineUpdate")) + "ms");
 		return deltaTime;
+	}
+
+	void UnInit()
+	{
+		delete mainWindow;
 	}
 }

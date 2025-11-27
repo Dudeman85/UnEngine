@@ -22,13 +22,13 @@ namespace une
 		Vector3 scale = Vector3(1.0f);
 		//The origin/pivot point offset
 		Vector3 pivot;
+		//What order should euler rotation be applied in
+		RotationOrder rotationOrder = XYZ;
 
 		//The parent entity of this entity, If set this transform will be relative to the parent
 		ecs::Entity parent = 0;
 		//All the children of this entity
 		std::set<ecs::Entity> children;
-
-		RotationOrder rotationOrder = XYZ;
 
 		//If true updates all transform based caches, reverts to false next frame
 		//WARNING: This will not update if transform is manually changed

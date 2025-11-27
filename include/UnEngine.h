@@ -25,6 +25,7 @@
 
 namespace une
 {
+	//TODO: Make better
 	//If true updates physics and collision systems
 	inline bool enablePhysics = true;
 	//If true updates animation system
@@ -46,8 +47,17 @@ namespace une
 	inline std::shared_ptr<renderer::TextRenderSystem> textRenderSystem;
 	inline std::shared_ptr<renderer::TilemapRenderSystem> tilemapRenderSystem;
 
+	//Initialize engine library, should be called after creating a window
 	void EngineInit();
 
-	//Updates all default engine systems, returns delta time
-	double Update();
+	//Runs everything that should happen at the very beginning of a frame
+	void BeginFrame();
+
+	//Updates all default engine systems
+	void Update();
+
+	//Runs everything that should happen at the very end of a frame
+	double EndFrame();
+
+	void UnInit();
 }

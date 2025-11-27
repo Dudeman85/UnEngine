@@ -45,6 +45,12 @@ namespace une
 		debug::LogInfo("Successfully initialized GLFW");
 	}
 
+	Window::~Window()
+	{
+		glfwDestroyWindow(glWindow);
+		glfwTerminate();
+	}
+
 	Vector2Int Window::GetPosition()
 	{
 		glfwGetWindowPos(glWindow, &xPos, &yPos);

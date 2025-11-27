@@ -10,6 +10,7 @@ namespace une
 	{
 	public:
 		Window(int width, int height, const std::string& name);
+		~Window();
 
 		Vector2Int GetPosition();
 		void SetPosition(const Vector2Int& pos);

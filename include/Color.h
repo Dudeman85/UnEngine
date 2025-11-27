@@ -11,7 +11,8 @@ namespace une
         explicit Color(float red, float green, float blue, float alpha = 1.0f);
 
         Color(const Vector4& c);
-        static Color FromHSB(float hue, float saturation, float brightness); //TODO Implementation
+        static Color FromHSV(float hue, float saturation, float value);
+        Color AsHSV() const;
         Color As8Bit() const;
         Color AsSRGB() const;
 
