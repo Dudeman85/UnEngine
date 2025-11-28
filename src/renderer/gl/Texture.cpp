@@ -5,7 +5,8 @@
 #include <stb_image.h>
 
 #include "debug/Logging.h"
-#include "debug/DebugTiming.h"
+#include "debug/Timers.h"
+#include "renderer/gl/Window.h"
 
 namespace une
 {
@@ -130,7 +131,10 @@ namespace une
 
 	Texture::~Texture()
 	{
-		glDeleteTextures(1, &id);
+		if (mainWindow)
+		{
+			glDeleteTextures(1, &id);
+		}
 	}
 
 	//Sets the OpenGL sampling type when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.

@@ -49,6 +49,7 @@ namespace une
 	{
 		glfwDestroyWindow(glWindow);
 		glfwTerminate();
+		mainWindow = nullptr;
 	}
 
 	Vector2Int Window::GetPosition()

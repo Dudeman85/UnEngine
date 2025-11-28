@@ -1,6 +1,6 @@
 #include "renderer/TextRenderer.h"
 
-#include <ft2build.h>
+#include "glad/gl.h"
 
 #include "debug/Logging.h"
 #include "renderer/UserInterface.h"

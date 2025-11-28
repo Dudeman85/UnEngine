@@ -1,7 +1,10 @@
 #include "renderer/gl/Font.h"
 
+#include "glad/gl.h"
+
 #include "debug/Logging.h"
 #include "renderer/TextRenderer.h"
+#include "renderer/gl/Window.h"
 
 namespace une
 {
@@ -20,11 +23,14 @@ namespace une
 	}
 	Font::~Font()
 	{
-		glDeleteBuffers(1, &VAO);
-		glDeleteBuffers(1, &VBO);
-		for (auto& character : characters)
+		if (mainWindow)
 		{
-			glDeleteTextures(1, &character.second.textureID);
+			glDeleteBuffers(1, &VAO);
+			glDeleteBuffers(1, &VBO);
+			for (auto& character : characters)
+			{
+				glDeleteTextures(1, &character.second.textureID);
+			}
 		}
 	}
 
@@ -44,6 +50,7 @@ namespace une
 				continue;
 			}
 
+			//Directly implement OpenGL textures here
 			unsigned int texture;
 			glGenTextures(1, &texture);
 			glBindTexture(GL_TEXTURE_2D, texture);

@@ -10,6 +10,7 @@
 #include "ECS.h"
 #include "Transform.h"
 #include "renderer/gl/Texture.h"
+#include "renderer/gl/Window.h"
 
 namespace une
 {
@@ -225,8 +226,11 @@ namespace une
 
 	Tilemap::~Tilemap()
 	{
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteVertexArrays(1, &VBO);
+		if (mainWindow)
+		{
+			glDeleteVertexArrays(1, &VAO);
+			glDeleteVertexArrays(1, &VBO);
+		}
 		for (Texture* tex : tilesetTextures)
 			delete tex;
 		for (MapLayer* layer : mapLayers)

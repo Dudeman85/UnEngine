@@ -1,8 +1,11 @@
 #pragma once
 
 #include "ECS.h"
-#include "glad/gl.h"
 #include "tmxlite/Map.hpp"
+
+#ifndef __gl_h_
+#include "glad/gl.h"
+#endif
 
 #include "Vector.h"
 #include "renderer/gl/Texture.h"

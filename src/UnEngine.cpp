@@ -1,7 +1,10 @@
 #include "UnEngine.h"
 
+#include "glad/gl.h"
+
 #include "debug/Logging.h"
-#include "debug/DebugTiming.h"
+#include "debug/Timers.h"
+#include "debug/GUI.h"
 
 namespace une
 {
@@ -9,7 +12,7 @@ namespace une
 
 	void EngineInit()
 	{
-		assert(mainWindow && "Make sure to create the main window before initializing the engine.");
+		assert(mainWindow && "Make sure to create the main window before initializing UnEngine.");
 
 		//Get the engine systems
 		timerSystem = ecs::GetSystem<TimerSystem>();
@@ -26,7 +29,9 @@ namespace une
 		modelRenderSystem = ecs::GetSystem<renderer::ModelRenderSystem>();
 		textRenderSystem = ecs::GetSystem<renderer::TextRenderSystem>();
 		tilemapRenderSystem = ecs::GetSystem<renderer::TilemapRenderSystem>();
+
 		renderer::Init();
+		debug::gui::Init();
 	}
 
 	//Setup a new frame. Should be called at the very beginning of a frame
@@ -69,6 +74,9 @@ namespace une
 			collisionSystem->Update();
 		//Transform must be after physics, collision and rendering
 		transformSystem->Update();
+
+		//Debug stuff
+		debug::gui::Update();
 	}
 
 	//Runs everything that should happen at the very end of a frame, returns deltaTime
@@ -85,6 +93,7 @@ namespace une
 
 	void UnInit()
 	{
+		debug::gui::UnInit();
 		delete mainWindow;
 	}
 }

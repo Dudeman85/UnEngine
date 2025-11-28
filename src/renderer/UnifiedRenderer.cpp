@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "glad/gl.h"
+
 #include "UnEngine.h"
 #include "debug/Logging.h"
 

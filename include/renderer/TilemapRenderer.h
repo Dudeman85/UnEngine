@@ -7,7 +7,6 @@
 
 #include "ECS.h"
 #include "renderer/gl/Shader.h"
-#include "renderer/gl/Camera.h"
 #include "renderer/gl/Utils.h"
 #include "Tilemap.h"
 #include "Transform.h"

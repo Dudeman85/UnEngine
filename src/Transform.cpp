@@ -1,5 +1,6 @@
 #include "Transform.h"
 
+#include "debug/Logging.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -157,23 +158,56 @@ namespace une
 		transform.staleCache = true;
 	}
 
+	//Returns true if entity does not have parent as child
+	bool TransformSystem::RecursiveCheckChildren(ecs::Entity entity, ecs::Entity parent)
+	{
+		if (entity == parent)
+			return false;
+
+		for (ecs::Entity child : ecs::GetComponent<Transform>(entity).children)
+		{
+			if (!RecursiveCheckChildren(child, parent))
+				return false;
+		}
+		return true;
+	}
+
 	//Add a parent entity to a child entity
 	void TransformSystem::AddParent(ecs::Entity child, ecs::Entity parent)
 	{
 		Transform& parentTransform = ecs::GetComponent<Transform>(parent);
 		Transform& childTransform = ecs::GetComponent<Transform>(child);
 
+		//Make sure no loops are created
+		if (!RecursiveCheckChildren(child, parent))
+		{
+			debug::LogWarning("Adding parent which is also a child of entity " + std::to_string(child) + " will cause infinite loop!");
+			return;
+		}
+
+		//Remove old parent
+		if (ecs::EntityExists(childTransform.parent))
+			ecs::GetComponent<Transform>(childTransform.parent).children.erase(child);
+
+		//Add new parent
 		parentTransform.children.insert(child);
 		childTransform.parent = parent;
+
+		childTransform.staleCache = true;
 	}
 	//Remove a parent entity from a child entity, This will place the child to root
-	void TransformSystem::RemoveParent(ecs::Entity child, ecs::Entity parent)
+	void TransformSystem::RemoveParent(ecs::Entity child)
 	{
-		Transform& parentTransform = ecs::GetComponent<Transform>(parent);
 		Transform& childTransform = ecs::GetComponent<Transform>(child);
+		if (ecs::EntityExists(childTransform.parent))
+		{
+			Transform& parentTransform = ecs::GetComponent<Transform>(childTransform.parent);
 
-		parentTransform.children.erase(child);
-		childTransform.parent = 0;
+			parentTransform.children.erase(child);
+			childTransform.parent = 0;
+
+			childTransform.staleCache = true;
+		}
 	}
 
 	//Get the right (x) vector of a transform

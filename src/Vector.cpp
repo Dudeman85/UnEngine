@@ -161,7 +161,7 @@ namespace une
 	std::string Vector2Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%" PRId64 ", %" PRId64 ")", x, y);
+		std::snprintf(buff, sizeof(buff) - 1, "{%" PRId64 ", %" PRId64 "}", x, y);
 		return std::string(buff);
 	}
 
@@ -332,7 +332,7 @@ namespace une
 	std::string Vector2::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%f, %f)", x, y);
+		std::snprintf(buff, sizeof(buff) - 1, "{%.3f, %.3f}", x, y);
 		return std::string(buff);
 	}
 
@@ -481,7 +481,7 @@ namespace une
 	std::string Vector3Int::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%" PRId64 ", %" PRId64 ", %" PRId64 ")", x, y, z);
+		std::snprintf(buff, sizeof(buff) - 1, "{%" PRId64 ", %" PRId64 ", %" PRId64 "}", x, y, z);
 		return std::string(buff);
 	}
 
@@ -699,7 +699,7 @@ namespace une
 	std::string Vector3::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%f, %f, %f)", x, y, z);
+		std::snprintf(buff, sizeof(buff) - 1, "{%.3f, %.3f, %.3f}", x, y, z);
 		return std::string(buff);
 	}
 
@@ -869,7 +869,7 @@ namespace une
 	std::string Vector4::ToString() const
 	{
 		char buff[255];
-		std::snprintf(buff, sizeof(buff) - 1, "(%f, %f, %f, %f)", x, y, z, w);
+		std::snprintf(buff, sizeof(buff) - 1, "{%.3f, %.3f, %.3f, %.3f}", x, y, z, w);
 		return std::string(buff);
 	}
 }

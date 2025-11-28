@@ -1,11 +1,10 @@
 #include "renderer/PrimitiveRenderer.h"
 
-#include <algorithm>
-#include <ranges>
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
+#include "glad/gl.h"
 
-#include "assimp/code/AssetLib/3MF/3MFXmlTags.h"
 #include "renderer/UserInterface.h"
+#include "renderer/gl/Window.h"
 
 namespace une
 {
@@ -41,9 +40,12 @@ namespace une
 
 	Primitive::~Primitive()
 	{
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteBuffers(1, &VBO);
-		glDeleteBuffers(1, &EBO);
+		if (mainWindow)
+		{
+			glDeleteVertexArrays(1, &VAO);
+			glDeleteBuffers(1, &VBO);
+			glDeleteBuffers(1, &EBO);
+		}
 	}
 
 	//Create a line starting at p1 and ending at p2

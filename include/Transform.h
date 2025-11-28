@@ -8,7 +8,8 @@
 
 namespace une
 {
-	enum RotationOrder { XYZ, XZY, YXZ, ZXY, YZX, ZYX };
+	enum RotationOrder : int { XYZ, XZY, YXZ, ZXY, YZX, ZYX };
+	inline const char* rotationOrderStrings[] = { "XYZ", "XZY", "YXZ", "ZXY", "YZX", "ZYX" };
 
 	//Transform component
 	ECS_REGISTER_COMPONENT(Transform)
@@ -74,10 +75,12 @@ namespace une
 		//Set the scale of an entity
 		static void SetScale(ecs::Entity entity, Vector3 scale);
 
+		//Returns true if entity does not have parent as child
+		static bool RecursiveCheckChildren(ecs::Entity entity, ecs::Entity parent);
 		//Add a parent entity to a child entity
 		static void AddParent(ecs::Entity child, ecs::Entity parent);
 		//Remove a parent entity from a child entity, This will place the child to root
-		static void RemoveParent(ecs::Entity child, ecs::Entity parent);
+		static void RemoveParent(ecs::Entity child);
 
 		//Get the right (x) vector of a transform
 		static Vector3 RightVector(ecs::Entity entity);

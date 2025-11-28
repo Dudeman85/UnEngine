@@ -15,12 +15,13 @@
 #include "renderer/gl/Shader.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Camera.h"
+#include "renderer/gl/Window.h"
 
 namespace une::renderer
 {
 	SpriteRenderSystem::~SpriteRenderSystem()
 	{
-		if (VAO)
+		if (VAO && mainWindow)
 		{
 			glDeleteVertexArrays(1, &VAO);
 			glDeleteVertexArrays(1, &VBO);
