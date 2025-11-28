@@ -22,7 +22,7 @@
 //Macro to register a component outside main
 #define ECS_REGISTER_COMPONENT(COMPONENT) \
 struct COMPONENT; \
-inline bool COMPONENT##Registered = ( ecs::RegisterComponent<COMPONENT>(), true );
+inline bool COMPONENT##Registered = ( ecs::RegisterComponent<COMPONENT>(#COMPONENT), true );
 
 //Macro to register a system and its components outside main
 #define ECS_REGISTER_SYSTEM(SYSTEM, ...) \
@@ -312,6 +312,7 @@ namespace ecs
 	//Maps from a components type name to its ID
 	inline std::unordered_map<const char*, uint16_t> componentTypeToID;
 	inline std::unordered_map<uint16_t, const char*> componentIDToType;
+	inline std::unordered_map<uint16_t, std::string> componentIDToReadableName;
 	//The amount of components registered. Also the next available component ID
 	inline uint16_t componentCount = 0;
 	constexpr uint16_t componentArraySegmentSize = 100;
@@ -535,10 +536,7 @@ namespace ecs
 		}
 #endif
 
-		if (!entityTags.contains(entity))
-			entityTags[entity].push_back(tag);
-		else
-			SetTags(entity, { tag });
+		entityTags[entity].push_back(tag);
 	}
 
 	//Remove a tag from an entity
@@ -610,7 +608,7 @@ namespace ecs
 
 	//Register a new component of type T
 	template<typename T>
-	void RegisterComponent()
+	void RegisterComponent(std::string name)
 	{
 		const char* componentType = typeid(T).name();
 
@@ -632,6 +630,7 @@ namespace ecs
 		//Assigns an ID and makes a new component array for the registered component type
 		componentTypeToID[componentType] = componentCount;
 		componentIDToType[componentCount] = componentType;
+		componentIDToReadableName[componentCount] = name;
 		componentArrays[componentType] = new ComponentArray<T>();
 
 		componentCount++;

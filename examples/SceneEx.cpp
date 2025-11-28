@@ -37,6 +37,9 @@ int main()
 	une::UICanvas canvas;
 
 	ecs::Entity test = ecs::NewEntity();
+	ecs::AddComponent(test, une::SpriteRenderer{.texture = &texture});
+	ecs::AddTag(test, "non world entity");
+	ecs::AddTag(test, "tag2");
 
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = &texture});
@@ -122,7 +125,7 @@ int main()
 		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_2))
 		{
-			debug::gui::EnableWindow(debug::gui::ImWindow::Components);
+			debug::gui::EnableWindow(debug::gui::ImWindow::Inspector);
 		}
 
 		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);

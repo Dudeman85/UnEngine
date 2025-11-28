@@ -69,11 +69,10 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [ ] Frame advance
   - [x] Better Logging
   - [ ] GUI
-    - [ ] Hierarchy
-    - [ ] Entity overview
-    - [ ] Transform tools
+    - [x] Hierarchy
+    - [x] Entity inspector
+    - [x] Transform tools
     - [ ] Debug toggles
-    - [ ] Toolbar
 - [ ] Add animation support to tilemap
 - [ ] Add TOML or similar config support
 - [x] Add multi camera support

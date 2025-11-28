@@ -6,7 +6,7 @@
 
 namespace debug::gui
 {
-	enum class ImWindow { Demo, Entities, Components };
+	enum class ImWindow { Demo, Entities, Inspector };
 
 	//What guis are currently visible
 	inline std::unordered_map<ImWindow, bool> windowVisibility;
@@ -27,13 +27,13 @@ namespace debug::gui
 	//Entity list and world hierarchy
 	void DrawEntities();
 	//Lists all components and draws inspectors for supported ones
-	void DrawComponents();
+	void DrawInspector();
 
 	//Components
 	//Transform component editor
 	void DrawTransform();
 
 	const std::unordered_map<ImWindow, std::function<void()>> windowDrawFunctions{
-		{ImWindow::Demo, DrawDemo}, {ImWindow::Entities, DrawEntities}, {ImWindow::Components, DrawComponents}
+		{ImWindow::Demo, DrawDemo}, {ImWindow::Entities, DrawEntities}, {ImWindow::Inspector, DrawInspector}
 	};
 }

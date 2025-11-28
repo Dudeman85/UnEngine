@@ -87,6 +87,8 @@ namespace debug::gui
 				e.second = false;
 			selectedEntity = entity;
 			entitySelection[entity] = true;
+
+			EnableWindow(ImWindow::Inspector);
 		}
 
 		//Draw all children of this entity
@@ -99,6 +101,9 @@ namespace debug::gui
 	//Entity list and world hierarchy
 	void DrawEntities()
 	{
+		ImGui::SetNextWindowSize(ImVec2(180, 300), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(1, 50), ImGuiCond_FirstUseEver);
+
 		ImGui::Begin("Entities", &windowVisibility[ImWindow::Entities]);
 
 		//Display all entities with a transform as a hierachy
@@ -128,6 +133,8 @@ namespace debug::gui
 							e.second = false;
 						selectedEntity = entity;
 						entitySelection[entity] = true;
+
+						EnableWindow(ImWindow::Inspector);
 					}
 				}
 			}
@@ -136,21 +143,40 @@ namespace debug::gui
 		ImGui::End();
 	}
 
-	void DrawComponents()
+	void DrawInspector()
 	{
-		ImGui::Begin("Components", &windowVisibility[ImWindow::Components]);
+		ImGui::SetNextWindowSize(ImVec2(250,370), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(une::mainWindow->GetSize().x - 251, 50), ImGuiCond_FirstUseEver);
+
+		ImGui::Begin("Entity Inspector", &windowVisibility[ImWindow::Inspector]);
 
 		ImGui::Text("Selected Entity: %d", selectedEntity);
 		ImGui::Separator();
 
+		if (!ecs::EntityExists(selectedEntity))
+		{
+			ImGui::Text("Entity does not exist");
+			ImGui::End();
+			return;
+		}
+
+		//Print the tags attached to selected entity
+		if (ImGui::CollapsingHeader("Tags"))
+		{
+			for (std::string tag : ecs::GetTags(selectedEntity))
+			{
+				ImGui::Text("%s", tag.c_str());
+			}
+		}
+
 		//Print the readable names of all components attached to selected entity
-		if (ImGui::CollapsingHeader("Component List"))
+		if (ImGui::CollapsingHeader("Components"))
 		{
 			for (int i = 0; i < ECS_MAX_COMPONENTS; i++)
 			{
 				if (ecs::entitySignatures[selectedEntity][i])
 				{
-					ImGui::Text("%s", ecs::componentIDToType[i]);
+					ImGui::Text("%s", ecs::componentIDToReadableName[i].c_str());
 				}
 			}
 		}
@@ -158,9 +184,7 @@ namespace debug::gui
 		//Transform inspector
 		if (ecs::HasComponent<une::Transform>(selectedEntity))
 		{
-			ImGui::Spacing();
 			ImGui::Separator();
-			ImGui::Spacing();
 			DrawTransform();
 		}
 
@@ -180,7 +204,7 @@ namespace debug::gui
 
 				//Position sliders
 				float pos[3] = { (float)tf.position.x, (float)tf.position.y, (float)tf.position.z };
-				if (ImGui::DragFloat3("Position", pos, 0.2f, 0.f, 0.f))
+				if (ImGui::DragFloat3("Position", pos, 0.1f, 0.f, 0.f))
 				{
 					une::TransformSystem::SetPosition(selectedEntity, pos[0], pos[1], pos[2]);
 				}
@@ -194,7 +218,7 @@ namespace debug::gui
 
 				//Scale sliders
 				float scale[3] = { (float)tf.scale.x, (float)tf.scale.y, (float)tf.scale.z };
-				if (ImGui::DragFloat3("Scale", scale, 0.2f, 0.f, 0.f))
+				if (ImGui::DragFloat3("Scale", scale, 0.02f, 0.f, 0.f))
 				{
 					une::TransformSystem::SetScale(selectedEntity, scale[0], scale[1], scale[2]);
 				}
@@ -209,6 +233,7 @@ namespace debug::gui
 				}
 
 				//Rotation order selector
+				ImGui::SetNextItemWidth(50);
 				int currentOrder = tf.rotationOrder;
 				if (ImGui::Combo("Rotation Order", &currentOrder, une::rotationOrderStrings, IM_ARRAYSIZE(une::rotationOrderStrings)))
 				{
@@ -219,6 +244,7 @@ namespace debug::gui
 				ImGui::Separator();
 
 				//Parent
+				ImGui::SetNextItemWidth(50);
 				int parent = tf.parent;
 				ImGui::InputInt("Parent", &parent, 0);
 				if (ImGui::IsItemDeactivatedAfterEdit())
