@@ -16,7 +16,7 @@ int main()
 	//Set logging level and outputs
 	debug::logOutputs.push_back({ new std::ofstream{"log.txt"}, false });
 	debug::logOutputs[0].second = true;
-	debug::verbosity = debug::Verbosity::Warning;
+	debug::verbosity = debug::Verbosity::Info;
 
 	bool isHost = false;
 	uint16_t port = 0;

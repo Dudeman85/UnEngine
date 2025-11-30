@@ -188,7 +188,7 @@ namespace une
 				{
 					//Convert all properties to lower case
 					std::string propertyName;
-					std::transform(property.getName().begin(), property.getName().end(), propertyName.begin(), tolower);
+					std::transform(propertyName.begin(), propertyName.end(), propertyName.begin(), tolower);
 					layerProperties[propertyName] = property;
 				}
 
