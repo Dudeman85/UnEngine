@@ -323,7 +323,7 @@ namespace une::enet
 		//Retrieve the Internet Gateway Devide of the router
 		ret = UPNP_GetValidIGD(upnpDevices, &upnpUrls, &igdData, lanAddress, sizeof(lanAddress), wanAddress, sizeof(wanAddress));
 		freeUPNPDevlist(upnpDevices);
-		if (ret == UPNP_CONNECTED_IGD)
+		if (ret > 0)
 		{
 			//Configure the port mapping to open it
 			ret = UPNP_AddPortMapping(upnpUrls.controlURL, igdData.first.servicetype, sPort.c_str(), sPort.c_str(), lanAddress, name.c_str(), "UDP", "", "0");

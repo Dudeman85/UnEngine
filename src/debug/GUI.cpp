@@ -283,21 +283,14 @@ namespace debug::gui
 				//Copy Transform component string to clipboard
 				if (ImGui::Button("Copy component to clipboard"))
 				{
-					//Put all children in string
-					std::string childString = "{";
-					for (ecs::Entity child : tf.children)
-						childString += std::to_string(child) + ", ";
-					if (!tf.children.empty())
-						childString.erase(childString.size() - 2, 2);
-					childString += "}";
 					std::string rotationOrder = "une::" + std::string(une::rotationOrderStrings[tf.rotationOrder]);
 
 					//Format the component string
 					char buff[1000];
 					std::snprintf(buff, sizeof(buff),
-						"une::Transform{%s, %s, %s, %s, %s, %d, %s}",
+						"une::Transform{%s, %s, %s, %s, %s}",
 						tf.position.ToString().c_str(), tf.rotation.ToString().c_str(), tf.scale.ToString().c_str(),
-						tf.pivot.ToString().c_str(), rotationOrder.c_str(), tf.parent, childString.c_str());
+						tf.pivot.ToString().c_str(), rotationOrder.c_str());
 
 					ImGui::SetClipboardText(buff);
 				}

@@ -16,7 +16,7 @@ int main()
 	//Set logging level and outputs
 	debug::logOutputs.push_back({ new std::ofstream{"log.txt"}, false });
 	debug::logOutputs[0].second = true;
-	debug::verbosity = debug::Verbosity::Info;
+	debug::verbosity = debug::Verbosity::Warning;
 
 	bool isHost = false;
 	uint16_t port = 0;
@@ -233,6 +233,9 @@ int main()
 	//Game loop
 	while (!window->ShouldClose())
 	{
+		une::BeginFrame();
+		une::enet::UpdateEnet(connection);
+		
 		if (playerEntities.contains(playerId))
 		{
 			if (glfwGetKey(window->glWindow, GLFW_KEY_RIGHT))
@@ -292,7 +295,8 @@ int main()
 
 		//Update engine systems and receive enet packets
 		une::Update();
-		une::enet::UpdateEnet(connection);
+
+		une::EndFrame();
 	}
 
 	une::enet::UPNPUnmapAllPorts();
