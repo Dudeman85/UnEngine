@@ -1,25 +1,16 @@
 #pragma once
 #include <functional>
+#include <string>
 #include <unordered_map>
-
-#include "imgui.h"
 
 namespace debug::gui
 {
-	enum class ImWindow { Demo, Entities, Inspector };
-
-	//What guis are currently visible
-	inline std::unordered_map<ImWindow, bool> windowVisibility;
-
 	//Initialize ImGui
 	void Init();
 	//Clean up resources used by ImGui
 	void UnInit();
 	//Renders and updates everything
 	void Update();
-
-	void EnableWindow(ImWindow window);
-	void DisableWindow(ImWindow window);
 
 	//Windows
 	//Dear ImGui demo
@@ -30,10 +21,22 @@ namespace debug::gui
 	void DrawInspector();
 
 	//Components
-	//Transform component editor
+	//Transform inspector
 	void DrawTransform();
+	//Function pointers to draw each component inspector by their readable name
+	const std::unordered_map<std::string, std::function<void()>> componentDrawFunctions{
+		{"Transform", DrawTransform}
+	};
 
+	//GUI window types
+	enum class ImWindow { Demo, Entities, Inspector };
+	//What guis are currently visible
+	inline std::unordered_map<ImWindow, bool> windowVisibility;
+	//Function pointers to draw each gui
 	const std::unordered_map<ImWindow, std::function<void()>> windowDrawFunctions{
 		{ImWindow::Demo, DrawDemo}, {ImWindow::Entities, DrawEntities}, {ImWindow::Inspector, DrawInspector}
 	};
+
+	void EnableWindow(ImWindow window);
+	void DisableWindow(ImWindow window);
 }
