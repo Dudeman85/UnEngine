@@ -21,11 +21,11 @@ namespace debug::gui
 	void DrawInspector();
 
 	//Components
-	//Transform inspector
-	void DrawTransform();
+	void TransformInspector();
+	void PolygonColliderInspector();
 	//Function pointers to draw each component inspector by their readable name
 	const std::unordered_map<std::string, std::function<void()>> componentDrawFunctions{
-		{"Transform", DrawTransform}
+		{"Transform", TransformInspector}, {"PolygonCollider", PolygonColliderInspector}
 	};
 
 	//GUI window types

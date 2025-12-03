@@ -45,7 +45,6 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ### New Features
 - [x] Implement UPnP for automatic port forwarding
-- [ ] Add Hexagonal tilemap support
 - [x] Implement enet (was already implemented)
 - [x] Component serialization support
 
@@ -57,7 +56,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Improve resource loading and management
 - [x] Add an option to change the transform pivot
 - [ ] Improve animation system
-- [ ] Rethink the transform hierarchy
+- [x] Rethink the transform hierarchy
 - [x] Fix text resolution scaling
 - [ ] Fix sound bugs
 - [ ] Better integrate sounds with ecs
@@ -68,11 +67,14 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [ ] Camera
   - [ ] Frame advance
   - [x] Better Logging
+  - [ ] Primitive Drawing
   - [ ] GUI
     - [x] Hierarchy
     - [x] Entity inspector
     - [x] Transform tools
+    - [ ] Inspectors for other components
     - [ ] Debug toggles
+- [ ] Add Hexagonal tilemap support
 - [ ] Add animation support to tilemap
 - [ ] Add TOML or similar config support
 - [x] Add multi camera support

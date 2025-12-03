@@ -44,6 +44,7 @@ int main()
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = &texture});
 	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ, 0, {4, 6}});
+	ecs::AddComponent(player, une::PolygonCollider{.vertices = {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}}});
 	ecs::Entity child = ecs::NewEntity();
 	ecs::AddComponent(child, une::TextRenderer{.font = &font, .text = "Player", .color = une::Color(12, 150, 60)});
 	ecs::AddComponent(child, une::Transform{.position = {-4.5, 8, 0}, .scale = 0.2});

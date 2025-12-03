@@ -7,8 +7,6 @@ namespace une
 	///Called every frame
 	void CollisionSystem::Update()
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
-
 		//For each entity
 		for (ecs::Entity entity : entities)
 		{

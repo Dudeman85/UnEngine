@@ -626,7 +626,6 @@ namespace ecs
 			throw std::runtime_error("ECS ERROR: Too many registered components!");
 		}
 #endif
-
 		//Assigns an ID and makes a new component array for the registered component type
 		componentTypeToID[componentType] = componentCount;
 		componentIDToType[componentCount] = componentType;
@@ -648,7 +647,6 @@ namespace ecs
 			return;
 		}
 #endif
-
 		GetComponentArray<T>()->SetDestructor(destructor);
 	}
 
@@ -678,7 +676,6 @@ namespace ecs
 			throw std::runtime_error("ECS ERROR: Entity does not have the desired component!");
 		}
 #endif
-
 		return GetComponentArray<T>()->GetComponent(entity);
 	}
 
@@ -687,7 +684,6 @@ namespace ecs
 	uint16_t GetComponentID()
 	{
 		const char* componentType = typeid(T).name();
-
 #ifndef ECS_DISABLE_CHECKS
 		//Make sure the component has been registered
 		if (!componentArrays.contains(componentType))
@@ -696,8 +692,37 @@ namespace ecs
 			throw std::runtime_error("ECS ERROR: Component not registered!");
 		}
 #endif
-
 		return componentTypeToID[componentType];
+	}
+
+	//Get the readable name of a component
+	template<typename T>
+	std::string GetComponentName()
+	{
+		const char* componentType = typeid(T).name();
+#ifndef ECS_DISABLE_CHECKS
+		//Make sure the component has been registered
+		if (!componentArrays.contains(componentType))
+		{
+			LogError("Component has not been registered!");
+			throw std::runtime_error("ECS ERROR: Component not registered!");
+		}
+#endif
+		return componentIDToReadableName[GetComponentID<T>()];
+	}
+
+	//Get the readable name of a component by its ID
+	inline std::string GetComponentNameByID(uint16_t componentID)
+	{
+#ifndef ECS_DISABLE_CHECKS
+		//Make sure the component has been registered
+		if (!componentIDToReadableName.contains(componentID))
+		{
+			LogWarning("Component has not been registered!");
+			return "";
+		}
+#endif
+		return componentIDToReadableName[componentID];
 	}
 
 	//Add a component to entity.
@@ -731,7 +756,6 @@ namespace ecs
 	void RemoveComponent(Entity entity)
 	{
 		const char* componentType = typeid(T).name();
-
 #ifndef ECS_DISABLE_CHECKS
 		//Make sure the entity exists
 		if (!EntityExists(entity))
@@ -746,12 +770,24 @@ namespace ecs
 			return;
 		}
 #endif
-
 		GetComponentArray<T>()->RemoveComponent(entity);
 
 		//Update the entity's signature
 		entitySignatures[entity].reset(componentTypeToID[componentType]);
 		OnEntitySignatureChanged(entity);
+	}
+
+	inline Signature GetSignature(Entity entity)
+	{
+#ifndef ECS_DISABLE_CHECKS
+		//Make sure the entity exists
+		if (!EntityExists(entity))
+		{
+			LogWarning("Entity " + std::to_string(entity) + " does not exist!");
+			return Signature();
+		}
+#endif
+		return entitySignatures[entity];
 	}
 
 	//Returns a new entity with no components

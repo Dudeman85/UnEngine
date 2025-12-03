@@ -7,8 +7,6 @@
 #include "ECS.h"
 #include "Vector.h"
 #include "Transform.h"
-#include "Tilemap.h"
-#include "renderer/gl/Camera.h"
 
 namespace une
 {
@@ -46,10 +44,10 @@ namespace une
 		bool trigger = false;
 		//The layer of the collider, behavior is determined by the collision layer matrix
 		int layer = 0;
-		//Draw this collider
-		bool visualise = false;
 		//Override the rotation of the collider, (0-360)degrees. This is useful if attaching a 2D collider to a 3D model
 		float rotationOverride = -1;
+		//Draw this collider
+		bool visualise = false;
 		//The axis-aligned bounding box of the collider. This is updated automatically and is set in world coordinates
 		std::array<float, 4> bounds;
 	};

@@ -172,12 +172,12 @@ namespace debug::gui
 		//Print the readable names of all components attached to selected entity
 		if (ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			for (int i = 0; i < ECS_MAX_COMPONENTS; i++)
+			for (uint16_t i = 0; i < ECS_MAX_COMPONENTS; i++)
 			{
-				if (ecs::entitySignatures[selectedEntity][i])
+				if (ecs::GetSignature(selectedEntity)[i])
 				{
-					const char* componentName = ecs::componentIDToReadableName[i].c_str();
-					if (ImGui::CollapsingHeader(componentName))
+					const std::string componentName = ecs::GetComponentNameByID(i);
+					if (ImGui::CollapsingHeader(componentName.c_str()))
 					{
 						//If the component has a defined inspector, draw it here
 						if (componentDrawFunctions.contains(componentName))
@@ -198,105 +198,156 @@ namespace debug::gui
 
 	//Components
 
-	//Transform component editor
-	void DrawTransform()
+	void TransformInspector()
 	{
-		if (ecs::HasComponent<une::Transform>(selectedEntity))
+		une::Transform& tf = ecs::GetComponent<une::Transform>(selectedEntity);
+
+		//Position sliders
+		float pos[3] = { (float)tf.position.x, (float)tf.position.y, (float)tf.position.z };
+		if (ImGui::DragFloat3("Position", pos, 0.1f, 0.f, 0.f))
 		{
-			une::Transform& tf = ecs::GetComponent<une::Transform>(selectedEntity);
+			une::TransformSystem::SetPosition(selectedEntity, pos[0], pos[1], pos[2]);
+		}
 
-			//Position sliders
-			float pos[3] = { (float)tf.position.x, (float)tf.position.y, (float)tf.position.z };
-			if (ImGui::DragFloat3("Position", pos, 0.1f, 0.f, 0.f))
+		//Rotation sliders
+		float rot[3] = { (float)tf.rotation.x, (float)tf.rotation.y, (float)tf.rotation.z };
+		if (ImGui::DragFloat3("Rotation", rot, 0.2f, 0.f, 0.f))
+		{
+			une::TransformSystem::SetRotation(selectedEntity, rot[0], rot[1], rot[2]);
+		}
+
+		//Scale sliders
+		float scale[3] = { (float)tf.scale.x, (float)tf.scale.y, (float)tf.scale.z };
+		if (ImGui::DragFloat3("Scale", scale, 0.02f, 0.f, 0.f))
+		{
+			une::TransformSystem::SetScale(selectedEntity, scale[0], scale[1], scale[2]);
+		}
+
+		ImGui::Separator();
+
+		//Pivot sliders
+		float pivot[3] = { (float)tf.pivot.x, (float)tf.pivot.y, (float)tf.pivot.z };
+		if (ImGui::DragFloat3("Pivot", pivot, 0.2f, 0.f, 0.f))
+		{
+			une::TransformSystem::SetPivot(selectedEntity, pivot[0], pivot[1], pivot[2]);
+		}
+
+		//Rotation order selector
+		ImGui::SetNextItemWidth(50);
+		int currentOrder = tf.rotationOrder;
+		if (ImGui::Combo("Rotation Order", &currentOrder, une::rotationOrderStrings, IM_ARRAYSIZE(une::rotationOrderStrings)))
+		{
+			tf.rotationOrder = (une::RotationOrder)currentOrder;
+			tf.staleCache = true;
+		}
+
+		ImGui::Separator();
+
+		//Parent
+		ImGui::SetNextItemWidth(50);
+		int parent = tf.parent;
+		ImGui::InputInt("Parent", &parent, 0);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			if (parent == 0)
+				une::TransformSystem::RemoveParent(selectedEntity);
+			else
 			{
-				une::TransformSystem::SetPosition(selectedEntity, pos[0], pos[1], pos[2]);
-			}
-
-			//Rotation sliders
-			float rot[3] = { (float)tf.rotation.x, (float)tf.rotation.y, (float)tf.rotation.z };
-			if (ImGui::DragFloat3("Rotation", rot, 0.2f, 0.f, 0.f))
-			{
-				une::TransformSystem::SetRotation(selectedEntity, rot[0], rot[1], rot[2]);
-			}
-
-			//Scale sliders
-			float scale[3] = { (float)tf.scale.x, (float)tf.scale.y, (float)tf.scale.z };
-			if (ImGui::DragFloat3("Scale", scale, 0.02f, 0.f, 0.f))
-			{
-				une::TransformSystem::SetScale(selectedEntity, scale[0], scale[1], scale[2]);
-			}
-
-			ImGui::Separator();
-
-			//Pivot sliders
-			float pivot[3] = { (float)tf.pivot.x, (float)tf.pivot.y, (float)tf.pivot.z };
-			if (ImGui::DragFloat3("Pivot", pivot, 0.2f, 0.f, 0.f))
-			{
-				une::TransformSystem::SetPivot(selectedEntity, pivot[0], pivot[1], pivot[2]);
-			}
-
-			//Rotation order selector
-			ImGui::SetNextItemWidth(50);
-			int currentOrder = tf.rotationOrder;
-			if (ImGui::Combo("Rotation Order", &currentOrder, une::rotationOrderStrings, IM_ARRAYSIZE(une::rotationOrderStrings)))
-			{
-				tf.rotationOrder = (une::RotationOrder)currentOrder;
-				tf.staleCache = true;
-			}
-
-			ImGui::Separator();
-
-			//Parent
-			ImGui::SetNextItemWidth(50);
-			int parent = tf.parent;
-			ImGui::InputInt("Parent", &parent, 0);
-			if (ImGui::IsItemDeactivatedAfterEdit())
-			{
-				if (parent == 0)
-					une::TransformSystem::RemoveParent(selectedEntity);
-				else
+				if (ecs::HasComponent<une::Transform>(parent))
 				{
-					if (ecs::HasComponent<une::Transform>(parent))
-					{
-						une::TransformSystem::AddParent(selectedEntity, parent);
-					}
+					une::TransformSystem::AddParent(selectedEntity, parent);
+				}
+			}
+		}
+
+		//Children dropdown
+		if (ImGui::TreeNode("Children"))
+		{
+			for (ecs::Entity child : tf.children)
+			{
+				//Draw the selectable entity id
+				if (ImGui::Selectable(std::to_string(child).c_str(), &entitySelection[child]))
+				{
+					//Toggle all other entities off
+					for (auto& e : entitySelection)
+						e.second = false;
+					selectedEntity = child;
+					entitySelection[child] = true;
+				}
+			}
+			ImGui::TreePop();
+		}
+
+		ImGui::Separator();
+
+		//Copy Transform component string to clipboard
+		if (ImGui::Button("Copy component to clipboard"))
+		{
+			std::string rotationOrder = "une::" + std::string(une::rotationOrderStrings[tf.rotationOrder]);
+
+			//Format the component string
+			char buff[1000];
+			std::snprintf(buff, sizeof(buff),
+				"une::Transform{%s, %s, %s, %s, %s}",
+				tf.position.ToString().c_str(), tf.rotation.ToString().c_str(), tf.scale.ToString().c_str(),
+				tf.pivot.ToString().c_str(), rotationOrder.c_str());
+
+			ImGui::SetClipboardText(buff);
+		}
+	}
+
+	void PolygonColliderInspector()
+	{
+		une::PolygonCollider& collider = ecs::GetComponent<une::PolygonCollider>(selectedEntity);
+
+		//Vertices
+		if (ImGui::TreeNode("Vertices"))
+		{
+			//Size the vector
+			int size = collider.vertices.size();
+			ImGui::SetNextItemWidth(100);
+			if (ImGui::InputInt("Amount", &size))
+			{
+				if ((ImGui::IsItemDeactivated() || ImGui::IsItemClicked()) && size >= 0)
+				{
+					collider.vertices.resize(size);
+					if (ecs::HasComponent<une::Transform>(selectedEntity))
+						ecs::GetComponent<une::Transform>(selectedEntity).staleCache = true;
 				}
 			}
 
-			//Children dropdown
-			if (ImGui::TreeNode("Children"))
+			//Display every Vertex
+			for (int i = 0; i < collider.vertices.size(); i++)
 			{
-				for (ecs::Entity child : tf.children)
+				float vert[2] = {(float)collider.vertices[i].x, (float)collider.vertices[i].y};
+				if (ImGui::DragFloat2(std::to_string(i).c_str(), vert, 0.1f, 0.f, 0.f))
 				{
-					//Draw the selectable entity id
-					if (ImGui::Selectable(std::to_string(child).c_str(), &entitySelection[child]))
-					{
-						//Toggle all other entities off
-						for (auto& e : entitySelection)
-							e.second = false;
-						selectedEntity = child;
-						entitySelection[child] = true;
-					}
+					collider.vertices[i] = {vert[0], vert[1]};
+					if (ecs::HasComponent<une::Transform>(selectedEntity))
+						ecs::GetComponent<une::Transform>(selectedEntity).staleCache = true;
 				}
-				ImGui::TreePop();
 			}
+			ImGui::TreePop();
+		}
 
-			ImGui::Separator();
+		//Simple members
+		ImGui::Separator();
+		ImGui::Checkbox("Trigger", &collider.trigger);
+		ImGui::Checkbox("Visualise", &collider.visualise);
+		ImGui::SetNextItemWidth(100);
+		ImGui::InputInt("Layer", &collider.layer);
+		ImGui::SetNextItemWidth(100);
+		ImGui::DragFloat("Rotation Override", &collider.rotationOverride, 0.2f, -1.f, 360.f, "%.1f");
 
-			//Copy Transform component string to clipboard
-			if (ImGui::Button("Copy component to clipboard"))
-			{
-				std::string rotationOrder = "une::" + std::string(une::rotationOrderStrings[tf.rotationOrder]);
-
-				//Format the component string
-				char buff[1000];
-				std::snprintf(buff, sizeof(buff),
-					"une::Transform{%s, %s, %s, %s, %s}",
-					tf.position.ToString().c_str(), tf.rotation.ToString().c_str(), tf.scale.ToString().c_str(),
-					tf.pivot.ToString().c_str(), rotationOrder.c_str());
-
-				ImGui::SetClipboardText(buff);
-			}
+		//AABB
+		ImGui::Separator();
+		if (ImGui::TreeNode("Bounding Box"))
+		{
+			ImGui::Text("Top:    %.1f", collider.bounds[0]);
+			ImGui::Text("Right:  %.1f", collider.bounds[1]);
+			ImGui::Text("Bottom: %.1f", collider.bounds[2]);
+			ImGui::Text("Left:   %.1f", collider.bounds[3]);
+			ImGui::TreePop();
 		}
 	}
 }
