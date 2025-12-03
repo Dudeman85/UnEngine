@@ -45,5 +45,9 @@ set(IMGUI_BACKEND
 	"./imgui/backends/imgui_impl_glfw.cpp"
 	"./imgui/backends/imgui_impl_glfw.h"
 )
-add_library(imgui ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_BACKEND})
+set(IMGUI_ADDONS
+	"./imgui/misc/cpp/imgui_stdlib.cpp"
+	"./imgui/misc/cpp/imgui_stdlib.h"
+)
+add_library(imgui ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_BACKEND} ${IMGUI_ADDONS})
 target_link_libraries(imgui glfw)

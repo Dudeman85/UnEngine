@@ -16,7 +16,7 @@ namespace une
 			debug::LogError("Failed to load font from " + path);
 			return;
 		}
-
+		name = face->family_name;
 		FT_Set_Pixel_Sizes(face, 0, resolution);
 		this->resolution = face->size->metrics.y_ppem;
 		LoadCharacters(face);

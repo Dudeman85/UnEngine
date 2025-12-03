@@ -33,6 +33,7 @@ namespace une
 		int GetResolution() const;
 
 		unsigned int VAO, VBO;
+		std::string name;
 		std::unordered_map<char, Character> characters;
 	private:
 		void LoadCharacters(FT_Face face);

@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "misc/cpp/imgui_stdlib.h"
 
 #include "ECS.h"
 #include "UnEngine.h"
@@ -349,5 +350,22 @@ namespace debug::gui
 			ImGui::Text("Left:   %.1f", collider.bounds[3]);
 			ImGui::TreePop();
 		}
+	}
+
+	void TextRendererInspector()
+	{
+		une::TextRenderer& tr = ecs::GetComponent<une::TextRenderer>(selectedEntity);
+
+		ImGui::Text("Font: %s", tr.font->name.c_str());
+		ImGui::Separator();
+		ImGui::InputText("Text", &tr.text);
+		ImGui::DragInt("Size", &tr.size, 1, 1, 256);
+		une::Color c = tr.color.AsSRGB();
+		float col[4] = {c.r, c.g, c.b, c.a};
+		if (ImGui::ColorEdit4("Color", col, ImGuiColorEditFlags_NoInputs))
+		{
+			tr.color = une::Color(col[0], col[1], col[2], col[3]);
+		}
+		ImGui::Checkbox("Enabled", &tr.enabled);
 	}
 }
