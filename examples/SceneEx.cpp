@@ -134,7 +134,7 @@ int main()
 		if (glfwGetKey(window->glWindow, GLFW_KEY_T))
 		{
 			une::Transform& tf = ecs::GetComponent<une::Transform>(player);
-			debug::DrawRectangle({-200, -200, 0}, {-200, 200, 0}, {200, 200, 0}, tf.position, une::Color(255, 0, 0), true);
+			debug::DrawRectangle({-200, -200, 0}, {-200, 200, 0}, {200, 200, 0}, tf.position, une::Color(255, 0, 0), false);
 		}
 
 		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);

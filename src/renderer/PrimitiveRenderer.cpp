@@ -88,16 +88,11 @@ namespace une
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
 		std::vector<double> vertices
 		{
-			//Positions
 			v1.x, v1.y, v1.z,
 			v2.x, v2.y, v2.z,
 			v3.x, v3.y, v3.z,
 		};
-		//Indices to draw a triangle
-		std::vector<unsigned int> indices
-		{
-			0, 1, 2,
-		};
+		std::vector<unsigned int> indices{0, 1, 2};
 
 		//Create the primitive object from vertice data
 		return Primitive(vertices, indices, wireframe);
@@ -109,18 +104,17 @@ namespace une
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
 		std::vector<double> vertices
 		{
-			//Positions
 			v1.x, v1.y, v1.z,
 			v2.x, v2.y, v2.z,
 			v3.x, v3.y, v3.z,
 			v4.x, v4.y, v4.z,
 		};
-		//Indices to draw a rectangle
-		std::vector<unsigned int> indices
-		{
-			0, 1, 2,
-			0, 2, 3,
-		};
+
+		std::vector<unsigned int> indices;
+		if (wireframe)
+			indices = {0, 1, 2, 3};
+		else
+			indices = {0, 1, 2, 0, 2, 3};
 
 		//Create the primitive object from vertice data
 		return Primitive(vertices, indices, wireframe);

@@ -7,6 +7,7 @@
 
 #include "ECS.h"
 #include "UnEngine.h"
+#include "debug/Primitives.h"
 #include "renderer/gl/Window.h"
 
 namespace debug::gui
@@ -202,6 +203,14 @@ namespace debug::gui
 	void TransformInspector()
 	{
 		une::Transform& tf = ecs::GetComponent<une::Transform>(selectedEntity);
+
+		//Visualize transform origin
+		une::Transform globalTf = une::TransformSystem::GetGlobalTransform(selectedEntity);
+		globalTf.scale = 15;
+		globalTf.pivot = 0;
+		std::vector<une::Vector3> verts{{0, 0, 0}, {0, 1, 0}, {1, 0, 0}};
+		verts = une::TransformSystem::ApplyTransforms(verts, globalTf);
+		debug::DrawTriangle(verts[0], verts[1], verts[2], une::Color(17, 156, 45), false);
 
 		//Position sliders
 		float pos[3] = { (float)tf.position.x, (float)tf.position.y, (float)tf.position.z };

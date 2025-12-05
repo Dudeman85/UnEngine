@@ -295,9 +295,9 @@ namespace une
 		{
 			const Transform& parentTransform = ecs::GetComponent<Transform>(currentParent);
 
-			globalTransform.position += parentTransform.position;
+			globalTransform.position = ApplyTransforms({globalTransform.position}, parentTransform).front();
 			globalTransform.rotation += parentTransform.rotation;
-			globalTransform.scale += parentTransform.scale;
+			globalTransform.scale *= parentTransform.scale;
 
 			currentParent = parentTransform.parent;
 		}
@@ -370,9 +370,8 @@ namespace une
 		for (int i = 0; i < vertices.size(); i++)
 		{
 			//Many type conversions later we have applied transform matrix
-			glm::vec3 glmVert = glm::vec3(glm::vec4(vertices[i].ToGlm(), 0) * transformMatrix);
-			Vector3 vert(glmVert.x, glmVert.y, glmVert.z);
-			transformedVerts.push_back(vert);
+			glm::vec4 glmVert = transformMatrix * glm::vec4(vertices[i].ToGlm(), 1.0f);
+			transformedVerts.push_back({glmVert.x, glmVert.y, glmVert.z});
 		}
 
 		return transformedVerts;

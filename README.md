@@ -42,6 +42,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [x] Redo camera for ecs
 - [x] Redo UI system
 - [x] Redo window and context system
+- [x] Fix GetGlobalTransform
 
 ### New Features
 - [x] Implement UPnP for automatic port forwarding
