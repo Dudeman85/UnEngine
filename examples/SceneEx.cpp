@@ -5,6 +5,7 @@
 #include "renderer/UserInterface.h"
 #include "debug/GUI.h"
 #include "debug/Logging.h"
+#include "debug/Primitives.h"
 
 enum class MessageType : int8_t { AddPlayer, RemovePlayer, ConnectionReceived, PositionInfo, AllPositionInfo };
 
@@ -32,7 +33,7 @@ int main()
 	//Make the camera and UI canvas
 	ecs::Entity camera = ecs::NewEntity();
 	ecs::AddComponent(camera, une::Camera{});
-	ecs::AddComponent(camera, une::Transform{});
+	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 100}});
 	une::CameraSystem::MakeOrtho(camera, 800, 600);
 	une::UICanvas canvas;
 
@@ -55,6 +56,8 @@ int main()
 	une::TransformSystem::AddParent(nestedChild, child);
 	ecs::Entity child2 = ecs::NewEntity();
 	ecs::AddComponent(child2, une::Transform{.position = {0, -8, 0}});
+	une::Primitive primitive = une::Primitive::Rectangle();
+	//ecs::AddComponent(child2, une::PrimitiveRenderer{.primitive = &primitive, .color = une::Color(12, 150, 60)});
 	une::TransformSystem::AddParent(child2, player);
 
 	ecs::Entity uiSprite = ecs::NewEntity();
@@ -127,6 +130,11 @@ int main()
 		if (glfwGetKey(window->glWindow, GLFW_KEY_2))
 		{
 			debug::gui::EnableWindow(debug::gui::ImWindow::Inspector);
+		}
+		if (glfwGetKey(window->glWindow, GLFW_KEY_T))
+		{
+			une::Transform& tf = ecs::GetComponent<une::Transform>(player);
+			debug::DrawRectangle({-200, -200, 0}, {-200, 200, 0}, {200, 200, 0}, tf.position, une::Color(255, 0, 0), true);
 		}
 
 		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);

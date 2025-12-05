@@ -8,9 +8,11 @@
 
 namespace une
 {
-	Primitive::Primitive(const std::vector<double>& vertices, const std::vector<unsigned int>& indices)
+	Primitive::Primitive(const std::vector<double>& vertices, const std::vector<unsigned int>& indices, bool wf)
 	{
+		wireframe = wf;
 		numVertices = indices.size();
+		numIndices = indices.size();
 
 		//Make the Vertex Array Object, Vertex Buffer Object, and Element Buffer Object
 		glGenVertexArrays(1, &VAO);
@@ -38,9 +40,21 @@ namespace une
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
+	Primitive::Primitive(Primitive&& other)
+	{
+		this->VAO = other.VAO;
+		this->VBO = other.VBO;
+		this->EBO = other.EBO;
+		this->numVertices = other.numVertices;
+		this->numIndices = other.numIndices;
+		this->wireframe = other.wireframe;
+
+		other.VAO = 0;
+	}
+
 	Primitive::~Primitive()
 	{
-		if (mainWindow)
+		if (mainWindow && VAO)
 		{
 			glDeleteVertexArrays(1, &VAO);
 			glDeleteBuffers(1, &VBO);
@@ -65,11 +79,11 @@ namespace une
 		};
 
 		//Create the primitive object from vertice data
-		return Primitive(vertices, indices);
+		return Primitive(vertices, indices, true);
 	}
 
 	//Create a triangle from three vertices, Defaults to equilateral triangle
-	Primitive Primitive::Triangle(Vector3 v1, Vector3 v2, Vector3 v3)
+	Primitive Primitive::Triangle(bool wireframe, Vector3 v1, Vector3 v2, Vector3 v3)
 	{
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
 		std::vector<double> vertices
@@ -86,11 +100,11 @@ namespace une
 		};
 
 		//Create the primitive object from vertice data
-		return Primitive(vertices, indices);
+		return Primitive(vertices, indices, wireframe);
 	}
 
 	//Create a rectangle from four vertices going clockwise, Defaults to square
-	Primitive Primitive::Rectangle(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
+	Primitive Primitive::Rectangle(bool wireframe, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
 	{
 		//Rectangle vertices start at bottom left and go clockwise to bottom right
 		std::vector<double> vertices
@@ -105,15 +119,15 @@ namespace une
 		std::vector<unsigned int> indices
 		{
 			0, 1, 2,
-			2, 3, 0,
+			0, 2, 3,
 		};
 
 		//Create the primitive object from vertice data
-		return Primitive(vertices, indices);
+		return Primitive(vertices, indices, wireframe);
 	}
 
 	//Create a polygon from provided 3D vertices, going clockwise
-	Primitive Primitive::Polygon(const std::vector<Vector3>& verts)
+	Primitive Primitive::Polygon(bool wireframe, const std::vector<Vector3>& verts)
 	{
 		//Move all Vector3 vertices to a simple float vector
 		std::vector<double> vertices;
@@ -128,10 +142,10 @@ namespace une
 		}
 
 		//Create the primitive object from vertice data
-		return Primitive(vertices, indices);
+		return Primitive(vertices, indices, wireframe);
 	}
 	//Create a polygon from provided 2D vertices, going clockwise
-	Primitive Primitive::Polygon(const std::vector<Vector2>& verts)
+	Primitive Primitive::Polygon(bool wireframe, const std::vector<Vector2>& verts)
 	{
 		//Move all Vector2 vertices to a simple float vector
 		std::vector<double> vertices;
@@ -146,7 +160,44 @@ namespace une
 		}
 
 		//Create the primitive object from vertice data
-		return Primitive(vertices, indices);
+		return Primitive(vertices, indices, wireframe);
+	}
+
+	void Primitive::Draw(const Color& color, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection) const
+	{
+		const Shader* shader = renderer::PrimitiveRenderSystem::shader;
+		shader->Use();
+		debug::LogGLError();
+		debug::LogGLError();
+		debug::LogGLError();
+		debug::LogGLError();
+
+		glBindVertexArray(VAO);
+		debug::LogGLError();
+
+		//Set uniforms
+		int modelLoc = glGetUniformLocation(shader->ID, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		int viewLoc = glGetUniformLocation(shader->ID, "view");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		int projLoc = glGetUniformLocation(shader->ID, "projection");
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		int colorLoc = glGetUniformLocation(shader->ID, "color");
+		const Color srgb = color.AsSRGB();
+		glUniform4f(colorLoc, srgb.r, srgb.g, srgb.b, srgb.a);
+
+		debug::LogGLError();
+		if (wireframe)
+		{
+			glDrawElements(GL_LINE_LOOP, numVertices, GL_UNSIGNED_INT, 0);
+		}
+		else
+		{
+			glDrawElements(GL_TRIANGLES, numVertices, GL_UNSIGNED_INT, 0);
+		}
+
+		debug::LogGLError();
+		glBindVertexArray(0);
 	}
 
 	namespace renderer
@@ -249,67 +300,35 @@ namespace une
 		//Draw a primitive to the screen
 		void PrimitiveRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 		{
-			Transform transform = TransformSystem::GetGlobalTransform(entity);
-			PrimitiveRenderer& primitiveRenderer = ecs::GetComponent<PrimitiveRenderer>(entity);
-
-			DrawPrimitive(primitiveRenderer.primitive, cameraEntity, primitiveRenderer.color, ecs::HasComponent<UIElement>(entity) ? ui : normal,
-				transform.position, transform.rotation, transform.scale);
-		}
-
-		//Draw a primitive to the screen, does not require an entity
-		void PrimitiveRenderSystem::DrawPrimitive(const Primitive* primitive, ecs::Entity cameraEntity, const Color& color, DrawPriority prio,
-			Vector3 position, Vector3 rotation, Vector3 scale)
-		{
+			PrimitiveRenderer& pr = ecs::GetComponent<PrimitiveRenderer>(entity);
 			Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 
-			shader->Use();
-
-			glBindVertexArray(primitive->VAO);
-
-			//Create the model matrix
-			glm::mat4 model = glm::mat4(1.0);
-			//Position
-			model = glm::translate(model, position.ToGlm());
-			//X, Y, Z euler rotations
-			model = glm::rotate(model, (float)glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, (float)glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::rotate(model, (float)glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-			//Scale
-			model = glm::scale(model, scale.ToGlm());
-
-			//Give the shader the model matrix
-			int modelLoc = glGetUniformLocation(shader->ID, "model");
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-			//Give the shader the primitive's color
-			int colorLoc = glGetUniformLocation(shader->ID, "color");
-			const Color srgb = color.AsSRGB();
-			glUniform4f(colorLoc, srgb.r, srgb.g, srgb.b, srgb.a);
-
-			//Get the view and projection locations
-			int viewLoc = glGetUniformLocation(shader->ID, "view");
-			int projLoc = glGetUniformLocation(shader->ID, "projection");
-
-			if (prio == DrawPriority::ui)
+			if (!pr.primitive)
 			{
+				debug::LogWarning("No primitive given for PrimitiveRenderer of entity " + std::to_string(entity));
+				return;
+			}
+
+			//Get mvp
+			glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
+			glm::mat4 view = cam.view;
+			glm::mat4 projection = cam.projection;
+
+			//Set view and projection appropriately if ui
+			if (ecs::HasComponent<UIElement>(entity))
+			{
+				UIElement& ui = ecs::GetComponent<UIElement>(entity);
+				if (!ui.canvas)
+				{
+					debug::LogWarning("No canvas given for UIElement of entity " + std::to_string(entity));
+					return;
+				}
 				//Render UI elements independent of camera's view and projection
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-			}
-			else
-			{
-				if (prio == DrawPriority::aboveAll)
-					glDisable(GL_DEPTH_BUFFER_BIT);
-				//Render World entities based on camera's view and projection
-				glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.view));
-				glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(cam.projection));
+				view = ui.canvas->GetTransformForEntity(entity);
+				projection = ui.canvas->GetProjection();
 			}
 
-			//TODO: Fix filled draw
-			glDrawElements(GL_LINE_LOOP, primitive->numVertices, GL_UNSIGNED_INT, 0);
-
-			glEnable(GL_DEPTH_BUFFER_BIT);
-			glBindVertexArray(0);
+			pr.primitive->Draw(pr.color, model, view, projection);
 		}
 
 		const std::vector<Renderable>& PrimitiveRenderSystem::GetTransparentWorldEntities()

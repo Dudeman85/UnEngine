@@ -6,6 +6,7 @@
 
 #include "UnEngine.h"
 #include "debug/Logging.h"
+#include "debug/Primitives.h"
 
 namespace une::renderer
 {
@@ -45,7 +46,6 @@ namespace une::renderer
 	void UnifiedRenderPass(ecs::Entity cameraEntity)
 	{
 		glEnable(GL_DEPTH_TEST);
-		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_BLEND);
 		//First render all opaque world entities (non semi-transparent & non UI)
@@ -72,6 +72,9 @@ namespace une::renderer
 		for (const std::vector<Renderable>& v : transparents)
 			transparentEntites.insert(transparentEntites.end(), v.begin(), v.end());
 		DrawOrderedEntities(transparentEntites, cameraEntity);
+
+		//Draw debug stuff here
+		debug::RenderAllDebugPrimitives(cameraEntity);
 
 		//Clear depth buffer to always render UI above world
 		glClear(GL_DEPTH_BUFFER_BIT);

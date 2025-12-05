@@ -5,6 +5,7 @@
 #include "debug/Logging.h"
 #include "debug/Timers.h"
 #include "debug/GUI.h"
+#include "debug/Primitives.h"
 
 namespace une
 {

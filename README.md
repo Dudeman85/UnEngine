@@ -68,7 +68,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
   - [ ] Camera
   - [ ] Frame advance
   - [x] Better Logging
-  - [ ] Primitive Drawing
+  - [x] Primitive Drawing
   - [ ] GUI
     - [x] Hierarchy
     - [x] Entity inspector
