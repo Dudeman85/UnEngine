@@ -37,6 +37,7 @@ namespace une
 	struct PolygonCollider
 	{
 		//The vertices of the polygon making up the collider, going clockwise. The vertices must form a convex polygon
+		//Make sure to set Transform::staleCache = true, when changing this
 		std::vector<Vector2> vertices;
 		//Callback function on collision
 		std::function<void(Collision)> callback;
@@ -45,6 +46,7 @@ namespace une
 		//The layer of the collider, behavior is determined by the collision layer matrix
 		int layer = 0;
 		//Override the rotation of the collider, (0-360)degrees. This is useful if attaching a 2D collider to a 3D model
+		//Make sure to set Transform::staleCache = true, when changing this
 		float rotationOverride = -1;
 		//Draw this collider
 		bool visualise = false;

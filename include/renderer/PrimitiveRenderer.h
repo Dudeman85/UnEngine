@@ -32,7 +32,7 @@ namespace une
 		//Create a polygon from provided 3D vertices, going clockwise
 		static Primitive Polygon(bool wireframe, const std::vector<Vector3>& verts);
 		//Create a polygon from provided 2D vertices, going clockwise
-		static Primitive Polygon(bool wireframe, const std::vector<Vector2>& verts);
+		static Primitive Polygon(bool wireframe, const std::vector<Vector2>& verts, double z = 0);
 
 		void Draw(const Color& color, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection) const;
 

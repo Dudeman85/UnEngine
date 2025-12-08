@@ -139,7 +139,7 @@ namespace une
 		return Primitive(vertices, indices, wireframe);
 	}
 	//Create a polygon from provided 2D vertices, going clockwise
-	Primitive Primitive::Polygon(bool wireframe, const std::vector<Vector2>& verts)
+	Primitive Primitive::Polygon(bool wireframe, const std::vector<Vector2>& verts, double z)
 	{
 		//Move all Vector2 vertices to a simple float vector
 		std::vector<double> vertices;
@@ -149,7 +149,7 @@ namespace une
 		{
 			vertices.push_back(verts[i].x);
 			vertices.push_back(verts[i].y);
-			vertices.push_back(0);
+			vertices.push_back(z);
 			indices.push_back(i);
 		}
 

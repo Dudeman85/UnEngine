@@ -347,7 +347,11 @@ namespace debug::gui
 		ImGui::SetNextItemWidth(100);
 		ImGui::InputInt("Layer", &collider.layer);
 		ImGui::SetNextItemWidth(100);
-		ImGui::DragFloat("Rotation Override", &collider.rotationOverride, 0.2f, -1.f, 360.f, "%.1f");
+		if (ImGui::DragFloat("Rotation Override", &collider.rotationOverride, 0.2f, -1.f, 360.f, "%.1f"))
+		{
+			if (ecs::HasComponent<une::Transform>(selectedEntity))
+				ecs::GetComponent<une::Transform>(selectedEntity).staleCache = true;
+		}
 
 		//AABB
 		ImGui::Separator();
@@ -367,8 +371,10 @@ namespace debug::gui
 
 		ImGui::Text("Font: %s", tr.font->name.c_str());
 		ImGui::Separator();
-		ImGui::InputText("Text", &tr.text);
+		ImGui::InputTextMultiline("Text", &tr.text, ImVec2(0, ImGui::GetTextLineHeight() * 4.5));
 		ImGui::DragInt("Size", &tr.size, 1, 1, 256);
+
+		//Color picker
 		une::Color c = tr.color.AsSRGB();
 		float col[4] = {c.r, c.g, c.b, c.a};
 		if (ImGui::ColorEdit4("Color", col, ImGuiColorEditFlags_NoInputs))

@@ -377,24 +377,24 @@ namespace une
 		return transformedVerts;
 	}
 
-	//Applies transforms to 2D vertices and returns the transformed vertices, takes z rotation in degrees
-	std::vector<Vector2> TransformSystem::ApplyTransforms2D(const std::vector<Vector2>& vertices, const Transform& transform, double rotation)
+	//Applies relevant 2D transforms to given 2D vertices and returns the transformed vertices
+	std::vector<Vector2> TransformSystem::ApplyTransforms2D(const std::vector<Vector2>& vertices, const Transform& transform)
 	{
 		std::vector<Vector2> transformedVerts;
 		//For each vertice apply scale and rotation
 		for (int i = 0; i < vertices.size(); i++)
 		{
-			//Apply transform to the polygon collider
 			Vector2 transformedVert = vertices[i];
 			//Pivot
 			transformedVert -= transform.pivot;
 			//Rotate
-			const float angle = Radians(rotation);
-			transformedVert.x = vertices[i].x * cosf(angle) - vertices[i].y * sinf(angle);
-			transformedVert.y = vertices[i].x * sinf(angle) + vertices[i].y * cosf(angle);
+			const float angle = Radians(transform.rotation.z);
+			const Vector2 tmp = transformedVert;
+			transformedVert.x = tmp.x * cosf(angle) - tmp.y * sinf(angle);
+			transformedVert.y = tmp.x * sinf(angle) + tmp.y * cosf(angle);
 			//Scale
 			transformedVert *= transform.scale;
-			//Move
+			//Translate
 			transformedVert += transform.position;
 
 			transformedVerts.push_back(transformedVert);

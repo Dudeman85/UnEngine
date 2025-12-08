@@ -1,5 +1,6 @@
 #include "Collision.h"
 
+#include "debug/Primitives.h"
 #include "renderer/PrimitiveRenderer.h"
 
 namespace une
@@ -23,23 +24,23 @@ namespace une
 				}
 			}
 
-#ifdef _DEBUG
-			/*
 			//Draw the bounding box and polygon collider
 			if (collider.visualise)
 			{
 				//Calculate the vertices of the collision and bounding boxes in world coordinates
-				float rotation = collider.rotationOverride >= 0 ? collider.rotationOverride : transform.rotation.z;
-				std::vector<Vector2> colliderVerts = TransformSystem::ApplyTransforms2D(collider.vertices, rotation, transform.scale, transform.position);
-				Primitive colliderPrimitive = Primitive::Polygon(colliderVerts);
-				std::vector<Vector2> boundingBoxVerts{ Vector2(collider.bounds[3], collider.bounds[0]), Vector2(collider.bounds[1], collider.bounds[0]), Vector2(collider.bounds[1], collider.bounds[2]), Vector2(collider.bounds[3], collider.bounds[2]) };
-				Primitive boundingBoxPrimitive = Primitive::Polygon(boundingBoxVerts);
+				Transform globalTf = TransformSystem::GetGlobalTransform(entity);
+				if (collider.rotationOverride >= 0)
+					globalTf.rotation.z = collider.rotationOverride;
 
-				//Draw those vertices
-				//colliderPrimitive.Draw(cam, Vector3(255, 0, 0), Transform{ .position = Vector3(0, 0, 0) });
-				//boundingBoxPrimitive.Draw(cam, Vector3(0, 255, 0), Transform{ .position = Vector3(0, 0, 0) });
-			}*/
-#endif
+				//Collider
+				std::vector<Vector2> colliderVerts = TransformSystem::ApplyTransforms2D(collider.vertices, globalTf);
+				debug::DrawPolygon(colliderVerts, Color::Red(), true, globalTf.position.z);
+				//AABB
+				std::vector<Vector2> boundingBoxVerts{
+					Vector2(collider.bounds[3], collider.bounds[0]), Vector2(collider.bounds[1], collider.bounds[0]),
+					Vector2(collider.bounds[1], collider.bounds[2]), Vector2(collider.bounds[3], collider.bounds[2]) };
+				debug::DrawPolygon(boundingBoxVerts, Color::Green(), true, globalTf.position.z);
+			}
 		}
 	}
 
@@ -215,9 +216,7 @@ namespace une
 			return Collision{ .type = Collision::Type::miss, .a = a, .b = b };
 
 		//Get relevant components from a and b
-		Transform& aTransform = ecs::GetComponent<Transform>(a);
 		PolygonCollider& aCollider = ecs::GetComponent<PolygonCollider>(a);
-		Transform& bTransform = ecs::GetComponent<Transform>(b);
 		PolygonCollider& bCollider = ecs::GetComponent<PolygonCollider>(b);
 
 		//If collision layer matrix specifies to ignore, return miss
@@ -226,11 +225,15 @@ namespace une
 			return Collision{ .type = Collision::Type::miss, .a = a, .b = b };
 
 		//Rotate and scale every vertex of a, movement is handled later
-		const double aRotation = aCollider.rotationOverride >= 0 ? aCollider.rotationOverride : aTransform.rotation.z;
-		std::vector<Vector2> aVerts = TransformSystem::ApplyTransforms2D(aCollider.vertices, aTransform, aRotation);
+		Transform aTransform = TransformSystem::GetGlobalTransform(b);
+		if (aCollider.rotationOverride >= 0)
+			aTransform.rotation.z = aCollider.rotationOverride;
+		std::vector<Vector2> aVerts = TransformSystem::ApplyTransforms2D(aCollider.vertices, aTransform);
 		//Rotate and scale every vertex of b, movement is handled later
-		const double bRotation = bCollider.rotationOverride >= 0 ? bCollider.rotationOverride : bTransform.rotation.z;
-		std::vector<Vector2> bVerts = TransformSystem::ApplyTransforms2D(bCollider.vertices, aTransform, bRotation);
+		Transform bTransform = TransformSystem::GetGlobalTransform(b);
+		if (bCollider.rotationOverride >= 0)
+			bTransform.rotation.z = bCollider.rotationOverride;
+		std::vector<Vector2> bVerts = TransformSystem::ApplyTransforms2D(bCollider.vertices, bTransform);
 
 		//Check SAT collision
 		Collision collision = SATIntersect(aVerts, bVerts);
@@ -421,17 +424,18 @@ namespace une
 	///Update the AABB of the polygon collider
 	void CollisionSystem::UpdateAABB(ecs::Entity entity)
 	{
-		Transform& transform = ecs::GetComponent<Transform>(entity);
 		PolygonCollider& collider = ecs::GetComponent<PolygonCollider>(entity);
 
 		//Bounds go top, right, bottom, left
 		std::array<float, 4> bounds{ -INFINITY, -INFINITY, INFINITY, INFINITY };
 
 		//Apply transforms to collider vertices
-		const double rotation = collider.rotationOverride >= 0 ? collider.rotationOverride : transform.rotation.z;
-		std::vector<Vector2> transformedVerts = TransformSystem::ApplyTransforms2D(collider.vertices, transform, rotation);
+		Transform globalTf = TransformSystem::GetGlobalTransform(entity);
+		if (collider.rotationOverride >= 0)
+			globalTf.rotation.z = collider.rotationOverride;
+		std::vector<Vector2> transformedVerts = TransformSystem::ApplyTransforms2D(collider.vertices, globalTf);
 
-		//For each vertice apply the transform and calculate min and max bounds
+		//For each vertice calculate min and max bounds
 		for (const Vector2& transformedVert : transformedVerts)
 		{
 			//Calculate bounds

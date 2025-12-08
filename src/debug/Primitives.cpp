@@ -30,9 +30,14 @@ namespace debug
 	}
 
 	//Draw a polygon
-	void DrawPolygon(std::vector<une::Vector3> vertices, une::Color color, bool wireframe)
+	void DrawPolygon(const std::vector<une::Vector3>& vertices, une::Color color, bool wireframe)
 	{
 		une::Primitive primitive = une::Primitive::Polygon(wireframe, vertices);
+		debugPrimitives.push_back({ std::move(primitive), color });
+	}
+	void DrawPolygon(const std::vector<une::Vector2>& vertices, une::Color color, bool wireframe, double z)
+	{
+		une::Primitive primitive = une::Primitive::Polygon(wireframe, vertices, z);
 		debugPrimitives.push_back({ std::move(primitive), color });
 	}
 
