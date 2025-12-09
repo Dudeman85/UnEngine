@@ -49,6 +49,7 @@ namespace une
 	{
 		Camera& cam = ecs::GetComponent<Camera>(e);
 
+		cam.perspective = false;
 		cam.width = width;
 		cam.height = height;
 		cam.nearPlane = nearPlane;

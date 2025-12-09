@@ -93,7 +93,7 @@ namespace une
 		for (Collision& collision : collisions)
 		{
 			if (collision.mtv.Length() > maxIntersect.mtv.Length())
-			{
+			{/*
 				if (tileProperties.contains(collision.b))
 				{
 					//If the tile is set to be a trigger
@@ -103,7 +103,7 @@ namespace une
 				else
 				{
 					maxIntersect = collision;
-				}
+				}*/
 			}
 		}
 		//Solve the largest collision
@@ -178,12 +178,4 @@ namespace une
 		Rigidbody& rigidbody = ecs::GetComponent<Rigidbody>(entity);
 		rigidbody.velocity += velocity * cappedDt * rigidbody.mass;
 	}
-
-	///Sets the rigidbody properties of a tile type
-	inline void PhysicsSystem::SetTileProperty(unsigned int tileID, TileProperty properties)
-	{
-		tileProperties.insert({ tileID, properties });
-	}
-
-	std::map<unsigned int, TileProperty> PhysicsSystem::tileProperties = tileProperties;
 }

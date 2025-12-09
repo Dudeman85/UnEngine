@@ -365,6 +365,25 @@ namespace debug::gui
 		}
 	}
 
+	void RigidbodyInspector()
+	{
+		une::Rigidbody& rb = ecs::GetComponent<une::Rigidbody>(selectedEntity);
+
+		//Velocity sliders
+		float v[3] = { (float)rb.velocity.x, (float)rb.velocity.y, (float)rb.velocity.z };
+		if (ImGui::DragFloat3("Velocity", v, 1, 0, 0, "%.1f"))
+		{
+			rb.velocity = {v[0], v[1], v[2]};
+		}
+
+		//Simple members
+		ImGui::DragFloat("Mass", &rb.mass, 1, 0, 0, "%.1f");
+		ImGui::DragFloat("Gravity Scale", &rb.gravityScale, 0.1, 0, 0, "%.1f");
+		ImGui::DragFloat("Drag", &rb.drag, 0.01, 0, 999999, "%.3f");
+		ImGui::DragFloat("Restitution", &rb.restitution, 0.01, 0, 1, "%.3f");
+		ImGui::Checkbox("Kinematic", &rb.kinematic);
+	}
+
 	void TextRendererInspector()
 	{
 		une::TextRenderer& tr = ecs::GetComponent<une::TextRenderer>(selectedEntity);
@@ -382,5 +401,89 @@ namespace debug::gui
 			tr.color = une::Color(col[0], col[1], col[2], col[3]);
 		}
 		ImGui::Checkbox("Enabled", &tr.enabled);
+	}
+
+	void CameraInspector()
+	{
+		une::Camera& c = ecs::GetComponent<une::Camera>(selectedEntity);
+
+		if (ImGui::Checkbox("Perspective", &c.perspective))
+		{
+			une::CameraSystem::RecalculateProjection(selectedEntity);
+		}
+
+		//Ortho width and height
+		float wh[2] = {c.width, c.height};
+		if (ImGui::DragFloat2("Width/Height", wh, 1, 1, 999999, "%.1f"))
+		{
+			c.width = wh[0];
+			c.height = wh[1];
+			une::CameraSystem::RecalculateProjection(selectedEntity);
+		}
+
+		//Perspective field of view
+		if (ImGui::DragFloat("FOV", &c.fov, 1, 1, 179, "%.1f"))
+		{
+			une::CameraSystem::RecalculateProjection(selectedEntity);
+		}
+
+		//Near and far clip planes
+		float nf[2] = {c.nearPlane, c.farPlane};
+		if (ImGui::DragFloat2("Near/Far", wh, 1, -999999, 999999, "%.1f"))
+		{
+			c.nearPlane = nf[0];
+			c.farPlane = nf[1];
+			une::CameraSystem::RecalculateProjection(selectedEntity);
+		}
+
+		ImGui::InputInt("Draw Order", &c.drawOrder);
+
+		ImGui::Separator();
+		//Viewport ndc sliders
+		if (ImGui::TreeNode("Viewport"))
+		{
+			float bl[2] = {(float)c.viewport.x1, (float)c.viewport.y1};
+			ImGui::DragFloat2("Bottom-left", bl, 0.01, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+			float tr[2] = {(float)c.viewport.x2, (float)c.viewport.y2};
+			ImGui::DragFloat2("Top-Right", tr, 0.01, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+			c.viewport = {bl[0], bl[1], tr[0], tr[1]};
+
+			ImGui::TreePop();
+		}
+
+		ImGui::Separator();
+		//Read-only View and Projection matrices
+		if (ImGui::TreeNode("Internal"))
+		{
+			//View
+			ImGui::Text("View Matrix");
+			ImGui::BeginTable("View Matrix", 4, ImGuiTableFlags_Borders);
+			for (int row = 0; row < 4; row++)
+			{
+				ImGui::TableNextRow();
+				for (int col = 0; col < 4; col++)
+				{
+					ImGui::TableSetColumnIndex(col);
+					ImGui::Text("%.3f", c.view[col][row]);
+				}
+			}
+			ImGui::EndTable();
+
+			//Projection
+			ImGui::Text("Projection Matrix");
+			ImGui::BeginTable("Projection Matrix", 4, ImGuiTableFlags_Borders);
+			for (int row = 0; row < 4; row++)
+			{
+				ImGui::TableNextRow();
+				for (int col = 0; col < 4; col++)
+				{
+					ImGui::TableSetColumnIndex(col);
+					ImGui::Text("%.3f", c.projection[col][row]);
+				}
+			}
+			ImGui::EndTable();
+
+			ImGui::TreePop();
+		}
 	}
 }

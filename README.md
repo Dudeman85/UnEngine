@@ -62,7 +62,6 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Fix sound bugs
 - [ ] Better integrate sounds with ecs
 - [ ] Fix tilemaps with multiple tilesets
-- [ ] Add data access to basic vector types
 
 ### New features
 - [ ] Add debug tools

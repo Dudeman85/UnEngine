@@ -46,6 +46,7 @@ int main()
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = &texture});
 	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ, 0, {4, 6}});
 	ecs::AddComponent(player, une::PolygonCollider{.vertices = {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}}});
+	ecs::AddComponent(player, une::Rigidbody{});
 	ecs::Entity child = ecs::NewEntity();
 	ecs::AddComponent(child, une::TextRenderer{.font = &font, .text = "Player", .color = une::Color(12, 150, 60)});
 	ecs::AddComponent(child, une::Transform{.position = {-4.5, 8, 0}, .scale = 0.2});
@@ -68,10 +69,6 @@ int main()
 	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = &texture});
 	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
 	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
-
-	// Setup Dear ImGui context
-
-	bool show_demo_window = true;
 
 	//Game loop
 	while (!window->ShouldClose())
@@ -137,8 +134,8 @@ int main()
 			debug::DrawRectangle({-200, -200, 0}, {-200, 200, 0}, {200, 200, 0}, tf.position, une::Color(255, 0, 0), false);
 		}
 
-		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
 		//TODO: fix
+		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
 		canvas.SetScale(canvas.GetScale());
 
 		//Update engine libraries and render everything

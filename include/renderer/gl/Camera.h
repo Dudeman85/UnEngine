@@ -15,7 +15,7 @@ namespace une
 	{
 		bool perspective = false;
 		//Width and height are used with an orthographic camera
-		float width, height;
+		float width = 100, height = 100;
 		//Field of view is used with a perspective camera
 		float fov = 75;
 		float nearPlane = 0.1;
