@@ -298,7 +298,7 @@ namespace debug::gui
 			//Format the component string
 			char buff[1000];
 			std::snprintf(buff, sizeof(buff),
-				"une::Transform{%s, %s, %s, %s, %s}",
+				"une::Transform{.position = %s, .rotation = %s, .scale = %s, .pivot = %s, .rotationOrder = %s}",
 				tf.position.ToString().c_str(), tf.rotation.ToString().c_str(), tf.scale.ToString().c_str(),
 				tf.pivot.ToString().c_str(), rotationOrder.c_str());
 
@@ -363,6 +363,26 @@ namespace debug::gui
 			ImGui::Text("Left:   %.1f", collider.bounds[3]);
 			ImGui::TreePop();
 		}
+
+		ImGui::Separator();
+
+		//Copy PolygonCollider component string to clipboard
+		if (ImGui::Button("Copy component to clipboard"))
+		{
+			std::string verts = "{";
+			for (const une::Vector2 vert : collider.vertices)
+			{
+				verts += vert.ToString() + ", ";
+			}
+
+			//Format the component string
+			char buff[10000];
+			std::snprintf(buff, sizeof(buff),
+				"une::PolygonCollider{.vertices = %s, .trigger = %d, .layer = %d, .rotationOverride = %.1f, .visualise = %d}",
+				verts.c_str(), collider.trigger, collider.layer,collider.rotationOverride, collider.visualise);
+
+			ImGui::SetClipboardText(buff);
+		}
 	}
 
 	void RigidbodyInspector()
@@ -382,6 +402,20 @@ namespace debug::gui
 		ImGui::DragFloat("Drag", &rb.drag, 0.01, 0, 999999, "%.3f");
 		ImGui::DragFloat("Restitution", &rb.restitution, 0.01, 0, 1, "%.3f");
 		ImGui::Checkbox("Kinematic", &rb.kinematic);
+
+		ImGui::Separator();
+
+		//Copy Rigidbody component string to clipboard
+		if (ImGui::Button("Copy component to clipboard"))
+		{
+			//Format the component string
+			char buff[10000];
+			std::snprintf(buff, sizeof(buff),
+				"une::Rigidbody{.velocity = %s, .mass = %.1f, .gravityScale = %.1f, .drag = %.3f, .restitution = %.3f, .kinematic = %d}",
+				rb.velocity.ToString().c_str(), rb.mass, rb.gravityScale, rb.drag, rb.restitution, rb.kinematic);
+
+			ImGui::SetClipboardText(buff);
+		}
 	}
 
 	void TextRendererInspector()
@@ -401,6 +435,20 @@ namespace debug::gui
 			tr.color = une::Color(col[0], col[1], col[2], col[3]);
 		}
 		ImGui::Checkbox("Enabled", &tr.enabled);
+
+		ImGui::Separator();
+
+		//Copy TextRenderer component string to clipboard
+		if (ImGui::Button("Copy component to clipboard"))
+		{
+			//Format the component string
+			char buff[10000];
+			std::snprintf(buff, sizeof(buff),
+				"une::TextRenderer{.text = %s, .size = %d, .color = %s, .enabled = %d}",
+				tr.text.c_str(), tr.size, tr.color.ToString().c_str(), tr.enabled);
+
+			ImGui::SetClipboardText(buff);
+		}
 	}
 
 	void CameraInspector()

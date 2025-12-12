@@ -21,6 +21,8 @@ namespace une
         Color As8Bit() const;
         Color AsSRGB() const;
 
+        std::string ToString() const;
+
         bool isSRGB;
         float r, g, b, a;
     };

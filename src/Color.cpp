@@ -99,4 +99,15 @@ namespace une
         else
             return Color(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
     }
+
+    std::string Color::ToString() const
+    {
+        char buff[1000];
+        if (isSRGB)
+            std::snprintf(buff, sizeof(buff), "Color(%f, %f, %f, %f)", r, g, b, a);
+        else
+            std::snprintf(buff, sizeof(buff), "Color(%d, %d, %d, %d)", (int)r, (int)g, (int)b, (int)a);
+
+        return std::string(buff);
+    }
 }
