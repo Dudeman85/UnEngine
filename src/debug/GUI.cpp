@@ -80,6 +80,15 @@ namespace debug::gui
 		for (int i = 0; i < depth; ++i)
 			text.append(" ");
 		text.append(std::to_string(entity));
+		//Add tags staring with # to hierarchy
+		std::vector<std::string> tags = ecs::GetTags(entity);
+		for (std::string& tag : tags)
+		{
+			if (tag[0] == '#')
+			{
+				text.append("; " + tag);
+			}
+		}
 
 		//Draw the selectable entity id
 		if (ImGui::Selectable(text.c_str(), &entitySelection[entity]))
