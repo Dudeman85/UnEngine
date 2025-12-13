@@ -82,11 +82,14 @@ namespace debug::gui
 		text.append(std::to_string(entity));
 		//Add tags staring with # to hierarchy
 		std::vector<std::string> tags = ecs::GetTags(entity);
+		char spacer = ':';
 		for (std::string& tag : tags)
 		{
 			if (tag[0] == '#')
 			{
-				text.append("; " + tag);
+				tag[0] = ' ';
+				text.append(spacer + tag);
+				spacer = ',';
 			}
 		}
 
@@ -300,7 +303,7 @@ namespace debug::gui
 		ImGui::Separator();
 
 		//Copy Transform component string to clipboard
-		if (ImGui::Button("Copy component to clipboard"))
+		if (ImGui::Button("Copy Transform to clipboard"))
 		{
 			std::string rotationOrder = "une::" + std::string(une::rotationOrderStrings[tf.rotationOrder]);
 
@@ -313,6 +316,8 @@ namespace debug::gui
 
 			ImGui::SetClipboardText(buff);
 		}
+
+		ImGui::Separator();
 	}
 
 	void PolygonColliderInspector()
@@ -376,13 +381,14 @@ namespace debug::gui
 		ImGui::Separator();
 
 		//Copy PolygonCollider component string to clipboard
-		if (ImGui::Button("Copy component to clipboard"))
+		if (ImGui::Button("Copy PolygonCollider to clipboard"))
 		{
 			std::string verts = "{";
 			for (const une::Vector2 vert : collider.vertices)
 			{
 				verts += vert.ToString() + ", ";
 			}
+			verts += "}";
 
 			//Format the component string
 			char buff[10000];
@@ -392,6 +398,8 @@ namespace debug::gui
 
 			ImGui::SetClipboardText(buff);
 		}
+
+		ImGui::Separator();
 	}
 
 	void RigidbodyInspector()
@@ -415,7 +423,7 @@ namespace debug::gui
 		ImGui::Separator();
 
 		//Copy Rigidbody component string to clipboard
-		if (ImGui::Button("Copy component to clipboard"))
+		if (ImGui::Button("Copy Rigidbody to clipboard"))
 		{
 			//Format the component string
 			char buff[10000];
@@ -425,6 +433,8 @@ namespace debug::gui
 
 			ImGui::SetClipboardText(buff);
 		}
+
+		ImGui::Separator();
 	}
 
 	void TextRendererInspector()
@@ -448,16 +458,18 @@ namespace debug::gui
 		ImGui::Separator();
 
 		//Copy TextRenderer component string to clipboard
-		if (ImGui::Button("Copy component to clipboard"))
+		if (ImGui::Button("Copy TextRenderer to clipboard"))
 		{
 			//Format the component string
 			char buff[10000];
 			std::snprintf(buff, sizeof(buff),
-				"une::TextRenderer{.text = %s, .size = %d, .color = %s, .enabled = %d}",
+				"une::TextRenderer{.font = &font, .text = \"%s\", .size = %d, .color = une::%s, .enabled = %d }",
 				tr.text.c_str(), tr.size, tr.color.ToString().c_str(), tr.enabled);
 
 			ImGui::SetClipboardText(buff);
 		}
+
+		ImGui::Separator();
 	}
 
 	void CameraInspector()
@@ -542,5 +554,7 @@ namespace debug::gui
 
 			ImGui::TreePop();
 		}
+
+		ImGui::Separator();
 	}
 }

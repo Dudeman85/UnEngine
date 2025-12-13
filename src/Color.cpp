@@ -104,7 +104,7 @@ namespace une
     {
         char buff[1000];
         if (isSRGB)
-            std::snprintf(buff, sizeof(buff), "Color(%f, %f, %f, %f)", r, g, b, a);
+            std::snprintf(buff, sizeof(buff), "Color(%.3f, %.3f, %.3f, %.3f)", r, g, b, a);
         else
             std::snprintf(buff, sizeof(buff), "Color(%d, %d, %d, %d)", (int)r, (int)g, (int)b, (int)a);
 
