@@ -8,8 +8,15 @@
 #include "renderer/gl/Model.h"
 #include "audio/AudioEngine.h"
 
-namespace une
+namespace une::resources
 {
+    //Loads a texture asynchronously or returns it if already loaded, texture is only valid on success
+    //Returns -1 on failure, 0 on incomplete and 1 on success
+    int LoadTextureAsync(std::string path, Texture* texture)
+    {
+
+    }
+
     //Recursively loads all textures
     std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories, unsigned int filteringType)
     {

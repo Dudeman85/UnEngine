@@ -1,12 +1,42 @@
 #pragma once
 
 #include <unordered_map>
+#include <future>
 
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Model.h"
+#include "renderer/gl/Font.h"
+#include "Tilemap.h"
 
-namespace une
+namespace une::resources
 {
+    static std::string resourcePath = "";
+
+    //Loads a texture or fetches it if already loaded
+    static Texture* LoadTexture(std::string path);
+    //Loads a texture asynchronously or fetches it if already loaded, texture is only valid on success
+    //Returns -1 on failure, 0 on incomplete and 1 on success
+    static std::future<Texture*> LoadTextureAsync(std::string path);
+    
+    //Loads a model or fetches it if already loaded
+    static Model* LoadModel (std::string path);
+    //Loads a model asynchronously or fetches it if already loaded, model is only valid on success
+    //Returns -1 on failure, 0 on incomplete and 1 on success
+    static std::future<Model*> LoadModelAsync(std::string path);
+
+    //Loads a font or fetches it if already loaded
+    static Font* LoadFont(std::string path, int resolution);
+    //Loads a font asynchronously or fetches it if already loaded, font is only valid on success
+    //Returns -1 on failure, 0 on incomplete and 1 on success
+    static std::future<Font*> LoadFontAsync(std::string path, int resolution);
+
+    //Loads a tilemap or fetches it if already loaded
+    static Tilemap* LoadTilemap(std::string path);
+    //Loads a tilemap asynchronously or fetches it if already loaded, tilemap is only valid on success
+    //Returns -1 on failure, 0 on incomplete and 1 on success
+    static std::future<Tilemap*> LoadTilemapAsync(std::string path);
+
+
     //Recursively loads all textures 
     std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);
 
