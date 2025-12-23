@@ -10,11 +10,40 @@
 
 namespace une::resources
 {
-    //Loads a texture asynchronously or returns it if already loaded, texture is only valid on success
-    //Returns -1 on failure, 0 on incomplete and 1 on success
-    int LoadTextureAsync(std::string path, Texture* texture)
+    Texture* LoadTexture(const std::string& path, unsigned int filteringType, bool flip)
     {
+        return LoadResource<Texture>(path, filteringType, flip);
+    }
+    std::future<Texture*> LoadTextureAsync(const std::string& path, unsigned int filteringType, bool flip)
+    {
+        return LoadResourceAsync<Texture>(path, filteringType, flip);
+    }
 
+    Model* LoadModel(const std::string& path)
+    {
+        return LoadResource<Model>(path);
+    }
+    std::future<Model*> LoadModelAsync(const std::string& path)
+    {
+        return LoadResourceAsync<Model>(path);
+    }
+
+    Font* LoadFont(const std::string& path, unsigned short resolution)
+    {
+        return LoadResource<Font>(path, resolution);
+    }
+    std::future<Font*> LoadFontAsync(const std::string& path, unsigned short resolution)
+    {
+        return LoadResourceAsync<Font>(path, resolution);
+    }
+
+    Tilemap* LoadTilemap(const std::string& path, unsigned int filteringType)
+    {
+        return LoadResource<Tilemap>(path, filteringType);
+    }
+    std::future<Tilemap*> LoadTilemapAsync(const std::string& path, unsigned int filteringType)
+    {
+        return LoadResourceAsync<Tilemap>(path, filteringType);
     }
 
     //Recursively loads all textures

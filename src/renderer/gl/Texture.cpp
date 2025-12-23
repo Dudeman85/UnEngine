@@ -156,6 +156,11 @@ namespace une
 		return id;
 	}
 
+	bool Texture::Valid()
+	{
+		return id != 0;
+	}
+
 	//Use this texture on the next draw call
 	void Texture::Use()
 	{

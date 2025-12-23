@@ -25,6 +25,7 @@ namespace une
 		directory = path.substr(0, path.find_last_of('/'));
 
 		ProcessNode(scene->mRootNode, scene);
+		valid = true;
 	}
 	
 	//Call ProcessNode recursively on every child node of root node
@@ -142,5 +143,10 @@ namespace une
 			}
 		}
 		return textures;
+	}
+
+	bool Model::Valid()
+	{
+		return valid;
 	}
 }

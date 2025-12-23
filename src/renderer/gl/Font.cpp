@@ -8,10 +8,10 @@
 
 namespace une
 {
-	Font::Font(const std::string& path, FT_UShort resolution, int faceIndex)
+	Font::Font(const std::string& path, unsigned short resolution)
 	{
 		FT_Face face;
-		if (FT_New_Face(renderer::TextRenderSystem::ftLib, path.c_str(), faceIndex, &face))
+		if (FT_New_Face(renderer::TextRenderSystem::ftLib, path.c_str(), 0, &face))
 		{
 			debug::LogError("Failed to load font from " + path);
 			return;
@@ -37,6 +37,11 @@ namespace une
 	int Font::GetResolution() const
 	{
 		return resolution;
+	}
+
+	bool Font::Valid()
+	{
+		return VAO != 0;
 	}
 
 	void Font::LoadCharacters(FT_Face face)

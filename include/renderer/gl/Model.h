@@ -31,6 +31,7 @@ namespace une
 		///Model data
 		std::vector<Mesh> meshes;
 
+		bool Valid();
 	private:
 		void LoadModel(std::string path);
 		void ProcessNode(aiNode* node, const aiScene* scene);
@@ -41,5 +42,7 @@ namespace une
 		std::string directory;
 		//Store all the already loaded textures for efficiency
 		std::vector<Texture*> textures_loaded;
+
+		bool valid = false;
 	};
 }

@@ -123,5 +123,18 @@ struct UICanvas // not a component
 ```
 All ui elements will be transformed using a canvas instead of the camera's view, still have to figure out what to do about projection, probably just use ortho.
 This means the UI elements will use standard coordinates relative to the canvas instead of ndc like it was. Makes it easier to position things, make menus, simplify code, and hide/show things, also unifies ui element implementation instead of it being renderer specific.
+
 ### Idea for new debugging camera 
 A camera for code debugging, which works by holding down a key and can be moved in any direction with the mouse; the key used at the moment is at the choice of the programmer in charge of making the tool
+
+### Idea for better resource mangement
+Current problems:
+1.  Resources are always loaded in main thread
+2. It is very easy to accidentally load duplicate resources
+3. Resources have to be managed individually
+
+To fix 1 we implement asynchronous resource loading. <br>
+To fix 2 we handle loading and storing resources on the engine side and hand out pointers to user, 
+if the resource isnt loaded when user requests it, we load it according to user policy.<br>
+To fix 3 we can add definable resource packs which can be a vector of resource paths, 
+these can then be loaded and unloaded easily by user.

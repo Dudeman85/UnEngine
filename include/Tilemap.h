@@ -76,6 +76,8 @@ namespace une
 		//Returns the vertices making up this tile's collider
 		std::vector<Vector2> GetTileCollider(uint32_t gid) const;
 
+		bool Valid();
+
 		Vector2Int tileSize;
 		std::vector<MapLayer*> mapLayers;
 

@@ -1,13 +1,10 @@
 #include "UnEngine.h"
 #include "Vector.h"
-#include "Serialization.h"
-#include "Networking.h"
 #include "renderer/UserInterface.h"
 #include "debug/GUI.h"
 #include "debug/Logging.h"
 #include "debug/Primitives.h"
-
-enum class MessageType : int8_t { AddPlayer, RemovePlayer, ConnectionReceived, PositionInfo, AllPositionInfo };
+#include "utils/ResourceManagement.h"
 
 int main()
 {
@@ -24,7 +21,7 @@ int main()
 
 	std::string assets = UNE_EXAMPLE_PROJECT_LOCATION "/assets/";
 	une::Texture texture(assets + "strawberry.png");
-	une::Texture transparentTexture(assets + "Transparent.png");
+	une::Texture transparentTexture(assets + "Achelous.obj");
 	une::Model model(assets + "Achelous.obj");
 	une::Font font(assets + "Coolvetica Rg Cond.otf", 64);
 	une::Tilemap tilemap(assets + "testMap.tmx");
@@ -70,6 +67,8 @@ int main()
 	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = &texture});
 	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
 	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
+
+	std::future<une::Texture*> testTexture = une::resources::LoadResourceAsync<une::Texture>(assets + "AchelousTexture.png");
 
 	//Game loop
 	while (!window->ShouldClose())

@@ -34,6 +34,8 @@ namespace une
 		//Get this textures OpenGL ID
 		unsigned int ID();
 
+		bool Valid();
+
 		//Use this texture on the next draw call
 		void Use();
 

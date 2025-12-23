@@ -285,6 +285,11 @@ namespace une
 		}
 	}
 
+	bool Tilemap::Valid()
+	{
+		return VAO != 0;
+	}
+
 	//Returns the TileInfo of every tile with a collider at tilemap coords
 	std::vector<Tilemap::TileInfo> Tilemap::GetCollisionTilesAtLocation(Vector2Int pos) const
 	{

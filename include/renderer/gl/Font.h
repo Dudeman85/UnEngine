@@ -27,10 +27,12 @@ namespace une
 		};
 
 		//Load a font from file with a set dpi resolution
-		Font(const std::string& path, FT_UShort resolution, int faceIndex = 0);
+		Font(const std::string& path, unsigned short resolution);
 		~Font();
 
 		int GetResolution() const;
+
+		bool Valid();
 
 		unsigned int VAO, VBO;
 		std::string name;

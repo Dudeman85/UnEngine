@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <future>
+#include <variant>
 
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Model.h"
@@ -10,44 +11,136 @@
 
 namespace une::resources
 {
+    struct Resource
+    {
+        void* ptr;
+        std::string type;
+    };
+
+    //Path to load resources relative to
     static std::string resourcePath = "";
 
-    //Loads a texture or fetches it if already loaded
-    static Texture* LoadTexture(std::string path);
-    //Loads a texture asynchronously or fetches it if already loaded, texture is only valid on success
-    //Returns -1 on failure, 0 on incomplete and 1 on success
-    static std::future<Texture*> LoadTextureAsync(std::string path);
-    
-    //Loads a model or fetches it if already loaded
-    static Model* LoadModel (std::string path);
-    //Loads a model asynchronously or fetches it if already loaded, model is only valid on success
-    //Returns -1 on failure, 0 on incomplete and 1 on success
-    static std::future<Model*> LoadModelAsync(std::string path);
+    //These should be treated as read only
+    static std::unordered_map<std::string, Resource> resources;
+    static std::unordered_map<std::string, bool> loadingResources;
 
-    //Loads a font or fetches it if already loaded
-    static Font* LoadFont(std::string path, int resolution);
-    //Loads a font asynchronously or fetches it if already loaded, font is only valid on success
-    //Returns -1 on failure, 0 on incomplete and 1 on success
-    static std::future<Font*> LoadFontAsync(std::string path, int resolution);
+    template<typename T, typename... Types>
+    T* LoadResource(const std::string& path, Types... args)
+    {
+        //Load from storage if not already loaded
+        if (!resources.contains(path))
+        {
+            if (loadingResources.contains(path))
+            {
+                debug::LogWarning(path + " is already being loaded asynchronously!");
+                return nullptr;
+            }
 
-    //Loads a tilemap or fetches it if already loaded
-    static Tilemap* LoadTilemap(std::string path);
-    //Loads a tilemap asynchronously or fetches it if already loaded, tilemap is only valid on success
-    //Returns -1 on failure, 0 on incomplete and 1 on success
-    static std::future<Tilemap*> LoadTilemapAsync(std::string path);
+            T* resource = new T(path, args...);
+            //Check successful load
+            if (!resource->Valid())
+            {
+                delete resource;
+                return nullptr;
+            }
+            resources[path] = Resource(resource, typeid(T).name());
+        }
 
+        //If right type, cast and return
+        if (resources[path].type == typeid(T).name())
+        {
+            return (T*)resources[path].ptr;
+        }
+        else
+        {
+            debug::LogError(path + " is not of type " + std::string(typeid(T).name()));
+            return nullptr;
+        }
+    }
 
-    //Recursively loads all textures 
-    std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);
+    template<typename T, typename... Types>
+    std::future<T*> LoadResourceAsync(const std::string& path, Types... args)
+    {
+        //Immediately return if already loaded
+        if (resources.contains(path))
+        {
+            return std::async(std::launch::deferred, [path, args...](){return LoadResource<T>(path, args...);});
+        }
 
-    //Recursively loads all models
-    std::unordered_map<std::string, Model*> ProcessDirectoryModels(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);
+        //Currently being loaded, return pointer when ready
+        if (loadingResources.contains(path))
+        {
+            return std::async(std::launch::async, [path, args...]()
+            {
+                while (loadingResources.contains(path))
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+                }
+                return LoadResource<T>(path, args...);
+            });
+        }
 
-    //Load every texture from path, if includeSubdirectories is specified also recursively loads subdirectories
-    //Returns a map with the name of the texture's path relative to root directory, ex. "level1/Player.png"
-    std::unordered_map<std::string, Texture*> PreloadTextures(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);
+        //Start a thread to load this
+        loadingResources[path] = true;
+        return std::async(std::launch::async, [path, args...]() -> T*
+        {
+            T* resource = new T(path, args...);
+            //Check successful load
+            if (!resource->Valid())
+            {
+                delete resource;
+                return nullptr;
+            }
+            resources[path] = Resource(resource, typeid(T).name());
 
-    //Load every model from path, if includeSubdirectories is specified also recursively loads subdirectories
-    //Returns a map with the name of the models's path relative to root directory, ex. "level1/Player.obj"
-    std::unordered_map<std::string, Model*> PreloadModels(const std::string& path, bool includeSubdirectories = true, unsigned int filteringType = GL_LINEAR);
+            //If this has been unloaded during loading, delete it
+            if (!loadingResources.contains(path))
+            {
+                delete resource;
+                return nullptr;
+            }
+
+            resources[path] = Resource(resource, typeid(T).name());
+            loadingResources.erase(path);
+            return resource;
+        });
+    }
+
+    //Unloads a texture if it is loaded
+    template<typename T>
+    void UnloadResource(const std::string& path)
+    {
+        if (loadingResources.contains(path))
+        {
+            loadingResources.erase(path);
+        }
+        else
+        {
+            if (resources.contains(path))
+            {
+                //If right type, cast and delete
+                if (resources[path].type == typeid(T).name())
+                {
+                    delete (T*)resources[path].ptr;
+                    resources.erase(path);
+                }
+                else
+                {
+                    debug::LogWarning("Failed to delete resource: " + path + " is not of type " + std::string(typeid(T).name()));
+                }
+            }
+        }
+    }
+
+    Texture* LoadTexture(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
+    std::future<Texture*> LoadTextureAsync(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
+
+    Model* LoadModel(const std::string& path);
+    std::future<Model*> LoadModelAsync(const std::string& path);
+
+    Font* LoadFont(const std::string& path, unsigned short resolution);
+    std::future<Font*> LoadFontAsync(const std::string& path, unsigned short resolution);
+
+    Tilemap* LoadTilemap(const std::string& path, unsigned int filteringType = GL_NEAREST);
+    std::future<Tilemap*> LoadTilemapAsync(const std::string& path, unsigned int filteringType = GL_NEAREST);
 }
