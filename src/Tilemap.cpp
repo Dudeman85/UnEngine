@@ -14,14 +14,14 @@
 
 namespace une
 {
-	MapLayer::MapLayer(const tmx::Map& map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties)
+	MapLayer::MapLayer(const tmx::Map* map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties)
 	{
 		tilesetTextures = textures;
 		index = i;
 		properties = layerProperties;
 
 		//Set some properties
-		enabled = map.getLayers()[i]->getVisible();
+		enabled = map->getLayers()[i]->getVisible();
 		//If layer has a specified z offset set it here
 		if (properties.contains("zoffset"))
 			zOffset = properties["zoffset"].getFloatValue();
@@ -32,14 +32,14 @@ namespace une
 			if (properties["collision"].getBoolValue())
 			{
 				//Get the tile GIDs
-				auto& tiles = map.getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
+				auto& tiles = map->getLayers()[i]->getLayerAs<tmx::TileLayer>().getTiles();
 				hasCollision = true;
 				//Transfer the tile GIDs to the 2D collision vector
-				collider.resize(map.getTileCount().x);
-				for (int x = 0; x < map.getTileCount().x; x++)
+				collider.resize(map->getTileCount().x);
+				for (int x = 0; x < map->getTileCount().x; x++)
 				{
-					collider[x].resize(map.getTileCount().y);
-					for (int y = 0; y < map.getTileCount().y; y++)
+					collider[x].resize(map->getTileCount().y);
+					for (int y = 0; y < map->getTileCount().y; y++)
 					{
 						collider[x][y] = tiles[y * collider.size() + x].ID;
 					}
@@ -66,30 +66,30 @@ namespace une
 			glUniform2ui(tilesetSizeLoc, ss.columns, ss.rows);
 
 			glActiveTexture(GL_TEXTURE0);
-			ss.texture->Use();
+			glBindTexture(GL_TEXTURE_2D, ss.texture->ID());
 			glActiveTexture(GL_TEXTURE1);
-			ss.lookup->Use();
+			glBindTexture(GL_TEXTURE_2D, ss.lookup->ID());
 
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		}
 	}
 
 	//Create a subset for each tilseset this layer uses
-	void MapLayer::CreateSubsets(const tmx::Map& map)
+	void MapLayer::CreateSubsets(const tmx::Map* map)
 	{
-		const auto& layers = map.getLayers();
+		const auto& layers = map->getLayers();
 		if (index >= layers.size() || layers[index]->getType() != tmx::Layer::Type::Tile)
 		{
 			debug::LogWarning("Invalid tilemap layer index or layer type, layer will be empty");
 			return;
 		}
 
-		const tmx::Vector2u& mapSize = map.getTileCount();
+		const tmx::Vector2u& mapSize = map->getTileCount();
 		const auto& tiles = layers[index]->getLayerAs<tmx::TileLayer>().getTiles();
 		//Go through all tilesets in the map
-		for (int i = 0; i < map.getTilesets().size(); i++)
+		for (int i = 0; i < map->getTilesets().size(); i++)
 		{
-			const tmx::Tileset& ts = map.getTilesets()[i];
+			const tmx::Tileset& ts = map->getTilesets()[i];
 			std::vector<uint16_t> lookupData;
 			bool tsUsed = false;
 
@@ -117,8 +117,8 @@ namespace une
 			//If we have some data for this tile set, create the resources
 			if (tsUsed)
 			{
-				//Make the lookup texture
-				unsigned int tex;
+				//This is a special texture so we set it up here
+				GLuint tex;
 				glGenTextures(1, &tex);
 				glBindTexture(GL_TEXTURE_2D, tex);
 				//Only nearest works
@@ -135,26 +135,35 @@ namespace une
 					ts.getColumnCount(),
 					ts.getTileCount() / ts.getColumnCount(),
 					tilesetTextures[i],
-					new Texture(tex)
+					new Texture(tex, {mapSize.x, mapSize.y})
 				};
 				subsets.push_back(subset);
 			}
 		}
 	}
 
-	Tilemap::Tilemap(const std::string& path, unsigned int filteringType)
+	//Load pixel data from disk with stbimage
+	bool Tilemap::Load(const std::string& path, GLuint filteringType)
 	{
-		tmx::Map map;
-		map.load(path);
+		map = new tmx::Map();
+		if (!map->load(path))
+		{
+			debug::LogError("Failed to load tilemap at: " + path);
+			delete map;
+			return false;
+		}
 
-		tileSize = Vector2(map.getTileSize().x, map.getTileSize().y);
-		tilesets = map.getTilesets();
+		tileSize = Vector2(map->getTileSize().x, map->getTileSize().y);
+		tilesets = map->getTilesets();
 
 		//Process all tiles in each tileset
 		for (const tmx::Tileset& tileset : tilesets)
 		{
+			//TODO: Fix to use new resource management
 			//Load the tileset's texture
-			tilesetTextures.push_back(new Texture(tileset.getImagePath(), filteringType, false));
+			Texture* texture = new Texture();
+			texture->Load(tileset.getImagePath(), filteringType, false);
+			tilesetTextures.push_back(texture);
 
 			//Get the collider shapes for each tile id
 			for (const tmx::Tileset::Tile& tile: tileset.getTiles())
@@ -175,9 +184,27 @@ namespace une
 			}
 		}
 
+		this->path = path;
+		debug::LogSpam("Successfully loaded tilemap " + path);
+		return true;
+	}
+
+	//Make OpenGl Texture using loaded pixel data
+	bool Tilemap::SetupGLResources()
+	{
+		for (Texture* texture : tilesetTextures)
+		{
+			if (!texture->SetupGLResources())
+			{
+				debug::LogError("Failed to setup tilemap resources");
+				delete map;
+				return false;
+			}
+		}
+
 		//Process all the layers
-		const auto& layers = map.getLayers();
-		for (auto i = 0u; i < layers.size(); ++i)
+		const auto& layers = map->getLayers();
+		for (size_t i = 0; i < layers.size(); i++)
 		{
 			//Currently we only support tile layers
 			if (layers[i]->getType() == tmx::Layer::Type::Tile)
@@ -197,7 +224,7 @@ namespace une
 		}
 
 		//Initialize the OpenGL resources
-		const tmx::FloatRect bounds = map.getBounds();
+		const tmx::FloatRect bounds = map->getBounds();
 		const float vertices[] = {
 			bounds.left, bounds.top, 0.f, 0.f, 1.f,
 			bounds.left + bounds.width, bounds.top, 0.f, 1.f, 1.f,
@@ -205,8 +232,17 @@ namespace une
 			bounds.left + bounds.width, bounds.top + bounds.height, 0.f, 1.f, 0.f
 		};
 
+		//Map data is no longer needed
+		delete map;
+
 		//Make the single shared buffer
 		glGenVertexArrays(1, &VAO);
+		if (!VAO)
+		{
+			debug::LogError("Failed to generate vertex arrays: Make sure to only call this from the main thread");
+			debug::LogGLError();
+			return false;
+		}
 		glGenBuffers(1, &VBO);
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -222,11 +258,14 @@ namespace une
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		debug::LogSpam("Successfully setup gl resources for tilemap " + path);
+		return true;
 	}
 
 	Tilemap::~Tilemap()
 	{
-		if (mainWindow)
+		if (mainWindow && VAO)
 		{
 			glDeleteVertexArrays(1, &VAO);
 			glDeleteVertexArrays(1, &VBO);
@@ -283,11 +322,6 @@ namespace une
 				Vector2(-((float) tileSize.x / 2), -((float) tileSize.y / 2)) //Bottom-Left
 			};
 		}
-	}
-
-	bool Tilemap::Valid()
-	{
-		return VAO != 0;
 	}
 
 	//Returns the TileInfo of every tile with a collider at tilemap coords

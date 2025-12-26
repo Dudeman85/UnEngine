@@ -1,43 +1,35 @@
 #include "renderer/gl/Texture.h"
 
-#include <iostream>
-
-#include <stb_image.h>
+#include "stb_image.h"
 
 #include "debug/Logging.h"
-#include "debug/Timers.h"
 #include "renderer/gl/Window.h"
 
 namespace une
 {
-	//Make a texture from an existing opengl texture id
-	Texture::Texture(unsigned int id)
+	Texture::Texture(GLuint id, Vector2Int size)
 	{
 		this->id = id;
+		this->size = size;
+		semiTransparent = true;
 	}
 
-	//Load a texture from path
-	Texture::Texture(const std::string& path, unsigned int filteringType, bool flip)
+	//Load pixel data from disk with stbimage
+	bool Texture::Load(const std::string& path, bool editable, bool flip)
 	{
-		debug::StartTimer("LoadTexture");
-
-		this->path = path;
-
-		//Flip the image when loading into an OpenGL texture
 		stbi_set_flip_vertically_on_load(flip);
 
+		this->path = path;
 		int width, height, nrChannels;
-		unsigned char* imageData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-
+		imageData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 		if (!imageData)
 		{
 			debug::LogError("Error loading texture from " + path);
-			return;
+			stbi_image_free(imageData);
+			return false;
 		}
 
-		size = {width, height};
 		//Set the OpenGL texture format to include alpha if appropriate
-		GLint colorFormat;
 		if (nrChannels == 4)
 		{
 			colorFormat = GL_RGBA;
@@ -46,99 +38,93 @@ namespace une
 			{
 				if (imageData[i] > 5 && imageData[i] < 250)
 				{
-					isSemiTransparent = true;
+					semiTransparent = true;
 					break;
 				}
 			}
 		}
 		else if (nrChannels == 3)
 		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			colorFormat = GL_RGB;
 		}
 		else
 		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			colorFormat = GL_RED;
 		}
 
-		//Generate and bind texture
-		glGenTextures(1, &id);
-		glBindTexture(GL_TEXTURE_2D, id);
-
-		//Set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringType);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringType);
-
-		//Generate the texture using the image data
-		glTexImage2D(GL_TEXTURE_2D, 0, colorFormat, width, height, 0, colorFormat, GL_UNSIGNED_BYTE, imageData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		//Unbind texture
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		//Image data is no longer needed
-		stbi_image_free(imageData);
-
-		debug::LogSpam("Successfully loaded texture from " + path + " in " + std::to_string(debug::EndTimer("LoadTexture")) + "ms");
+		size = {width, height};
+		this->editable = editable;
+		debug::LogSpam("Successfully loaded texture " + path);
+		return true;
 	}
 
-	//Create a texture from an image
-	Texture::Texture(const Image& image, unsigned int filteringType)
+	//Make OpenGl Texture using loaded pixel data
+	bool Texture::SetupGLResources()
 	{
-		//Convert the image to a 1D char array for OpenGL
-		unsigned char* imageData = new unsigned char[image.width * image.height * 4];
-		size = {image.width, image.height};
-		int i = 0;
-		//Make sure to flip the vertical for OpenGL
-		for (int y = image.height - 1; y >= 0; y--)
+		if (!SetupGLResources(imageData, size, colorFormat))
 		{
-			for (int x = 0; x < image.width; x++)
-			{
-				imageData[i++] = image[x][y].r;
-				imageData[i++] = image[x][y].g;
-				imageData[i++] = image[x][y].b;
-				imageData[i++] = image[x][y].a;
-				if (image[x][y].a > 5 && image[x][y].a < 250)
-					isSemiTransparent = true;
-			}
+			stbi_image_free(imageData);
+			editable = false;
+			return false;
+		}
+
+		//Image data is no longer needed if not editable
+		if (!editable)
+		{
+			stbi_image_free(imageData);
+		}
+
+		return true;
+	}
+
+	//Make OpenGL Texture using arbitrary pixel data
+	bool Texture::SetupGLResources(const uint8_t* data, Vector2Int size, GLint colorFormat)
+	{
+		if (!data)
+		{
+			debug::LogError("Failed to generate texture: No pixel data loaded");
+			return false;
 		}
 
 		//Generate and bind texture
 		glGenTextures(1, &id);
 		glBindTexture(GL_TEXTURE_2D, id);
-
-		//Set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringType);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringType);
+		if (!id)
+		{
+			debug::LogError("Failed to generate GL texture from image: Make sure to only call this from the main thread");
+			debug::LogGLError();
+			return false;
+		}
 
 		//Generate the texture using the image data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, colorFormat, size.x, size.y, 0, colorFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		//Unbind texture
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
 
-	Texture::Texture(Texture&& other) noexcept
-    {
-    	isSemiTransparent = other.isSemiTransparent;
-	    path = other.path;
-    	type = other.type;
-    	id = other.id;
-		size = other.size;
-    }
+		this->size = size;
+		debug::LogSpam("Successfully setup gl resources for texture " + path);
+		return true;
+	}
 
 	Texture::~Texture()
 	{
-		if (mainWindow)
+		if (mainWindow && id)
 		{
 			glDeleteTextures(1, &id);
+		}
+		if (editable)
+		{
+			stbi_image_free(imageData);
 		}
 	}
 
 	//Sets the OpenGL sampling type when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.
-	void Texture::SetScalingFilter(unsigned int filter)
+	void Texture::SetScalingFilter(GLuint filter)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 
@@ -148,22 +134,5 @@ namespace une
 
 		//Unbind texture
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
-	//Get this textures OpenGL ID
-	unsigned int Texture::ID()
-	{
-		return id;
-	}
-
-	bool Texture::Valid()
-	{
-		return id != 0;
-	}
-
-	//Use this texture on the next draw call
-	void Texture::Use()
-	{
-		glBindTexture(GL_TEXTURE_2D, id);
 	}
 }

@@ -4,6 +4,8 @@
 
 #include "debug/Logging.h"
 #include "renderer/TilemapRenderer.h"
+
+#include "renderer/gl/Camera.h"
 #include "renderer/gl/Shader.h"
 
 namespace une::renderer

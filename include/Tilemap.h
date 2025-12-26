@@ -16,7 +16,7 @@ namespace une
 	class MapLayer
 	{
 	public:
-		MapLayer(const tmx::Map& map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties);
+		MapLayer(const tmx::Map* map, uint32_t i, const std::vector<Texture*>& textures, std::unordered_map<std::string, tmx::Property> layerProperties);
 		~MapLayer();
 		MapLayer(const MapLayer&) = delete;
 		MapLayer& operator = (const MapLayer&) = delete;
@@ -43,14 +43,14 @@ namespace une
 		};
 
 		//Create a subset for each tilseset this layer uses
-		void CreateSubsets(const tmx::Map& map);
+		void CreateSubsets(const tmx::Map* map);
 
 		std::vector<Texture*> tilesetTextures;
 		std::vector<Subset> subsets;
 	};
 
 	//A class to load a tiled tilemap using the tmxlite library
-	class Tilemap
+	class Tilemap : public resources::Resource
 	{
 	public:
 		struct TileInfo
@@ -65,8 +65,16 @@ namespace une
 			std::vector<Vector2> collider;
 		};
 
-		Tilemap(const std::string& path, unsigned int filteringType = GL_NEAREST);
-		~Tilemap();
+		Tilemap() = default;
+		~Tilemap() override;
+
+		//Load pixel data from disk with stbimage
+		bool Load(const std::string& path, GLuint filteringType = GL_NEAREST);
+		//Make OpenGl Texture using loaded pixel data
+		bool SetupGLResources() override;
+
+		//Is the OpenGl texture usable
+		bool Valid() const override {return VAO != 0;};
 
 		void SetLayerVisibility(uint32_t layer, bool visible);
 		//Get the position of a tile in world coordinates when attached to an entity
@@ -76,8 +84,6 @@ namespace une
 		//Returns the vertices making up this tile's collider
 		std::vector<Vector2> GetTileCollider(uint32_t gid) const;
 
-		bool Valid();
-
 		Vector2Int tileSize;
 		std::vector<MapLayer*> mapLayers;
 
@@ -86,5 +92,6 @@ namespace une
 		std::vector<tmx::Tileset> tilesets;
 		std::unordered_map<uint32_t, std::vector<Vector2>> tileColliders;
 		std::vector<Texture*> tilesetTextures;
+		tmx::Map* map;
 	};
 }

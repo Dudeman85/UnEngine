@@ -8,44 +8,61 @@
 
 namespace une
 {
-	void Model::LoadModel(std::string path)
+	Model::~Model()
+	{
+		for (Texture* tex : textures_loaded)
+		{
+			delete tex;
+		}
+	}
+
+	bool Model::Load(const std::string& path)
 	{
 		//Load model with Assimp, convert all primitives to triangles and flip texture UVs for OpenGL
-		Assimp::Importer import;
-		const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-		
+		importer = new Assimp::Importer();
+		scene = importer->ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+
 		//Make sure the model scene is not null and it imported properly
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
-			debug::LogError(import.GetErrorString());
-			return;
+			debug::LogError(importer->GetErrorString());
+			return false;
 		}
 
-		//Save the original model's directory
+		this->path = path;
 		directory = path.substr(0, path.find_last_of('/'));
+		debug::LogSpam("Successfully loaded model " + path);
+		return true;
+	}
 
-		ProcessNode(scene->mRootNode, scene);
+	bool Model::SetupGLResources()
+	{
+		//TODO: Make better
+		ProcessNode(scene->mRootNode);
+		delete importer;
 		valid = true;
+		debug::LogSpam("Successfully setup gl resources for model " + path);
+		return true;
 	}
 	
 	//Call ProcessNode recursively on every child node of root node
-	void Model::ProcessNode(aiNode* node, const aiScene* scene)
+	void Model::ProcessNode(aiNode* node)
 	{
 		//Process all the node's meshes (if any)
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			meshes.push_back(ProcessMesh(mesh, scene));
+			meshes.push_back(ProcessMesh(mesh));
 		}
 		//Then do the same for each of its children
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
-			ProcessNode(node->mChildren[i], scene);
+			ProcessNode(node->mChildren[i]);
 		}
 	}
 
 	//Call ProcessMesh on every mesh originating from node
-	Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+	Mesh Model::ProcessMesh(aiMesh* mesh)
 	{
 		std::vector<Mesh::Vertex> vertices;
 		std::vector<unsigned int> indices;
@@ -124,7 +141,7 @@ namespace une
 			bool skip = false; 
 			for (unsigned int j = 0; j < textures_loaded.size(); j++)
 			{
-				if (std::strcmp(textures_loaded[j]->path.data(), textureLoc.C_Str()) == 0)
+				if (std::strcmp(textures_loaded[j]->Path().data(), textureLoc.C_Str()) == 0)
 				{
 					textures.push_back(textures_loaded[j]);
 					skip = true;
@@ -135,18 +152,15 @@ namespace une
 			//If the texture has not been loaded, load it
 			if (!skip)
 			{
+				//TODO: Fix to use new resource management
 				//Load the texture from location relative to model
-				Texture* texture = new Texture(directory + "/" + textureLoc.C_Str(), GL_LINEAR, false);
-				texture->type = typeName;
-				texture->path = textureLoc.C_Str();
+				Texture* texture = new Texture();
+				texture->Load(directory + "/" + textureLoc.C_Str(), GL_LINEAR, false);
+				texture->SetupGLResources();
+				texture->textureType = typeName;
 				textures.push_back(texture);
 			}
 		}
 		return textures;
-	}
-
-	bool Model::Valid()
-	{
-		return valid;
 	}
 }

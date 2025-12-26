@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <future>
-#include <variant>
 
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Model.h"
@@ -11,22 +10,24 @@
 
 namespace une::resources
 {
-    struct Resource
-    {
-        void* ptr;
-        std::string type;
-    };
-
     //Path to load resources relative to
-    static std::string resourcePath = "";
-
+    extern std::string rootPath;
     //These should be treated as read only
-    static std::unordered_map<std::string, Resource> resources;
-    static std::unordered_map<std::string, bool> loadingResources;
+    extern std::unordered_map<std::string, Resource*> resources;
+    enum class LoadingStatus {Queued, Loading, Ready};
+    extern std::unordered_map<std::string, LoadingStatus> loadingResources;
 
+    //Thread safe functions
+    void AppendLoadingResources(const std::string& path, LoadingStatus loadingStatus);
+    void AppendResources(const std::string& path, Resource* resource);
+    void EraseLoadingResources(const std::string& path);
+    void EraseResources(const std::string& path);
+
+    //Load or fetch a resource, also sets up its OpenGl resources
     template<typename T, typename... Types>
-    T* LoadResource(const std::string& path, Types... args)
+    T* Load(std::string path, Types... args)
     {
+        path = rootPath + path;
         //Load from storage if not already loaded
         if (!resources.contains(path))
         {
@@ -36,111 +37,137 @@ namespace une::resources
                 return nullptr;
             }
 
-            T* resource = new T(path, args...);
-            //Check successful load
+            AppendLoadingResources(path, LoadingStatus::Loading);
+
+            //Load from disk
+            T* resource = new T();
+            if (!resource->Load(path, args...))
+            {
+                delete resource;
+                return nullptr;
+            }
+            //Make the OpenGL resources
+            resource->SetupGLResources();
             if (!resource->Valid())
             {
                 delete resource;
                 return nullptr;
             }
-            resources[path] = Resource(resource, typeid(T).name());
+
+            EraseLoadingResources(path);
+            AppendResources(path, resource);
+            return resource;
         }
 
         //If right type, cast and return
-        if (resources[path].type == typeid(T).name())
-        {
-            return (T*)resources[path].ptr;
-        }
-        else
+        T* ret = dynamic_cast<T*>(resources[path]);
+        if (!ret)
         {
             debug::LogError(path + " is not of type " + std::string(typeid(T).name()));
-            return nullptr;
         }
+        return ret;
     }
 
+    //Load or fetch a resource, does not setup OpenGL resources
     template<typename T, typename... Types>
-    std::future<T*> LoadResourceAsync(const std::string& path, Types... args)
+    T* BasicLoad(std::string path, Types... args)
     {
-        //Immediately return if already loaded
-        if (resources.contains(path))
+        path = rootPath + path;
+        //Load from storage if not already loaded
+        if (!resources.contains(path))
         {
-            return std::async(std::launch::deferred, [path, args...](){return LoadResource<T>(path, args...);});
+            if (loadingResources.contains(path))
+            {
+                if (loadingResources[path] != LoadingStatus::Queued)
+                {
+                    debug::LogWarning(path + " is already being loaded asynchronously!");
+                    return nullptr;
+                }
+            }
+
+            AppendLoadingResources(path, LoadingStatus::Loading);
+
+            //Load from disk
+            T* resource = new T();
+            if (!resource->Load(path, args...))
+            {
+                delete resource;
+                EraseLoadingResources(path);
+                return nullptr;
+            }
+
+            AppendLoadingResources(path, LoadingStatus::Ready);
+            AppendResources(path, resource);
+            return resource;
+        }
+
+        //If right type, cast and return
+        T* ret = dynamic_cast<T*>(resources[path]);
+        if (!ret)
+        {
+            debug::LogError(path + " is not of type " + std::string(typeid(T).name()));
+        }
+        return ret;
+    }
+
+    //Asynchronously Load or fetch a resource, OpenGl resources will only be setup the frame after the resource has loaded
+    template<typename T, typename... Types>
+    [[nodiscard]] std::future<T*> LoadAsync(const std::string& path, Types... args)
+    {
+        std::string fullPath = rootPath + path;
+        //Immediately return if already loaded
+        if (resources.contains(fullPath))
+        {
+            return std::async(std::launch::async, [path, args...](){return BasicLoad<T>(path, args...);});
         }
 
         //Currently being loaded, return pointer when ready
-        if (loadingResources.contains(path))
+        if (loadingResources.contains(fullPath))
         {
-            return std::async(std::launch::async, [path, args...]()
+            return std::async(std::launch::async, [fullPath, path, args...]()
             {
-                while (loadingResources.contains(path))
+                while (loadingResources.contains(fullPath))
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(16));
                 }
-                return LoadResource<T>(path, args...);
+                return BasicLoad<T>(path, args...);
             });
         }
 
         //Start a thread to load this
-        loadingResources[path] = true;
-        return std::async(std::launch::async, [path, args...]() -> T*
+        AppendLoadingResources(fullPath, LoadingStatus::Queued);
+        return std::async(std::launch::async, [fullPath, args...]() -> T*
         {
-            T* resource = new T(path, args...);
-            //Check successful load
-            if (!resource->Valid())
-            {
-                delete resource;
-                return nullptr;
-            }
-            resources[path] = Resource(resource, typeid(T).name());
-
+            AppendLoadingResources(fullPath, LoadingStatus::Loading);
+            T* resource = new T();
+            resource->Load(fullPath, args...);
             //If this has been unloaded during loading, delete it
-            if (!loadingResources.contains(path))
+            if (!loadingResources.contains(fullPath))
             {
                 delete resource;
                 return nullptr;
             }
-
-            resources[path] = Resource(resource, typeid(T).name());
-            loadingResources.erase(path);
+            AppendLoadingResources(fullPath, LoadingStatus::Ready);
+            AppendResources(fullPath, resource);
             return resource;
         });
     }
 
+    inline const std::unordered_map<std::string, std::function<bool(std::string)>> resourceLoadFuncs{
+            {"png", BasicLoad<Texture>},
+            {"obj", BasicLoad<Model>},
+            {"ttf", BasicLoad<Font>}, {"otf", BasicLoad<Font>},
+            {"tmx", BasicLoad<Tilemap>},
+        };
+
+    //Deal with asynchronously loaded resources
+    void Update();
     //Unloads a texture if it is loaded
-    template<typename T>
-    void UnloadResource(const std::string& path)
-    {
-        if (loadingResources.contains(path))
-        {
-            loadingResources.erase(path);
-        }
-        else
-        {
-            if (resources.contains(path))
-            {
-                //If right type, cast and delete
-                if (resources[path].type == typeid(T).name())
-                {
-                    delete (T*)resources[path].ptr;
-                    resources.erase(path);
-                }
-                else
-                {
-                    debug::LogWarning("Failed to delete resource: " + path + " is not of type " + std::string(typeid(T).name()));
-                }
-            }
-        }
-    }
-
-    Texture* LoadTexture(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
-    std::future<Texture*> LoadTextureAsync(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
-
-    Model* LoadModel(const std::string& path);
-    std::future<Model*> LoadModelAsync(const std::string& path);
-
-    Font* LoadFont(const std::string& path, unsigned short resolution);
-    std::future<Font*> LoadFontAsync(const std::string& path, unsigned short resolution);
-
-    Tilemap* LoadTilemap(const std::string& path, unsigned int filteringType = GL_NEAREST);
-    std::future<Tilemap*> LoadTilemapAsync(const std::string& path, unsigned int filteringType = GL_NEAREST);
+    void Unload(std::string path);
+    //Preload a list of resources relative to rootPath, these can then be fetched with the appropriate Load function
+    //Returns true if all resources were successfully loadedon
+    bool PreloadResources(const std::vector<std::string>& paths);
+    //Preload a list of resources relative to rootPath asynchronously, these can then be fetched with the appropriate Load function
+    //Returns true if and when all resources were successfully loaded
+    [[nodiscard]] std::future<bool> PreloadResourcesAsync(const std::vector<std::string>& paths);
 }

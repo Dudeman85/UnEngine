@@ -74,6 +74,12 @@ namespace une
 		height = size.y;
 		glfwSetWindowSize(glWindow, width, height);
 	}
+	Vector2 Window::GetScale()
+	{
+		float x, y;
+		glfwGetWindowContentScale(glWindow, &x, &y);
+		return Vector2(x, y);
+	}
 	bool Window::IsFullscreen()
 	{
 		return fullscreen;

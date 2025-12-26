@@ -9,6 +9,7 @@
 #include "UnEngine.h"
 #include "debug/Primitives.h"
 #include "renderer/gl/Window.h"
+#include "utils/ResourceManagement.h"
 
 namespace debug::gui
 {
@@ -209,6 +210,42 @@ namespace debug::gui
 
 		ImGui::End();
 	}
+
+	static const std::unordered_map<une::resources::LoadingStatus, const char*> loadingStatusName{
+        {une::resources::LoadingStatus::Queued, "Queued"}, {une::resources::LoadingStatus::Loading, "Loading"},
+		{une::resources::LoadingStatus::Ready, "Ready"}
+	};
+
+	//Lists all loaded and loading resources
+	void DrawResources()
+	{
+		ImGui::Begin("Resources", &windowVisibility[ImWindow::Resources]);
+
+		ImGui::Text("Root Path: %s", une::resources::rootPath.c_str());
+
+		//Assets that are loaded and initialized
+		if (ImGui::CollapsingHeader("Loaded", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			for (const auto& resource : une::resources::resources)
+			{
+				std::string resourceName = resource.first.substr(une::resources::rootPath.length());
+				ImGui::Text("%s", resourceName.c_str());
+			}
+		}
+
+		//Assets that are currently loading asynchronously
+		if (ImGui::CollapsingHeader("Loading", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			for (const auto& resource : une::resources::loadingResources)
+			{
+				std::string resourceName = resource.first.substr(une::resources::rootPath.length());
+				ImGui::Text("%s : %s", resourceName.c_str(), loadingStatusName.at(resource.second));
+			}
+		}
+
+		ImGui::End();
+	}
+
 
 	//Components
 

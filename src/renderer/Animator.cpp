@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cassert>
 
+#include "Image.h"
 #include "utils/Timing.h"
 
 namespace une
@@ -162,7 +163,8 @@ namespace une
 			{
 				//Get the slice from the spritesheet
 				Image slice = spritesheet.Slice(col * width + paddingX, row * height + paddingY, col * width + width + paddingX, row * height + height + paddingY);
-				slicedTextures.push_back(new Texture(slice));
+				//slicedTextures.push_back(new Texture(slice));
+				assert(false && "This does not work");
 				paddingX++;
 			}
 			paddingY++;

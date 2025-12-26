@@ -51,10 +51,14 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ## High Priority
 ### Improvements
+- [ ] Improve resource loading and management
+  - [ ] Improve sprite loading
+  - [ ] Improve model loading
+  - [ ] Improve tilemap loading
+  - [ ] Improve font loading
 - [ ] Fix tilemap collision
 - [x] Update the vector library
 - [ ] Expand and improve the timing system
-- [ ] Improve resource loading and management
 - [x] Add an option to change the transform pivot
 - [ ] Improve animation system
 - [x] Rethink the transform hierarchy
@@ -82,7 +86,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ## Low Priority
 ### Improvements
-- [ ] Improve model loading and rendering
+- [ ] Improve model rendering
 - [ ] Add transparency to model rendering
 - [ ] Redo lighting system
 - [ ] Fix physics fps bugs
@@ -133,7 +137,8 @@ Current problems:
 2. It is very easy to accidentally load duplicate resources
 3. Resources have to be managed individually
 
-To fix 1 we implement asynchronous resource loading. <br>
+To fix 1 we implement asynchronous resource loading. This requires refactoring all resource loading
+to be be split between loading from disk and generating opengl resources.<br>
 To fix 2 we handle loading and storing resources on the engine side and hand out pointers to user, 
 if the resource isnt loaded when user requests it, we load it according to user policy.<br>
 To fix 3 we can add definable resource packs which can be a vector of resource paths, 

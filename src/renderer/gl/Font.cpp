@@ -8,22 +8,9 @@
 
 namespace une
 {
-	Font::Font(const std::string& path, unsigned short resolution)
-	{
-		FT_Face face;
-		if (FT_New_Face(renderer::TextRenderSystem::ftLib, path.c_str(), 0, &face))
-		{
-			debug::LogError("Failed to load font from " + path);
-			return;
-		}
-		name = face->family_name;
-		FT_Set_Pixel_Sizes(face, 0, resolution);
-		this->resolution = face->size->metrics.y_ppem;
-		LoadCharacters(face);
-	}
 	Font::~Font()
 	{
-		if (mainWindow)
+		if (mainWindow && VAO)
 		{
 			glDeleteBuffers(1, &VAO);
 			glDeleteBuffers(1, &VBO);
@@ -34,25 +21,32 @@ namespace une
 		}
 	}
 
-	int Font::GetResolution() const
+	bool Font::Load(const std::string& path, FT_UInt resolution)
 	{
-		return resolution;
+		if (FT_New_Face(renderer::TextRenderSystem::ftLib, path.c_str(), 0, &face))
+		{
+			debug::LogError("Failed to load font from " + path);
+			return false;
+		}
+		FT_Set_Pixel_Sizes(face, 0, resolution);
+		name = face->family_name;
+		this->resolution = face->size->metrics.y_ppem;
+		this->path = path;
+
+		debug::LogSpam("Successfully loaded font from " + path);
+		return true;
 	}
 
-	bool Font::Valid()
-	{
-		return VAO != 0;
-	}
-
-	void Font::LoadCharacters(FT_Face face)
+	bool Font::SetupGLResources()
 	{
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		//Make a texture for each character
 		for (unsigned char c = 0; c < 128; ++c)
 		{
 			if (FT_Load_Char(face, c, FT_LOAD_RENDER))
 			{
 				debug::LogError("Failed to load character " + std::to_string(c));
-				continue;
+				return false;
 			}
 
 			//Directly implement OpenGL textures here
@@ -85,8 +79,15 @@ namespace une
 
 			characters.insert(std::pair<char, Character>(c, character));
 		}
+		FT_Done_Face(face);
 
 		glGenVertexArrays(1, &VAO);
+		if (!VAO)
+		{
+			debug::LogError("Failed to generate vertex arrays for font: Make sure to only call this from the main thread");
+			debug::LogGLError();
+			return false;
+		}
 		glGenBuffers(1, &VBO);
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -98,6 +99,7 @@ namespace une
 		glBindVertexArray(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		FT_Done_Face(face);
+		debug::LogSpam("Successfully setup gl resources for font " + path);
+		return true;
 	}
 }

@@ -1,11 +1,10 @@
 #include "UnEngine.h"
 
-#include "glad/gl.h"
-
 #include "debug/Logging.h"
 #include "debug/Timers.h"
 #include "debug/GUI.h"
 #include "debug/Primitives.h"
+#include "utils/ResourceManagement.h"
 
 namespace une
 {
@@ -40,9 +39,7 @@ namespace une
 	{
 		debug::StartTimer("FrameStart");
 		glfwPollEvents();
-
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT);
+		renderer::Clear();
 	}
 
 	//Updates all default engine systems
@@ -52,6 +49,7 @@ namespace une
 		frameTimerString = "Completed engine update for frame " + std::to_string(frameCount)
 			+ ". Game took " + std::to_string(debug::EndTimer("FrameStart")) + "ms,";
 
+		resources::Update();
 		//Update engine systems
 		debug::StartTimer("SystemsTimer");
 		//Physics must be before collision

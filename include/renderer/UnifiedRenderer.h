@@ -7,6 +7,7 @@
 namespace une::renderer
 {
     void Init();
+    void Clear();
     void UnifiedRenderPrepass();
     void UnifiedRenderPass(ecs::Entity cameraEntity);
 

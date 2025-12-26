@@ -1,6 +1,7 @@
 #include "renderer/TextRenderer.h"
 
 #include "glad/gl.h"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "debug/Logging.h"
 #include "renderer/UserInterface.h"
@@ -68,6 +69,12 @@ namespace une::renderer
 
 			if (!text.enabled)
 				continue;
+			if (!text.font)
+			{
+				debug::LogWarning("No font given for TextRenderer of entity " + std::to_string(entity));
+				continue;
+			}
+
 			//Text is always sorted because it is anti-aliased
 			if (ecs::HasComponent<UIElement>(entity))
 				transparentUIEntities.push_back({entity, pos, DrawRenderable});
@@ -87,12 +94,6 @@ namespace une::renderer
 	{
 		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		TextRenderer& textRenderer = ecs::GetComponent<TextRenderer>(entity);
-
-		if (!textRenderer.font)
-		{
-			debug::LogWarning("No font given for TextRenderer of entity " + std::to_string(entity));
-			return;
-		}
 
 		shader->Use();
 

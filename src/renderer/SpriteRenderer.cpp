@@ -4,7 +4,6 @@
 #include <functional>
 
 #include <glad/gl.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -109,16 +108,22 @@ namespace une::renderer
 
 			if (!sprite.enabled)
 				continue;
+			if (!sprite.texture)
+			{
+				debug::LogWarning("No texture given for SpriteRenderer of entity " + std::to_string(entity));
+				continue;
+			}
+
 			if (ecs::HasComponent<UIElement>(entity))
 			{
-				if (sprite.texture->isSemiTransparent)
+				if (sprite.texture->SemiTransparent())
 					transparentUIEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
-				if (sprite.texture->isSemiTransparent)
+				if (sprite.texture->SemiTransparent())
 					transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueWorldEntities.push_back(entity);
@@ -157,12 +162,6 @@ namespace une::renderer
 		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
 
-		if (!sprite.texture)
-		{
-			debug::LogWarning("No texture given for SpriteRenderer of entity " + std::to_string(entity));
-			return;
-		}
-
 		//If a shader has been specified for this sprite use it, else use the default
 		Shader* shader = defaultShader;
 		if (sprite.shader)
@@ -171,7 +170,7 @@ namespace une::renderer
 
 		//Create the model matrix
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
-		model = glm::scale(model, glm::vec3(sprite.texture->size.x, sprite.texture->size.y, 1));
+		model = glm::scale(model, glm::vec3(sprite.texture->Size().x, sprite.texture->Size().y, 1));
 
 		//Give the shader the model matrix
 		int modelLoc = glGetUniformLocation(shader->ID, "model");
@@ -203,7 +202,7 @@ namespace une::renderer
 		//Bind the resources
 		glBindVertexArray(VAO);
 		glActiveTexture(GL_TEXTURE0);
-		sprite.texture->Use();
+		glBindTexture(GL_TEXTURE_2D, sprite.texture->ID());
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

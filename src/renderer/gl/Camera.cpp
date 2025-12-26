@@ -34,7 +34,7 @@ namespace une
 			//Set the viewport pixel size
 			const double viewportWidth = cam.viewport.x2 - cam.viewport.x1;
 			const double viewportHeight = cam.viewport.y2 - cam.viewport.y1;
-			const Vector2 windowSize = mainWindow->GetSize();
+			const Vector2 windowSize = mainWindow->GetSize() * mainWindow->GetScale();
 			glViewport(std::floor(cam.viewport.x1 * windowSize.x), std::floor(cam.viewport.y1 * windowSize.y),
 				std::floor(viewportWidth * windowSize.x), std::floor(viewportHeight * windowSize.y));
 

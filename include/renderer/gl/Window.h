@@ -15,6 +15,7 @@ namespace une
 		Vector2Int GetPosition();
 		void SetPosition(const Vector2Int& pos);
 		Vector2Int GetSize();
+		Vector2 GetScale();
 		void SetSize(const Vector2Int& size);
 		bool IsFullscreen();
 		//Set fullscreen or windowed mode

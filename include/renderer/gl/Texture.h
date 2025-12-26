@@ -7,44 +7,47 @@
 #endif
 
 #include "Vector.h"
-#include "Image.h"
+#include "utils/Resource.h"
 
 namespace une
 {
 	//Abstraction class for OpenGL textures
-	class Texture
+	class Texture : public resources::Resource
 	{
 	public:
-		Texture(const Texture&) = delete;
-		Texture() = delete;
-		//Make a texture from an existing opengl texture id
-		explicit Texture(unsigned int id);
-		//Load a texture from path
-		explicit Texture(const std::string& path, unsigned int filteringType = GL_NEAREST, bool flip = true);
-		//Make a texture from an image
-		explicit Texture(const Image& image, unsigned int filteringType = GL_NEAREST);
+		Texture() = default;
+		//From existing OpenGL texture
+		explicit Texture(GLuint id, Vector2Int size);
+		~Texture() override;
 
-		Texture(Texture&& other) noexcept;
-
-		~Texture();
+		//Load pixel data from disk with stbimage
+		bool Load(const std::string& path, bool editable = false, bool flip = true);
+		//Make OpenGl Texture using loaded pixel data
+		bool SetupGLResources() override;
+		//Make OpenGL Texture using arbitrary pixel data
+		bool SetupGLResources(const uint8_t* data, Vector2Int size, GLint colorFormat);
 
 		//Sets the OpenGL sampling filter when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.
-		void SetScalingFilter(unsigned int filter);
+		void SetScalingFilter(GLuint filter);
 
-		//Get this textures OpenGL ID
-		unsigned int ID();
+		//Is the OpenGl texture usable
+		bool Valid() const override {return id != 0;};
+		//Opengl texture ID
+		GLuint ID() const {return id;};
+		//Pixel size of the texture image
+		Vector2Int Size() const {return size;};
+		//Does this texture contain any pixels where a != 0 or 1
+		bool SemiTransparent() const {return semiTransparent;};
 
-		bool Valid();
-
-		//Use this texture on the next draw call
-		void Use();
-
-		Vector2Int size;
-		bool isSemiTransparent = false;
-		std::string path;
 		//Texture type primarily for 3D models Ex. texture_diffuse or texture_specular
-		std::string type;
+		std::string textureType;
+
 	private:
-		unsigned int id = 0;
+		GLuint id = 0;
+		Vector2Int size;
+		bool semiTransparent = false;
+
+		uint8_t* imageData = nullptr;
+		GLint colorFormat = 0;
 	};
 }

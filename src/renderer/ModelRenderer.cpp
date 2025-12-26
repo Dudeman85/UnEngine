@@ -2,6 +2,7 @@
 
 #include "debug/Logging.h"
 #include "renderer/UserInterface.h"
+#include "renderer/gl/Camera.h"
 
 namespace une::renderer
 {
@@ -211,7 +212,7 @@ namespace une::renderer
 				//Check if we have an override texture for this mesh
 				if (j < modelRenderer.textures.size() && modelRenderer.textures[j])
 				{
-					name = modelRenderer.textures[j]->type;
+					name = modelRenderer.textures[j]->textureType;
 
 					//Bind override texture
 					glBindTexture(GL_TEXTURE_2D, modelRenderer.textures[j]->ID());
@@ -219,7 +220,7 @@ namespace une::renderer
 				//Use default texture
 				else
 				{
-					name = mesh.textures[j]->type;
+					name = mesh.textures[j]->textureType;
 
 					//Bind default texture
 					glBindTexture(GL_TEXTURE_2D, mesh.textures[j]->ID());

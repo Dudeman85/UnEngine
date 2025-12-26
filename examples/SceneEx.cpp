@@ -19,12 +19,16 @@ int main()
 	une::EngineInit();
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
 
-	std::string assets = UNE_EXAMPLE_PROJECT_LOCATION "/assets/";
-	une::Texture texture(assets + "strawberry.png");
-	une::Texture transparentTexture(assets + "Achelous.obj");
-	une::Model model(assets + "Achelous.obj");
-	une::Font font(assets + "Coolvetica Rg Cond.otf", 64);
-	une::Tilemap tilemap(assets + "testMap.tmx");
+	une::resources::rootPath = UNE_EXAMPLE_PROJECT_LOCATION "/assets/";
+	const std::vector<std::string> resources{"strawberry.png", "Achelous.obj", "Coolvetica Rg Cond.otf", "testMap.tmx"};
+	auto done = une::resources::PreloadResources(resources);
+	//done.wait();
+
+	une::resources::PreloadResources(resources);
+
+	une::Texture* texture = une::resources::Load<une::Texture>("strawberry.png");
+	une::Model* model = une::resources::Load<une::Model>("Achelous.obj");
+	une::Font* coolvetica = une::resources::Load<une::Font>("Coolvetica Rg Cond.otf");
 	une::Primitive square = une::Primitive::Rectangle();
 
 	//Make the camera and UI canvas
@@ -35,22 +39,22 @@ int main()
 	une::UICanvas canvas;
 
 	ecs::Entity test = ecs::NewEntity();
-	ecs::AddComponent(test, une::SpriteRenderer{.texture = &texture});
+	ecs::AddComponent(test, une::SpriteRenderer{.texture = texture});
 	ecs::AddTag(test, "non world entity");
 	ecs::AddTag(test, "tag2");
 
 	ecs::Entity player = ecs::NewEntity();
-	ecs::AddComponent(player, une::SpriteRenderer{.texture = &texture});
+	ecs::AddComponent(player, une::SpriteRenderer{.texture = texture});
 	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ, 0, {4, 6}});
 	ecs::AddComponent(player, une::PolygonCollider{ .vertices = {{1.000, 1.000}, {1.000, -1.000}, {-1.000, -1.000}, {-1.000, 1.000}, }, .trigger = 0, .layer = 0, .rotationOverride = -1.0, .visualise = 0 });
 	ecs::AddComponent(player, une::Rigidbody{ .velocity = {0.000, 0.000, 0.000}, .mass = 1.0, .gravityScale = 1.0, .drag = 0.000, .restitution = 1.000, .kinematic = 0 });
 	ecs::AddTag(player, "#Player");
 	ecs::Entity child = ecs::NewEntity();
-	ecs::AddComponent(child, une::TextRenderer{ .font = &font, .text = "Player", .size = 24, .color = une::Color(12, 150, 60, 255), .enabled = 1 });
+	ecs::AddComponent(child, une::TextRenderer{ .font = coolvetica, .text = "Player", .size = 24, .color = une::Color(12, 150, 60, 255), .enabled = 1 });
 	ecs::AddComponent(child, une::Transform{.position = {-4.5, 8, 0}, .scale = 0.2});
 	une::TransformSystem::AddParent(child, player);
 	ecs::Entity nestedChild = ecs::NewEntity();
-	ecs::AddComponent(nestedChild, une::TextRenderer{.font = &font, .text = "Name:", .color = une::Color(200, 20, 60)});
+	ecs::AddComponent(nestedChild, une::TextRenderer{.font = coolvetica, .text = "Name:", .color = une::Color(200, 20, 60)});
 	ecs::AddComponent(nestedChild, une::Transform{.position = {0, 17, 0}, .scale = 0.5});
 	une::TransformSystem::AddParent(nestedChild, child);
 	ecs::Entity child2 = ecs::NewEntity();
@@ -60,15 +64,15 @@ int main()
 	une::TransformSystem::AddParent(child2, player);
 
 	ecs::Entity uiSprite = ecs::NewEntity();
-	ecs::AddComponent(uiSprite, une::TextRenderer{.font = &font, .text = "Health: 9000"});
+	ecs::AddComponent(uiSprite, une::TextRenderer{.font = coolvetica, .text = "Health: 9000"});
 	ecs::AddComponent(uiSprite, une::Transform{.position = {20, -50, 0}, .scale = 2});
 	ecs::AddComponent(uiSprite, une::UIElement{.canvas = &canvas, .anchor = {-1, 1}});
 	ecs::Entity uiSprite2 = ecs::NewEntity();
-	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = &texture});
+	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = texture});
 	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
 	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
 
-	std::future<une::Texture*> testTexture = une::resources::LoadResourceAsync<une::Texture>(assets + "AchelousTexture.png");
+	std::future<une::Model*> future;
 
 	//Game loop
 	while (!window->ShouldClose())
@@ -128,10 +132,29 @@ int main()
 		{
 			debug::gui::EnableWindow(debug::gui::ImWindow::Inspector);
 		}
+		if (glfwGetKey(window->glWindow, GLFW_KEY_3))
+		{
+			debug::gui::EnableWindow(debug::gui::ImWindow::Resources);
+		}
 		if (glfwGetKey(window->glWindow, GLFW_KEY_T))
 		{
-			une::Transform& tf = ecs::GetComponent<une::Transform>(player);
-			debug::DrawRectangle({-200, -200, 0}, {-200, 200, 0}, {200, 200, 0}, tf.position, une::Color(255, 0, 0), false);
+			une::resources::Unload("Achelous.obj");
+		}
+		if (glfwGetKey(window->glWindow, GLFW_KEY_G))
+		{
+			if (!future.valid())
+			{
+				future = une::resources::LoadAsync<une::Model>("Achelous.obj");
+				debug::LogError("HEre");
+			}
+		}
+
+		if (future.valid())
+		{
+			if (future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+			{
+				future.get();
+			}
 		}
 
 		//TODO: fix

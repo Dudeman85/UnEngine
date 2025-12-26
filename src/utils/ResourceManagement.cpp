@@ -2,172 +2,166 @@
 
 #include <filesystem>
 #include <unordered_map>
-#include <iostream>
 
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Model.h"
-#include "audio/AudioEngine.h"
 
 namespace une::resources
 {
-    Texture* LoadTexture(const std::string& path, unsigned int filteringType, bool flip)
+    std::string rootPath = "";
+    std::unordered_map<std::string, Resource*> resources;
+    std::unordered_map<std::string, LoadingStatus> loadingResources;
+    std::mutex loadingResourcesMutex;
+    std::mutex resourcesMutex;
+
+    //Thread safe functions
+    void AppendLoadingResources(const std::string& path, LoadingStatus loadingStatus)
     {
-        return LoadResource<Texture>(path, filteringType, flip);
+        loadingResourcesMutex.lock();
+        loadingResources[path] = loadingStatus;
+        loadingResourcesMutex.unlock();
     }
-    std::future<Texture*> LoadTextureAsync(const std::string& path, unsigned int filteringType, bool flip)
+    void AppendResources(const std::string& path, Resource* resource)
     {
-        return LoadResourceAsync<Texture>(path, filteringType, flip);
+        resourcesMutex.lock();
+        resources[path] = resource;
+        resourcesMutex.unlock();
+    }
+    void EraseLoadingResources(const std::string& path)
+    {
+        loadingResourcesMutex.lock();
+        loadingResources.erase(path);
+        loadingResourcesMutex.unlock();
+    }
+    void EraseResources(const std::string& path)
+    {
+        resourcesMutex.lock();
+        resources.erase(path);
+        resourcesMutex.unlock();
     }
 
-    Model* LoadModel(const std::string& path)
+    //Deal with asynchronously loaded resources
+    void Update()
     {
-        return LoadResource<Model>(path);
-    }
-    std::future<Model*> LoadModelAsync(const std::string& path)
-    {
-        return LoadResourceAsync<Model>(path);
-    }
-
-    Font* LoadFont(const std::string& path, unsigned short resolution)
-    {
-        return LoadResource<Font>(path, resolution);
-    }
-    std::future<Font*> LoadFontAsync(const std::string& path, unsigned short resolution)
-    {
-        return LoadResourceAsync<Font>(path, resolution);
-    }
-
-    Tilemap* LoadTilemap(const std::string& path, unsigned int filteringType)
-    {
-        return LoadResource<Tilemap>(path, filteringType);
-    }
-    std::future<Tilemap*> LoadTilemapAsync(const std::string& path, unsigned int filteringType)
-    {
-        return LoadResourceAsync<Tilemap>(path, filteringType);
-    }
-
-    //Recursively loads all textures
-    std::unordered_map<std::string, Texture*> ProcessDirectoryTextures(const std::string& path, bool includeSubdirectories, unsigned int filteringType)
-    {
-        std::unordered_map<std::string, Texture*> textures;
-
-        if (!std::filesystem::exists(path))
-            std::cout << "Invalid path: " << path << std::endl;
-
-        //For each item in the directory
-        for (const auto& directoryEntry : std::filesystem::directory_iterator(path))
+        for (auto it = loadingResources.cbegin(); it != loadingResources.cend();)
         {
-            std::string pathName = directoryEntry.path().string();
-
-            //If the item is a directory and recursive is enabled
-            if (is_directory(directoryEntry.path()) && includeSubdirectories)
+            //If resource is done loading
+            if (resources.contains(it->first))
             {
-                // Call the function recursively
-                std::unordered_map<std::string, Texture*> subdirTextures = ProcessDirectoryTextures(pathName, includeSubdirectories, filteringType);
-                textures.insert(subdirTextures.begin(), subdirTextures.end());
+                resources[it->first]->SetupGLResources();
+                if (!resources[it->first]->Valid())
+                {
+                    EraseResources(it->first);
+                    debug::LogError("Failed to setup OpenGL resources for " + it->first);
+                }
+                loadingResourcesMutex.lock();
+                it = loadingResources.erase(it);
+                loadingResourcesMutex.unlock();
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    //Unloads a texture if it is loaded
+    void Unload(std::string path)
+    {
+        path = rootPath + path;
+        if (loadingResources.contains(path))
+        {
+            EraseLoadingResources(path);
+        }
+        if (resources.contains(path))
+        {
+            delete resources[path];
+            EraseResources(path);
+        }
+    }
+
+    //Preload a list of resources relative to rootPath, these can then be fetched with the appropriate Load function
+    //Returns true if all resources were successfully loaded
+    bool PreloadResources(const std::vector<std::string>& paths)
+    {
+        for (const std::string& path : paths)
+        {
+            AppendLoadingResources(rootPath + path, LoadingStatus::Queued);
+        }
+
+        bool success = true;
+        for (const std::string& path : paths)
+        {
+            //Get the file extention
+            std::string extension = "";
+            const auto position = path.find_last_of('.');
+            if (position != std::string::npos)
+            {
+                extension = path.substr(position + 1);
+            }
+            else
+            {
+                debug::LogWarning(path + " does not have a valid extension");
+                success = false;
                 continue;
             }
 
-            // Name creation
-            std::string name = pathName;
-            size_t position = path.find(path);
-            if (position != std::string::npos)
+            //Load the appropriate type of model
+            if (resourceLoadFuncs.contains(extension))
             {
-                // Erase the original path from name
-                name.erase(position, path.length());
+                success &= resourceLoadFuncs.at(extension)(path);
             }
-
-            if (!name.empty())
+            else
             {
-                // Erase the first character, which is "/"
-                name = name.substr(1);
-            }
-
-            std::string extension = "";
-            position = name.find_last_of('.');
-            if (position != std::string::npos)
-            {
-                extension = name.substr(position + 1); // Save the extension
-            }
-
-            // Load .png as texture
-            if (extension == "png")
-            {
-                textures.emplace(name, new Texture(pathName, filteringType, true));
+                debug::LogWarning(path + " is not a supported resource type");
+                success = false;
             }
         }
-
-        return textures;
+        return success;
     }
 
-    //Recursively loads all models
-    std::unordered_map<std::string, Model*> ProcessDirectoryModels(const std::string& path, bool includeSubdirectories, unsigned int filteringType)
+    //Preload a list of resources relative to rootPath asynchronously, these can then be fetched with the appropriate Load function
+    //Returns true if and when all resources were successfully loaded
+    std::future<bool> PreloadResourcesAsync(const std::vector<std::string>& paths)
     {
-        std::unordered_map<std::string, Model*> models;
-
-        //For each item in the directory
-        for (const auto& directoryEntry : std::filesystem::directory_iterator(path))
+        for (const std::string& path : paths)
         {
-            std::string pathName = directoryEntry.path().string();
-            //Windows is stupid
-            std::replace(pathName.begin(), pathName.end(), '\\', '/');
-
-            //If the item is a directory and recursive is enabled
-            if (is_directory(directoryEntry.path()) && includeSubdirectories)
-            {
-                // Call the function recursively
-                std::unordered_map<std::string, Model*> subdirTextures = ProcessDirectoryModels(pathName, includeSubdirectories, filteringType);
-                models.insert(subdirTextures.begin(), subdirTextures.end());
-                continue;
-            }
-
-            // Name creation
-            std::string name = pathName;
-            size_t position = path.find(path);
-            if (position != std::string::npos)
-            {
-                // Erase the original path from name
-                name.erase(position, path.length());
-            }
-
-            if (!name.empty())
-            {
-                // Erase the first character, which is "/"
-                name = name.substr(1);
-            }
-
-            std::string extension = "";
-            position = name.find_last_of('.');
-            if (position != std::string::npos)
-            {
-                extension = name.substr(position + 1); // Save the extension
-            }
-
-            // Load .obj as model
-            if (extension == "obj")
-            {
-                Model* model = new Model(pathName);
-                for (const Mesh& mesh : model->meshes)
-                    for(Texture* tex : mesh.textures)
-                        tex->SetScalingFilter(filteringType);
-                models.emplace(name, model);
-            }
+            AppendLoadingResources(rootPath + path, LoadingStatus::Queued);
         }
 
-        return models;
-    }
+        return std::async(std::launch::async, [paths]()
+        {
+            bool success = true;
+            std::vector<std::future<bool>> threads;
+            for (const std::string& path : paths)
+            {
+                //Get the file extention
+                std::string extension = "";
+                const auto position = path.find_last_of('.');
+                if (position != std::string::npos)
+                {
+                    extension = path.substr(position + 1);
+                }
+                else
+                {
+                    debug::LogWarning(path + " does not have a valid extension");
+                    success = false;
+                    continue;
+                }
 
-    //Load every texture from path, if includeSubdirectories is specified also recursively loads subdirectories
-    //Returns a map with the name of the texture's path relative to root directory, ex. "level1/Player.png"
-    std::unordered_map<std::string, Texture*> PreloadTextures(const std::string& path, bool includeSubdirectories, unsigned int filteringType)
-    {
-        return ProcessDirectoryTextures(path, includeSubdirectories, filteringType);
-    }
+                //Load the appropriate type of model
+                if (resourceLoadFuncs.contains(extension))
+                {
+                     success &= resourceLoadFuncs.at(extension)(path);
+                }
+                else
+                {
+                    debug::LogWarning(path + " is not a supported resource type");
+                    success = false;
+                }
+            }
 
-    //Load every model from path, if includeSubdirectories is specified also recursively loads subdirectories
-    //Returns a map with the name of the models's path relative to root directory, ex. "level1/Player.obj"
-    std::unordered_map<std::string, Model*> PreloadModels(const std::string& path, bool includeSubdirectories, unsigned int filteringType)
-    {
-        return ProcessDirectoryModels(path, includeSubdirectories, filteringType);
+            return success;
+        });
     }
 }
