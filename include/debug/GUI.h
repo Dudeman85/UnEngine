@@ -28,11 +28,12 @@ namespace debug::gui
 	void RigidbodyInspector();
 	void TextRendererInspector();
 	void CameraInspector();
+	void SpriteRendererInspector();
 
 	//Function pointers to draw each component inspector by their readable name
 	const std::unordered_map<std::string, std::function<void()>> componentDrawFunctions{
 		{"Transform", TransformInspector}, {"PolygonCollider", PolygonColliderInspector}, {"TextRenderer", TextRendererInspector},
-		{"Rigidbody", RigidbodyInspector}, {"Camera", CameraInspector}
+		{"Rigidbody", RigidbodyInspector}, {"Camera", CameraInspector}, {"SpriteRenderer", SpriteRendererInspector}
 	};
 
 	//GUI window types

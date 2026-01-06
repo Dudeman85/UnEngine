@@ -20,7 +20,9 @@ int main()
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
 
 	une::resources::rootPath = UNE_EXAMPLE_PROJECT_LOCATION "/assets/";
-	const std::vector<std::string> resources{"strawberry.png", "Achelous.obj", "Coolvetica Rg Cond.otf", "testMap.tmx"};
+	const std::vector<std::string> resources{
+		"strawberry.png", "Achelous.obj", "Coolvetica Rg Cond.otf", "testMap.tmx", "Transparent.png"
+	};
 	auto done = une::resources::PreloadResources(resources);
 	//done.wait();
 
@@ -158,8 +160,10 @@ int main()
 		}
 
 		//TODO: fix
+		/*
 		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
 		canvas.SetScale(canvas.GetScale());
+		*/
 
 		//Update engine libraries and render everything
 		une::Update();

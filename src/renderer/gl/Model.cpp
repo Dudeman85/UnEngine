@@ -5,6 +5,7 @@
 #include <assimp/postprocess.h>
 
 #include "debug/Logging.h"
+#include "utils/ResourceManagement.h"
 
 namespace une
 {
@@ -29,7 +30,8 @@ namespace une
 			return false;
 		}
 
-		this->path = path;
+		this->fullPath = path;
+		this->path = path.substr(resources::rootPath.size());
 		directory = path.substr(0, path.find_last_of('/'));
 		debug::LogSpam("Successfully loaded model " + path);
 		return true;

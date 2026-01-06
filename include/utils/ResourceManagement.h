@@ -10,11 +10,12 @@
 
 namespace une::resources
 {
+    enum class LoadingStatus {Queued, Loading, Ready};
+
     //Path to load resources relative to
     extern std::string rootPath;
     //These should be treated as read only
     extern std::unordered_map<std::string, Resource*> resources;
-    enum class LoadingStatus {Queued, Loading, Ready};
     extern std::unordered_map<std::string, LoadingStatus> loadingResources;
 
     //Thread safe functions

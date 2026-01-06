@@ -52,7 +52,8 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 ## High Priority
 ### Improvements
 - [ ] Improve resource loading and management
-  - [ ] Improve sprite loading
+  - [x] Add async loading
+  - [x] Improve sprite loading
   - [ ] Improve model loading
   - [ ] Improve tilemap loading
   - [ ] Improve font loading
@@ -69,7 +70,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 
 ### New features
 - [ ] Add debug tools
-  - [ ] Camera
+  - [ ] Freecam
   - [ ] Frame advance
   - [x] Better Logging
   - [x] Primitive Drawing
@@ -77,7 +78,8 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
     - [x] Hierarchy
     - [x] Entity inspector
     - [x] Transform tools
-    - [ ] Inspectors for other components
+    - [x] Resource inspector
+    - [ ] Inspectors for all engine components
     - [ ] Debug toggles
 - [ ] Add Hexagonal tilemap support
 - [ ] Add animation support to tilemap

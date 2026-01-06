@@ -4,6 +4,7 @@
 
 #include "debug/Logging.h"
 #include "renderer/gl/Window.h"
+#include "utils/ResourceManagement.h"
 
 namespace une
 {
@@ -19,7 +20,6 @@ namespace une
 	{
 		stbi_set_flip_vertically_on_load(flip);
 
-		this->path = path;
 		int width, height, nrChannels;
 		imageData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 		if (!imageData)
@@ -54,6 +54,9 @@ namespace une
 
 		size = {width, height};
 		this->editable = editable;
+		this->fullPath = path;
+		this->path = path.substr(resources::rootPath.size());
+
 		debug::LogSpam("Successfully loaded texture " + path);
 		return true;
 	}

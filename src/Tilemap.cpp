@@ -11,6 +11,7 @@
 #include "Transform.h"
 #include "renderer/gl/Texture.h"
 #include "renderer/gl/Window.h"
+#include "utils/ResourceManagement.h"
 
 namespace une
 {
@@ -184,7 +185,8 @@ namespace une
 			}
 		}
 
-		this->path = path;
+		this->fullPath = path;
+		this->path = path.substr(resources::rootPath.size());
 		debug::LogSpam("Successfully loaded tilemap " + path);
 		return true;
 	}

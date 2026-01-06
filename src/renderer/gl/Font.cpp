@@ -5,6 +5,7 @@
 #include "debug/Logging.h"
 #include "renderer/TextRenderer.h"
 #include "renderer/gl/Window.h"
+#include "utils/ResourceManagement.h"
 
 namespace une
 {
@@ -31,7 +32,8 @@ namespace une
 		FT_Set_Pixel_Sizes(face, 0, resolution);
 		name = face->family_name;
 		this->resolution = face->size->metrics.y_ppem;
-		this->path = path;
+		this->fullPath = path;
+		this->path = path.substr(resources::rootPath.size());
 
 		debug::LogSpam("Successfully loaded font from " + path);
 		return true;

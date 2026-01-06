@@ -228,8 +228,7 @@ namespace debug::gui
 		{
 			for (const auto& resource : une::resources::resources)
 			{
-				std::string resourceName = resource.first.substr(une::resources::rootPath.length());
-				ImGui::Text("%s", resourceName.c_str());
+				ImGui::Text("%s", resource.second->Path().c_str());
 			}
 		}
 
@@ -478,10 +477,10 @@ namespace debug::gui
 	{
 		une::TextRenderer& tr = ecs::GetComponent<une::TextRenderer>(selectedEntity);
 
-		ImGui::Text("Font: %s", tr.font->name.c_str());
+		ImGui::Text("Font: %s", tr.font->Path().c_str());
 		ImGui::Separator();
 		ImGui::InputTextMultiline("Text", &tr.text, ImVec2(0, ImGui::GetTextLineHeight() * 4.5));
-		ImGui::DragInt("Size", &tr.size, 1, 1, 256);
+		ImGui::DragInt("Size", &tr.size, 1, 1, 999999);
 
 		//Color picker
 		une::Color c = tr.color.AsSRGB();
@@ -535,7 +534,7 @@ namespace debug::gui
 
 		//Near and far clip planes
 		float nf[2] = {c.nearPlane, c.farPlane};
-		if (ImGui::DragFloat2("Near/Far", wh, 1, -999999, 999999, "%.1f"))
+		if (ImGui::DragFloat2("Near/Far", nf, 1, -999999, 999999, "%.1f"))
 		{
 			c.nearPlane = nf[0];
 			c.farPlane = nf[1];
@@ -591,6 +590,33 @@ namespace debug::gui
 
 			ImGui::TreePop();
 		}
+
+		ImGui::Separator();
+	}
+
+	void SpriteRendererInspector()
+	{
+		une::SpriteRenderer& sr = ecs::GetComponent<une::SpriteRenderer>(selectedEntity);
+
+		if (ImGui::BeginCombo("Texture", sr.texture->Path().c_str()))
+		{
+			for (const auto& resource : une::resources::resources)
+			{
+				if (resource.first.ends_with(".png"))
+				{
+					const bool selected = sr.texture == resource.second;
+					if (ImGui::Selectable(resource.second->Path().c_str(), selected))
+						sr.texture = dynamic_cast<une::Texture*>(resource.second);
+
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::Text("Shader: TODO");
+		ImGui::Checkbox("Enabled", &sr.enabled);
 
 		ImGui::Separator();
 	}
