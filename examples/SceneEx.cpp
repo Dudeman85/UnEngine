@@ -5,6 +5,7 @@
 #include "debug/Logging.h"
 #include "debug/Primitives.h"
 #include "utils/ResourceManagement.h"
+#include "debug/FreeCam.h"
 
 int main()
 {
@@ -36,10 +37,17 @@ int main()
 	//Make the camera and UI canvas
 	ecs::Entity camera = ecs::NewEntity();
 	ecs::AddComponent(camera, une::Camera{});
-	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 100}});
 	une::CameraSystem::MakeOrtho(camera, 800, 600);
+	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 100}});
+	ecs::AddTag(camera, "#Camera");
 	une::UICanvas canvas;
-
+	//Make the camera and UI canvas
+	ecs::Entity camera2 = ecs::NewEntity();
+	ecs::AddComponent(camera2, une::Camera{ .viewport = {0, 0, 1, 1} });
+	une::CameraSystem::MakeOrtho(camera2, 800, 600);
+	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 100}});
+	auto t = ecs::GetComponent<une::Transform>(camera2);
+	
 	ecs::Entity test = ecs::NewEntity();
 	ecs::AddComponent(test, une::SpriteRenderer{.texture = texture});
 	ecs::AddTag(test, "non world entity");
@@ -47,7 +55,8 @@ int main()
 
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = texture});
-	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ, 0, {4, 6}});
+	ecs::AddComponent(player, une::ModelRenderer{.model = model});
+	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ});
 	ecs::AddComponent(player, une::PolygonCollider{ .vertices = {{1.000, 1.000}, {1.000, -1.000}, {-1.000, -1.000}, {-1.000, 1.000}, }, .trigger = 0, .layer = 0, .rotationOverride = -1.0, .visualise = 0 });
 	ecs::AddComponent(player, une::Rigidbody{ .velocity = {0.000, 0.000, 0.000}, .mass = 1.0, .gravityScale = 1.0, .drag = 0.000, .restitution = 1.000, .kinematic = 0 });
 	ecs::AddTag(player, "#Player");
@@ -75,6 +84,14 @@ int main()
 	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
 
 	std::future<une::Model*> future;
+
+	FreeCam fc(5, 0.12);
+	auto applyCamera = [&](const glm::vec3& pos, const glm::vec3& forward, const glm::vec3& up)
+	{
+		//Jos kamerasi k‰ytt‰‰ matriiseja, luo view:
+		glm::mat4 view = glm::lookAt(pos, pos + forward, up);
+		ecs::GetComponent<une::Camera>(camera).view = view;
+	};;
 
 	//Game loop
 	while (!window->ShouldClose())
@@ -159,11 +176,14 @@ int main()
 			}
 		}
 
+		debug::DrawLine({ 0, 0, 0 }, {0, 1000, 0}, une::Color::Red());
+		debug::DrawLine({ 0, 0, 0 }, {1000, 0, 0}, une::Color::Green());
+
 		//TODO: fix
-		/*
-		une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
-		canvas.SetScale(canvas.GetScale());
-		*/
+		//une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);
+		//canvas.SetScale(canvas.GetScale());
+
+		fc.UpdateGLFW(une::mainWindow->glWindow, une::deltaTime, applyCamera);
 
 		//Update engine libraries and render everything
 		une::Update();

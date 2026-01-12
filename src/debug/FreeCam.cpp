@@ -1,14 +1,22 @@
 ﻿#include "debug/FreeCam.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/constants.hpp>
-#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/rotate_vector.hpp> //Doesnt compile
 #include <glm/gtc/matrix_transform.hpp>
 #include <functional>
 #include <cmath>
 
-namespace debug
+namespace debug::freecam
 {
-
+    //All freecam stuff should go in debug::freecam
+    //The freecam should be an entity with atleast Camera and Transform
+    //It should have two modes, the current orbit mode, and a standard first person freecam
+    //There should be Enable(), Disable() and Update() functions
+    //Probably destroy the entity when disabled
+    //Set the camera params with CameraSystem::MakePerspective, maybe there could also be a way for the user to specify these
+    //GLFWWindow can be gotten with une::mainWindow->glWindow, input can come from that for now
+    //You can move it through Transform or directly set the une::Camera::view matrix
+    //It would also be nice if it was created on a pre-existing camera when Enable() is called
 }
 
 

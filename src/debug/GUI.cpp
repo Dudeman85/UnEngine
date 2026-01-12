@@ -106,6 +106,8 @@ namespace debug::gui
 			EnableWindow(ImWindow::Inspector);
 		}
 
+		auto a = ecs::GetComponent<une::Transform>(entity);
+
 		//Draw all children of this entity
 		for (ecs::Entity child : ecs::GetComponent<une::Transform>(entity).children)
 		{
