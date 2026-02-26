@@ -88,7 +88,6 @@ int main()
 	FreeCam fc(5, 0.12);
 	auto applyCamera = [&](const glm::vec3& pos, const glm::vec3& forward, const glm::vec3& up)
 	{
-		//Jos kamerasi k‰ytt‰‰ matriiseja, luo view:
 		glm::mat4 view = glm::lookAt(pos, pos + forward, up);
 		ecs::GetComponent<une::Camera>(camera).view = view;
 	};;

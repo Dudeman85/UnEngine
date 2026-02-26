@@ -15,6 +15,18 @@ namespace une
 		semiTransparent = true;
 	}
 
+	Texture::~Texture()
+	{
+		if (mainWindow && id)
+		{
+			glDeleteTextures(1, &id);
+		}
+		if (editable)
+		{
+			stbi_image_free(imageData);
+		}
+	}
+
 	//Load pixel data from disk with stbimage
 	bool Texture::Load(const std::string& path, bool editable, bool flip)
 	{
@@ -112,18 +124,6 @@ namespace une
 		this->size = size;
 		debug::LogSpam("Successfully setup gl resources for texture " + path);
 		return true;
-	}
-
-	Texture::~Texture()
-	{
-		if (mainWindow && id)
-		{
-			glDeleteTextures(1, &id);
-		}
-		if (editable)
-		{
-			stbi_image_free(imageData);
-		}
 	}
 
 	//Sets the OpenGL sampling type when up and downscaling the texture. Ex. GL_NEAREST, GL_LINEAR, etc.

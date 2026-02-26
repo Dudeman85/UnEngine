@@ -11,7 +11,7 @@
 
 namespace une
 {
-	///A class to store 3D model vertex and texture data, as well as handle model loading
+	//A class to store 3D model vertex and texture data, as well as handle model loading
 	class Model : public resources::Resource
 	{
 	public:
@@ -32,7 +32,7 @@ namespace une
 		std::vector<Texture*> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
 		//Store all the already loaded textures for efficiency
-		std::vector<Texture*> textures_loaded;
+		std::vector<Texture*> loadedTextures;
 
 		bool valid = false;
 		std::string directory;

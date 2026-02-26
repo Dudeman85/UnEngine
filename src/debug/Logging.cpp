@@ -58,7 +58,7 @@ namespace debug
 		Log(msg, Error, sl);
 	}
 
-	//Logs the last OpenGL error
+	//Logs the last OpenGL error if there were any
 	void LogGLError(std::source_location sl)
 	{
 		std::unordered_map<GLenum, std::string> errorMap = {

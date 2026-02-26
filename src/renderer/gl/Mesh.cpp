@@ -1,5 +1,8 @@
 #include "renderer/gl/Mesh.h"
 
+#include "debug/Logging.h"
+#include "renderer/gl/Window.h"
+
 namespace une
 {
 	Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture*> textures)
@@ -8,7 +11,21 @@ namespace une
 		this->vertices = vertices;
 		this->indices = indices;
 		this->textures = textures;
+	}
 
+	Mesh::~Mesh()
+	{
+		if (mainWindow)
+		{
+			glDeleteBuffers(1, &VBO);
+			glDeleteBuffers(1, &EBO);
+			glDeleteVertexArrays(1, &VAO);
+		}
+	}
+
+	//Generate OpenGL buffers, needs to be called from main thread
+	void Mesh::SetupGLResources()
+	{
 		//OpenGL buffers
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
@@ -36,5 +53,7 @@ namespace une
 
 		//Unbind VAO
 		glBindVertexArray(0);
+
+		debug::LogGLError();
 	}
 }

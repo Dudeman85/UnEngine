@@ -54,7 +54,7 @@ sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
 - [ ] Improve resource loading and management
   - [x] Add async loading
   - [x] Improve sprite loading
-  - [ ] Improve model loading
+  - [x] Improve model loading
   - [ ] Improve tilemap loading
   - [ ] Improve font loading
 - [ ] Fix tilemap collision

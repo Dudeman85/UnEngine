@@ -11,15 +11,20 @@ namespace une
 {
 	Model::~Model()
 	{
-		for (Texture* tex : textures_loaded)
+		for (Texture* tex : loadedTextures)
 		{
 			delete tex;
+		}
+		if (!valid)
+		{
+			delete importer;
 		}
 	}
 
 	bool Model::Load(const std::string& path)
 	{
 		//Load model with Assimp, convert all primitives to triangles and flip texture UVs for OpenGL
+		//TODO: This could be improved by having just one importer per thread
 		importer = new Assimp::Importer();
 		scene = importer->ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
@@ -33,20 +38,30 @@ namespace une
 		this->fullPath = path;
 		this->path = path.substr(resources::rootPath.size());
 		directory = path.substr(0, path.find_last_of('/'));
+
+		ProcessNode(scene->mRootNode);
+		delete importer;
+
 		debug::LogSpam("Successfully loaded model " + path);
 		return true;
 	}
 
 	bool Model::SetupGLResources()
 	{
-		//TODO: Make better
-		ProcessNode(scene->mRootNode);
-		delete importer;
+		for (Mesh& mesh : meshes)
+		{
+			mesh.SetupGLResources();
+		}
+		for (Texture* tex : loadedTextures)
+		{
+			tex->SetupGLResources();
+		}
+
 		valid = true;
 		debug::LogSpam("Successfully setup gl resources for model " + path);
 		return true;
 	}
-	
+
 	//Call ProcessNode recursively on every child node of root node
 	void Model::ProcessNode(aiNode* node)
 	{
@@ -112,18 +127,14 @@ namespace une
 				indices.push_back(face.mIndices[j]);
 		}
 
-		//If the mesh has a material
-		if (mesh->mMaterialIndex >= 0)
-		{
-			//Get the scene material vector
-			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		//Get the scene material vector
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-			std::vector<Texture*> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+		std::vector<Texture*> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-			std::vector<Texture*> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		}
+		std::vector<Texture*> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
 		return Mesh(vertices, indices, textures);
 	}
@@ -141,11 +152,11 @@ namespace une
 
 			//Check if the texture has already been loaded
 			bool skip = false; 
-			for (unsigned int j = 0; j < textures_loaded.size(); j++)
+			for (unsigned int j = 0; j < loadedTextures.size(); j++)
 			{
-				if (std::strcmp(textures_loaded[j]->Path().data(), textureLoc.C_Str()) == 0)
+				if (std::strcmp(loadedTextures[j]->Path().data(), textureLoc.C_Str()) == 0)
 				{
-					textures.push_back(textures_loaded[j]);
+					textures.push_back(loadedTextures[j]);
 					skip = true;
 					break;
 				}
@@ -154,11 +165,9 @@ namespace une
 			//If the texture has not been loaded, load it
 			if (!skip)
 			{
-				//TODO: Fix to use new resource management
 				//Load the texture from location relative to model
 				Texture* texture = new Texture();
 				texture->Load(directory + "/" + textureLoc.C_Str(), GL_LINEAR, false);
-				texture->SetupGLResources();
 				texture->textureType = typeName;
 				textures.push_back(texture);
 			}
