@@ -10,28 +10,14 @@ namespace une::resources
 {
     std::string rootPath = "";
     std::unordered_map<std::string, Resource*> resources;
-    std::unordered_map<std::string, LoadingStatus> loadingResources;
-    std::mutex loadingResourcesMutex;
     std::mutex resourcesMutex;
 
-    //Thread safe functions
-    void AppendLoadingResources(const std::string& path, LoadingStatus loadingStatus)
-    {
-        loadingResourcesMutex.lock();
-        loadingResources[path] = loadingStatus;
-        loadingResourcesMutex.unlock();
-    }
+    //Thread safe helper functions
     void AppendResources(const std::string& path, Resource* resource)
     {
         resourcesMutex.lock();
         resources[path] = resource;
         resourcesMutex.unlock();
-    }
-    void EraseLoadingResources(const std::string& path)
-    {
-        loadingResourcesMutex.lock();
-        loadingResources.erase(path);
-        loadingResourcesMutex.unlock();
     }
     void EraseResources(const std::string& path)
     {
@@ -40,43 +26,36 @@ namespace une::resources
         resourcesMutex.unlock();
     }
 
-    //Deal with asynchronously loaded resources
+    //Setup opengl stuff of asunchronously loaded resources
     void Update()
     {
-        for (auto it = loadingResources.cbegin(); it != loadingResources.cend();)
+        for (auto resource : resources)
         {
-            //If resource is done loading
-            if (resources.contains(it->first))
+            //If resource is done loading setup gl resources in main thread
+            if (resource.second->status == Resource::Status::Loaded)
             {
-                resources[it->first]->SetupGLResources();
-                if (!resources[it->first]->Valid())
+                resource.second->SetupGLResources();
+                if (!resource.second->Valid())
                 {
-                    EraseResources(it->first);
-                    debug::LogError("Failed to setup OpenGL resources for " + it->first);
+                    EraseResources(resource.first);
+                    debug::LogError("Failed to setup OpenGL resources for " + resource.first);
                 }
-                loadingResourcesMutex.lock();
-                it = loadingResources.erase(it);
-                loadingResourcesMutex.unlock();
-            }
-            else
-            {
-                ++it;
             }
         }
     }
 
-    //Unloads a texture if it is loaded
+    //Unloads a resource if it is loaded and has no other users
     void Unload(std::string path)
     {
         path = rootPath + path;
-        if (loadingResources.contains(path))
-        {
-            EraseLoadingResources(path);
-        }
+
         if (resources.contains(path))
         {
-            delete resources[path];
-            EraseResources(path);
+            if (--resources[path]->users <= 0)
+            {
+                delete resources[path];
+                EraseResources(path);
+            }
         }
     }
 
@@ -84,11 +63,6 @@ namespace une::resources
     //Returns true if all resources were successfully loaded
     bool PreloadResources(const std::vector<std::string>& paths)
     {
-        for (const std::string& path : paths)
-        {
-            AppendLoadingResources(rootPath + path, LoadingStatus::Queued);
-        }
-
         bool success = true;
         for (const std::string& path : paths)
         {
@@ -109,7 +83,7 @@ namespace une::resources
             //Load the appropriate type of model
             if (resourceLoadFuncs.contains(extension))
             {
-                success &= resourceLoadFuncs.at(extension)(path);
+                success &= resourceLoadFuncs.at(extension)(path, false);
             }
             else
             {
@@ -124,11 +98,6 @@ namespace une::resources
     //Returns true if and when all resources were successfully loaded
     std::future<bool> PreloadResourcesAsync(const std::vector<std::string>& paths)
     {
-        for (const std::string& path : paths)
-        {
-            AppendLoadingResources(rootPath + path, LoadingStatus::Queued);
-        }
-
         return std::async(std::launch::async, [paths]()
         {
             bool success = true;
@@ -152,7 +121,7 @@ namespace une::resources
                 //Load the appropriate type of model
                 if (resourceLoadFuncs.contains(extension))
                 {
-                     success &= resourceLoadFuncs.at(extension)(path);
+                     success &= resourceLoadFuncs.at(extension)(path, false);
                 }
                 else
                 {

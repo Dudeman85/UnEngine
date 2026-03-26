@@ -213,9 +213,9 @@ namespace debug::gui
 		ImGui::End();
 	}
 
-	static const std::unordered_map<une::resources::LoadingStatus, const char*> loadingStatusName{
-        {une::resources::LoadingStatus::Queued, "Queued"}, {une::resources::LoadingStatus::Loading, "Loading"},
-		{une::resources::LoadingStatus::Ready, "Ready"}
+	static const std::unordered_map<une::resources::Resource::Status, const char*> resourceStatusName{
+        {une::resources::Resource::Status::Invalid, "Invalid"}, {une::resources::Resource::Status::Loading, "Loading"},
+		{une::resources::Resource::Status::Loaded, "Loaded"}, {une::resources::Resource::Status::Ready, "Ready"}
 	};
 
 	//Lists all loaded and loading resources
@@ -230,17 +230,22 @@ namespace debug::gui
 		{
 			for (const auto& resource : une::resources::resources)
 			{
-				ImGui::Text("%s", resource.second->Path().c_str());
+				if (resource.second->status == une::resources::Resource::Status::Loaded)
+				{
+					ImGui::Text("%s", resource.second->Path().c_str());
+				}
 			}
 		}
 
 		//Assets that are currently loading asynchronously
 		if (ImGui::CollapsingHeader("Loading", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			for (const auto& resource : une::resources::loadingResources)
+			for (const auto& resource : une::resources::resources)
 			{
-				std::string resourceName = resource.first.substr(une::resources::rootPath.length());
-				ImGui::Text("%s : %s", resourceName.c_str(), loadingStatusName.at(resource.second));
+				if (resource.second->status != une::resources::Resource::Status::Loaded)
+				{
+					ImGui::Text("%s : %s", resource.second->Path().c_str(), resourceStatusName.at(resource.second->status));
+				}
 			}
 		}
 
