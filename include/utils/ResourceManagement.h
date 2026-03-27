@@ -10,7 +10,6 @@
 
 namespace une::resources
 {
-
     //Path to load resources relative to
     extern std::string rootPath;
     //Map of resource paths to resources. This should be treated as read only
@@ -115,7 +114,7 @@ namespace une::resources
             //Immediately return if already loaded
             if (resources[fullPath]->status == Resource::Status::Ready)
             {
-                return std::async(std::launch::deferred, [path, addUser, args...]()
+                return std::async(std::launch::async, [path, addUser, args...]()
                 {
                     return BasicLoad<T>(path, addUser, args...);
                 });
@@ -152,6 +151,7 @@ namespace une::resources
                 delete resource;
                 return nullptr;
             }
+            resource->status = Resource::Status::Loaded;
             return resource;
         });
     }

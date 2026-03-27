@@ -197,7 +197,7 @@ namespace une::renderer
 			unsigned int diffuseNr = 1;
 			unsigned int specularNr = 1;
 
-			Mesh mesh = modelRenderer.model->meshes[i];
+			const Mesh& mesh = modelRenderer.model->meshes[i];
 
 			//For each Texture in the mesh
 			for (unsigned int j = 0; j < mesh.textures.size(); j++)
@@ -233,15 +233,23 @@ namespace une::renderer
 
 				//Set the uniform for the material texture
 				glUniform1i(glGetUniformLocation(shader->ID, (name + number).c_str()), j);
+				debug::LogGLError();
 			}
+			debug::LogGLError();
 
 			//Unbind texture
 			glActiveTexture(GL_TEXTURE0);
+			debug::LogGLError();
 
 			//Draw mesh
+			debug::LogGLError();
 			glBindVertexArray(mesh.VAO);
+			debug::LogGLError();
 			glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+			debug::LogGLError();
 			glBindVertexArray(0);
+
+			debug::LogGLError();
 		}
 	}
 

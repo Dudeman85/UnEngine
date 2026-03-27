@@ -34,7 +34,8 @@ namespace une::resources
             //If resource is done loading setup gl resources in main thread
             if (resource.second->status == Resource::Status::Loaded)
             {
-                resource.second->SetupGLResources();
+                resource.second->SetupGLResources(); 
+                resource.second->status = Resource::Status::Ready;
                 if (!resource.second->Valid())
                 {
                     EraseResources(resource.first);

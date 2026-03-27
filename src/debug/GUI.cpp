@@ -230,7 +230,7 @@ namespace debug::gui
 		{
 			for (const auto& resource : une::resources::resources)
 			{
-				if (resource.second->status == une::resources::Resource::Status::Loaded)
+				if (resource.second->status == une::resources::Resource::Status::Ready)
 				{
 					ImGui::Text("%s", resource.second->Path().c_str());
 				}
@@ -242,9 +242,10 @@ namespace debug::gui
 		{
 			for (const auto& resource : une::resources::resources)
 			{
-				if (resource.second->status != une::resources::Resource::Status::Loaded)
+				if (resource.second->status != une::resources::Resource::Status::Ready)
 				{
-					ImGui::Text("%s : %s", resource.second->Path().c_str(), resourceStatusName.at(resource.second->status));
+					std::string resourceName = resource.first.substr(une::resources::rootPath.length());
+					ImGui::Text("%s : %s", resourceName.c_str(), resourceStatusName.at(resource.second->status));
 				}
 			}
 		}

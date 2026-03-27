@@ -15,7 +15,7 @@ namespace une
 
 	Mesh::~Mesh()
 	{
-		if (mainWindow)
+		if (mainWindow && VBO)
 		{
 			glDeleteBuffers(1, &VBO);
 			glDeleteBuffers(1, &EBO);

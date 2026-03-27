@@ -24,9 +24,6 @@ int main()
 	const std::vector<std::string> resources{
 		"strawberry.png", "Achelous.obj", "Coolvetica Rg Cond.otf", "testMap.tmx", "Transparent.png"
 	};
-	auto done = une::resources::PreloadResources(resources);
-	//done.wait();
-
 	une::resources::PreloadResources(resources);
 
 	une::Texture* texture = une::resources::Load<une::Texture>("strawberry.png");
@@ -52,7 +49,7 @@ int main()
 	ecs::AddComponent(test, une::SpriteRenderer{.texture = texture});
 	ecs::AddTag(test, "non world entity");
 	ecs::AddTag(test, "tag2");
-
+	
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = texture});
 	ecs::AddComponent(player, une::ModelRenderer{.model = model});
@@ -60,6 +57,7 @@ int main()
 	ecs::AddComponent(player, une::PolygonCollider{ .vertices = {{1.000, 1.000}, {1.000, -1.000}, {-1.000, -1.000}, {-1.000, 1.000}, }, .trigger = 0, .layer = 0, .rotationOverride = -1.0, .visualise = 0 });
 	ecs::AddComponent(player, une::Rigidbody{ .velocity = {0.000, 0.000, 0.000}, .mass = 1.0, .gravityScale = 1.0, .drag = 0.000, .restitution = 1.000, .kinematic = 0 });
 	ecs::AddTag(player, "#Player");
+	
 	ecs::Entity child = ecs::NewEntity();
 	ecs::AddComponent(child, une::TextRenderer{ .font = coolvetica, .text = "Player", .size = 24, .color = une::Color(12, 150, 60, 255), .enabled = 1 });
 	ecs::AddComponent(child, une::Transform{.position = {-4.5, 8, 0}, .scale = 0.2});
@@ -82,7 +80,7 @@ int main()
 	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = texture});
 	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
 	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
-
+	
 	std::future<une::Model*> future;
 
 	FreeCam fc(5, 0.12);
@@ -97,7 +95,7 @@ int main()
 	{
 		//Poll events
 		une::BeginFrame();
-
+		
 		if (glfwGetKey(window->glWindow, GLFW_KEY_RIGHT))
 		{
 			une::TransformSystem::Translate(player, 2, 0, 0);
@@ -163,7 +161,6 @@ int main()
 			if (!future.valid())
 			{
 				future = une::resources::LoadAsync<une::Model>("Achelous.obj");
-				debug::LogError("HEre");
 			}
 		}
 
@@ -171,7 +168,7 @@ int main()
 		{
 			if (future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
 			{
-				future.get();
+				ecs::GetComponent<une::ModelRenderer>(player).model = future.get();
 			}
 		}
 

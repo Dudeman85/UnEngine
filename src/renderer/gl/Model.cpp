@@ -69,7 +69,7 @@ namespace une
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			meshes.push_back(ProcessMesh(mesh));
+			meshes.emplace_back(ProcessMesh(mesh));
 		}
 		//Then do the same for each of its children
 		for (unsigned int i = 0; i < node->mNumChildren; i++)

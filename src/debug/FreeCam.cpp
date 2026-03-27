@@ -1,7 +1,6 @@
 ﻿#include "debug/FreeCam.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/constants.hpp>
-#include <glm/gtx/rotate_vector.hpp> //Doesnt compile
 #include <glm/gtc/matrix_transform.hpp>
 #include <functional>
 #include <cmath>
