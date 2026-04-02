@@ -132,10 +132,10 @@ namespace une::renderer
 	void ModelRenderSystem::DrawEntity(ecs::Entity entity, ecs::Entity cameraEntity)
 	{
 		//TODO:remake lighting system
-		Vector3 lightPos;
 		Vector3 lightColor = Vector3(255);
 		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		Transform& t = ecs::GetComponent<Transform>(cameraEntity);
+		Vector3 lightPos = ecs::GetComponent<Transform>(cameraEntity).position;
 
 		//Get relevant components
 		ModelRenderer& modelRenderer = ecs::GetComponent<ModelRenderer>(entity);

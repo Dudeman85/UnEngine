@@ -165,9 +165,7 @@ namespace une
 			//If the texture has not been loaded, load it
 			if (!skip)
 			{
-				//Load the texture from location relative to model
-				Texture* texture = new Texture();
-				texture->Load(directory + "/" + textureLoc.C_Str(), GL_LINEAR, false);
+				Texture* texture = resources::Load<Texture>(textureLoc.C_Str(), false, false, false);
 				texture->textureType = typeName;
 				textures.push_back(texture);
 			}

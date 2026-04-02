@@ -15,7 +15,7 @@ int main()
 	debug::verbosity = debug::Verbosity::Info;
 
 	//Setup une scene
-	une::Window* window = une::CreateMainWindow(800, 600, "Window");
+	une::Window* window = une::CreateMainWindow(1600, 1000, "Window");
 
 	une::EngineInit();
 	une::renderer::SetBackgroundColor(une::Color(32, 32, 32));
@@ -34,7 +34,7 @@ int main()
 	//Make the camera and UI canvas
 	ecs::Entity camera = ecs::NewEntity();
 	ecs::AddComponent(camera, une::Camera{});
-	une::CameraSystem::MakeOrtho(camera, 800, 600);
+	une::CameraSystem::MakeOrtho(camera, 1600, 1000);
 	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 100}});
 	ecs::AddTag(camera, "#Camera");
 	une::UICanvas canvas;
@@ -53,7 +53,7 @@ int main()
 	ecs::Entity player = ecs::NewEntity();
 	ecs::AddComponent(player, une::SpriteRenderer{.texture = texture});
 	ecs::AddComponent(player, une::ModelRenderer{.model = model});
-	ecs::AddComponent(player, une::Transform{{0.000, 0.000, -10.000}, {0.000, 0.000, 0.000}, {10.000, 10.000, 10.000}, {-5.000, -6.500, 0.000}, une::XYZ});
+	ecs::AddComponent(player, une::Transform{{0, 0.000, -10.000}, {0.000, 0.000, 0.000}, {20.000, 20.000, 20.000}, {-5.000, -6.500, 0.000}, une::XYZ});
 	ecs::AddComponent(player, une::PolygonCollider{ .vertices = {{1.000, 1.000}, {1.000, -1.000}, {-1.000, -1.000}, {-1.000, 1.000}, }, .trigger = 0, .layer = 0, .rotationOverride = -1.0, .visualise = 0 });
 	ecs::AddComponent(player, une::Rigidbody{ .velocity = {0.000, 0.000, 0.000}, .mass = 1.0, .gravityScale = 1.0, .drag = 0.000, .restitution = 1.000, .kinematic = 0 });
 	ecs::AddTag(player, "#Player");
