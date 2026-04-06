@@ -5,7 +5,7 @@
 
 namespace une
 {
-	Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture*> textures)
+	Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<std::weak_ptr<Texture>>& textures)
 	{
 		//Set the mesh data
 		this->vertices = vertices;

@@ -9,7 +9,7 @@
 
 namespace une
 {
-	Animation::Animation(const std::vector<Texture*>& animationTextures, const std::vector<int>& animationDelays)
+	Animation::Animation(const std::vector<std::shared_ptr<Texture>>& animationTextures, const std::vector<int>& animationDelays)
 	{
 		assert(animationTextures.size() == animationDelays.size() && "Failed to create animation! Number of frames and delays do not match!");
 
@@ -139,9 +139,9 @@ namespace une
 
 	//Slice spritesheet image to multiple textures.
 	//spritesWide is how many sprites wide the spritesheet is and spritesHigh is how many sprites tall the spritesheet is
-	std::vector<Texture*> SliceSpritesheet(const char* path, int spritesWide, int spritesHigh)
+	std::vector<std::shared_ptr<Texture>> SliceSpritesheet(const char* path, int spritesWide, int spritesHigh)
 	{
-		std::vector<Texture*> slicedTextures;
+		std::vector< std::shared_ptr<Texture>> slicedTextures;
 
 		//Load the spritesheet form path
 		Image spritesheet = Image(path);
@@ -178,7 +178,7 @@ namespace une
 	//You must provide a vector of delays for each frame going from top-left to bottom-right
 	std::vector<Animation> AnimationsFromSpritesheet(const char* path, int spritesWide, int spritesHigh, std::vector<int> delays)
 	{
-		std::vector<Texture*> allFrames = SliceSpritesheet(path, spritesWide, spritesHigh);
+		std::vector<std::shared_ptr<Texture>> allFrames = SliceSpritesheet(path, spritesWide, spritesHigh);
 
 		std::vector<Animation> animations;
 
@@ -188,7 +188,7 @@ namespace une
 		for (size_t i = 0; i < spritesHigh; i++)
 		{
 			//Slice the proper textures to a new vector
-			std::vector<Texture*> frames(spritesWide);
+			std::vector<std::shared_ptr<Texture>> frames(spritesWide);
 			copy(allFrames.begin() + i * spritesWide, allFrames.begin() + (i + 1) * spritesWide, frames.begin());
 
 			//Slice the proper timings to a new vector

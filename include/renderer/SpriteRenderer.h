@@ -13,8 +13,8 @@ namespace une
 	ECS_REGISTER_COMPONENT(SpriteRenderer)
 	struct SpriteRenderer
 	{
-		Texture* texture = nullptr;
-		Shader* shader = nullptr;
+		std::weak_ptr<Texture> texture;
+		std::weak_ptr<Shader> shader;
 
 		bool enabled = true;
 	};
@@ -44,7 +44,7 @@ namespace une
 			const std::vector<Renderable>& GetTransparentUIEntities();
 
 		private:
-			Shader* defaultShader = nullptr;
+			std::shared_ptr<Shader> defaultShader;
 			unsigned int VAO, VBO;
 
 			std::vector<ecs::Entity> opaqueWorldEntities;

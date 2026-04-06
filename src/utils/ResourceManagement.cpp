@@ -8,22 +8,18 @@
 
 namespace une::resources
 {
-    std::string rootPath = "";
-    std::unordered_map<std::string, Resource*> resources;
     std::mutex resourcesMutex;
 
     //Thread safe helper functions
-    void AppendResources(const std::string& path, Resource* resource)
+    void AppendResources(const std::string& path, std::shared_ptr<Resource> resource)
     {
-        resourcesMutex.lock();
+        std::lock_guard<std::mutex> lock(resourcesMutex);
         resources[path] = resource;
-        resourcesMutex.unlock();
     }
     void EraseResources(const std::string& path)
     {
-        resourcesMutex.lock();
+        std::lock_guard<std::mutex> lock(resourcesMutex);
         resources.erase(path);
-        resourcesMutex.unlock();
     }
 
     //Setup opengl stuff of asunchronously loaded resources
@@ -46,16 +42,24 @@ namespace une::resources
     }
 
     //Unloads a resource if it is loaded and has no other users
-    void Unload(std::string path)
+    //Unsafe disables resource mutex and should be set if unloading nested resources 
+    void Unload(std::string path, bool unsafe)
     {
         path = rootPath + path;
 
         if (resources.contains(path))
         {
-            if (--resources[path]->users <= 0)
+            auto test = resources[path].use_count();
+            if (resources[path].use_count() <= 1)
             {
-                delete resources[path];
-                EraseResources(path);
+                if (unsafe)
+                {
+                    resources.erase(path);
+                }
+                else
+                {
+                    EraseResources(path);
+                }
             }
         }
     }
@@ -84,7 +88,7 @@ namespace une::resources
             //Load the appropriate type of model
             if (resourceLoadFuncs.contains(extension))
             {
-                success &= resourceLoadFuncs.at(extension)(path, false);
+                success &= (bool)resourceLoadFuncs.at(extension)(path);
             }
             else
             {
@@ -122,7 +126,7 @@ namespace une::resources
                 //Load the appropriate type of model
                 if (resourceLoadFuncs.contains(extension))
                 {
-                     success &= resourceLoadFuncs.at(extension)(path, false);
+                     success &= (bool)resourceLoadFuncs.at(extension)(path);
                 }
                 else
                 {

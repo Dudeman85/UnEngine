@@ -9,7 +9,7 @@ namespace une::renderer
 	void ModelRenderSystem::Init()
 	{
 		//The default 3D model shader with bling-phong lighting
-		defaultShader = new Shader(
+		defaultShader = std::make_shared<Shader>(
 			R"(
 			#version 330 core
 			layout(location = 0) in vec3 aPos;
@@ -140,20 +140,21 @@ namespace une::renderer
 		//Get relevant components
 		ModelRenderer& modelRenderer = ecs::GetComponent<ModelRenderer>(entity);
 
-		if (!modelRenderer.model)
+		if (modelRenderer.model.expired())
 		{
 			debug::LogWarning("No model given for ModelRenderer of entity " + std::to_string(entity));
 			return;
 		}
 
 		//If a shader has been specified for this model use it, else use the default
-		Shader* shader = defaultShader;
-		if (modelRenderer.shader)
-			shader = modelRenderer.shader;
+		std::shared_ptr<Shader> shader = defaultShader;
+		if (!modelRenderer.shader.expired())
+			shader = modelRenderer.shader.lock();
 		shader->Use();
+		auto model = modelRenderer.model.lock();
 
 		//Create the model matrix, this is the same for each mesh so it only needs to be done once
-		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
+		glm::mat4 modelMatrix = TransformSystem::GetGlobalTransformMatrix(entity);
 
 		unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
 		unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
@@ -180,7 +181,7 @@ namespace une::renderer
 
 		//Model matrix
 		unsigned int modelLoc = glGetUniformLocation(shader->ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 		//Light Color
 		unsigned int colorLoc = glGetUniformLocation(shader->ID, "lightColor");
 		glUniform3f(colorLoc, lightColor.x / 255, lightColor.y / 255, lightColor.z / 255);
@@ -192,12 +193,12 @@ namespace une::renderer
 		glUniform3fv(viewPosLoc, 1, glm::value_ptr(t.position.ToGlm()));
 
 		//For each mesh in the model
-		for (unsigned int i = 0; i < modelRenderer.model->meshes.size(); i++)
+		for (unsigned int i = 0; i < model->meshes.size(); i++)
 		{
 			unsigned int diffuseNr = 1;
 			unsigned int specularNr = 1;
 
-			const Mesh& mesh = modelRenderer.model->meshes[i];
+			const Mesh& mesh = model->meshes[i];
 
 			//For each Texture in the mesh
 			for (unsigned int j = 0; j < mesh.textures.size(); j++)
@@ -220,10 +221,10 @@ namespace une::renderer
 				//Use default texture
 				else
 				{
-					name = mesh.textures[j]->textureType;
+					name = mesh.textures[j].lock()->textureType;
 
 					//Bind default texture
-					glBindTexture(GL_TEXTURE_2D, mesh.textures[j]->ID());
+					glBindTexture(GL_TEXTURE_2D, mesh.textures[j].lock()->ID());
 				}
 
 				if (name == "texture_diffuse")

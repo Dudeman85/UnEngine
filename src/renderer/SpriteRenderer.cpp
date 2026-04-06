@@ -31,7 +31,7 @@ namespace une::renderer
 	void SpriteRenderSystem::Init()
 	{
 		//Create the default sprite shader
-		defaultShader = new Shader(
+		defaultShader = std::make_shared<Shader>(
 			R"(
 			#version 330 core
 			layout(location = 0) in vec3 aPos;
@@ -108,22 +108,23 @@ namespace une::renderer
 
 			if (!sprite.enabled)
 				continue;
-			if (!sprite.texture)
+			if (sprite.texture.expired())
 			{
 				debug::LogWarning("No texture given for SpriteRenderer of entity " + std::to_string(entity));
 				continue;
 			}
+			auto texture = sprite.texture.lock();
 
 			if (ecs::HasComponent<UIElement>(entity))
 			{
-				if (sprite.texture->SemiTransparent())
+				if (texture->SemiTransparent())
 					transparentUIEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueUIEntities.push_back(entity);
 			}
 			else
 			{
-				if (sprite.texture->SemiTransparent())
+				if (texture->SemiTransparent())
 					transparentWorldEntities.push_back({entity, pos, DrawRenderable});
 				else
 					opaqueWorldEntities.push_back(entity);
@@ -163,14 +164,15 @@ namespace une::renderer
 		SpriteRenderer& sprite = ecs::GetComponent<SpriteRenderer>(entity);
 
 		//If a shader has been specified for this sprite use it, else use the default
-		Shader* shader = defaultShader;
-		if (sprite.shader)
-			shader = sprite.shader;
+		std::shared_ptr<Shader> shader = defaultShader;
+		if (!sprite.shader.expired())
+			shader = sprite.shader.lock();
 		shader->Use();
+		auto texture = sprite.texture.lock();
 
 		//Create the model matrix
 		glm::mat4 model = TransformSystem::GetGlobalTransformMatrix(entity);
-		model = glm::scale(model, glm::vec3(sprite.texture->Size().x, sprite.texture->Size().y, 1));
+		model = glm::scale(model, glm::vec3(texture->Size().x, texture->Size().y, 1));
 
 		//Give the shader the model matrix
 		int modelLoc = glGetUniformLocation(shader->ID, "model");
@@ -202,7 +204,7 @@ namespace une::renderer
 		//Bind the resources
 		glBindVertexArray(VAO);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, sprite.texture->ID());
+		glBindTexture(GL_TEXTURE_2D, texture->ID());
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

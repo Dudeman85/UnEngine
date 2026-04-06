@@ -69,7 +69,7 @@ namespace une::renderer
 
 			if (!text.enabled)
 				continue;
-			if (!text.font)
+			if (text.font.expired())
 			{
 				debug::LogWarning("No font given for TextRenderer of entity " + std::to_string(entity));
 				continue;
@@ -94,6 +94,7 @@ namespace une::renderer
 	{
 		Camera& cam = ecs::GetComponent<Camera>(cameraEntity);
 		TextRenderer& textRenderer = ecs::GetComponent<TextRenderer>(entity);
+		auto font = textRenderer.font.lock();
 
 		shader->Use();
 
@@ -131,16 +132,16 @@ namespace une::renderer
 		glUniform4f(glGetUniformLocation(shader->ID, "textColor"), srgb.r, srgb.g, srgb.b, srgb.a);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindVertexArray(textRenderer.font->VAO);
+		glBindVertexArray(font->VAO);
 
 		float x = 0;
 		// Renders text one letter at a time
 		std::string::const_iterator c;
 		for (c = textRenderer.text.begin(); c != textRenderer.text.end(); ++c)
 		{
-			Font::Character ch = textRenderer.font->characters[*c];
+			Font::Character ch = font->characters[*c];
 			//Size of the character is determined only by the text renderer size
-			float size = (float)textRenderer.size / (float)textRenderer.font->GetResolution();
+			float size = (float)textRenderer.size / (float)font->GetResolution();
 
 			float xpos = x + ch.bearing.x * size;
 			float ypos = -(ch.size.y - ch.bearing.y) * size;
@@ -158,7 +159,7 @@ namespace une::renderer
 			};
 
 			glBindTexture(GL_TEXTURE_2D, ch.textureID);
-			glBindBuffer(GL_ARRAY_BUFFER, textRenderer.font->VBO);
+			glBindBuffer(GL_ARRAY_BUFFER, font->VBO);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 6);

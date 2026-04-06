@@ -14,7 +14,7 @@ namespace une
 	struct TextRenderer
 	{
 		//The font of the text
-		Font* font;
+		std::weak_ptr<Font> font;
 		//The text that is printed
 		std::string text;
 		//Font size

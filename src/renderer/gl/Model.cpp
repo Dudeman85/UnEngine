@@ -11,13 +11,15 @@ namespace une
 {
 	Model::~Model()
 	{
-		for (Texture* tex : loadedTextures)
-		{
-			delete tex;
-		}
 		if (!valid)
 		{
 			delete importer;
+		}
+		for (std::shared_ptr<Texture>& tex : loadedTextures)
+		{
+			std::string path = tex->Path();
+			tex.reset();
+			resources::Unload(path, true);
 		}
 	}
 
@@ -52,10 +54,6 @@ namespace une
 		{
 			mesh.SetupGLResources();
 		}
-		for (Texture* tex : loadedTextures)
-		{
-			tex->SetupGLResources();
-		}
 
 		valid = true;
 		debug::LogSpam("Successfully setup gl resources for model " + path);
@@ -83,7 +81,7 @@ namespace une
 	{
 		std::vector<Mesh::Vertex> vertices;
 		std::vector<unsigned int> indices;
-		std::vector<Texture*> textures;
+		std::vector<std::weak_ptr<Texture>> textures;
 
 		//For each vertex in the mesh
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -130,19 +128,19 @@ namespace une
 		//Get the scene material vector
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-		std::vector<Texture*> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+		std::vector<std::weak_ptr<Texture>> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-		std::vector<Texture*> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+		std::vector<std::weak_ptr<Texture>> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
 		return Mesh(vertices, indices, textures);
 	}
 
 	//Loads every texture of specific type in a material
-	std::vector<Texture*> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
+	std::vector<std::weak_ptr<Texture>> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
 	{
-		std::vector<Texture*> textures;
+		std::vector<std::weak_ptr<Texture>> textures;
 		//For each material texture
 		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 		{
@@ -165,9 +163,13 @@ namespace une
 			//If the texture has not been loaded, load it
 			if (!skip)
 			{
-				Texture* texture = resources::Load<Texture>(textureLoc.C_Str(), false, false, false);
-				texture->textureType = typeName;
-				textures.push_back(texture);
+				auto texture = resources::BasicLoad<Texture>(textureLoc.C_Str(), false, false);
+				if (texture)
+				{
+					texture->textureType = typeName;
+					textures.push_back(texture);
+					loadedTextures.push_back(texture);
+				}
 			}
 		}
 		return textures;

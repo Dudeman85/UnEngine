@@ -11,18 +11,17 @@
 namespace une::resources
 {
     //Path to load resources relative to
-    extern std::string rootPath;
+    inline std::string rootPath = "";
     //Map of resource paths to resources. This should be treated as read only
-    extern std::unordered_map<std::string, Resource*> resources;
+    inline std::unordered_map<std::string, std::shared_ptr<Resource>> resources;
 
     //Thread safe helper functions
-    void AppendResources(const std::string& path, Resource* resource);
+    void AppendResources(const std::string& path, std::shared_ptr<Resource> resource);
     void EraseResources(const std::string& path);
 
     //Load or fetch a resource, does not setup OpenGL resources.
-    //addUser can be set to prevent premature unloading in the case of shared resources
     template<typename T, typename... Types>
-    T* BasicLoad(std::string path, bool addUser = false, Types... args)
+    std::shared_ptr<T> BasicLoad(std::string path, Types... args)
     {
         std::string fullPath = rootPath + path;
 
@@ -36,27 +35,23 @@ namespace une::resources
             }
 
             //If right type, cast and return
-            T* ret = dynamic_cast<T*>(resources[fullPath]);
+            std::shared_ptr<T> ret = dynamic_pointer_cast<T>(resources[fullPath]);
             if (!ret)
             {
                 debug::LogError(fullPath + " is not of type " + std::string(typeid(T).name()));
                 return nullptr;
             }
-            if (addUser)
-                resources[fullPath]->users++;
             return ret;
         }
 
-        T* resource = new T();
+        std::shared_ptr<T> resource = std::make_shared<T>();
         resource->status = Resource::Status::Loading;
-        if (addUser)
-            resource->users++;
         AppendResources(fullPath, resource);
 
         //Load from disk
         if (!resource->Load(fullPath, args...))
         {
-            delete resource;
+            EraseResources(fullPath);
             return nullptr;
         }
 
@@ -65,9 +60,8 @@ namespace une::resources
     }
 
     //Load or fetch a resource, also sets up its OpenGl resources, therefore only call this from the main thread
-    //addUser can be set to prevent premature unloading in the case of shared resources
     template<typename T, typename... Types>
-    T* Load(std::string path, bool addUser = false, Types... args)
+    std::shared_ptr<T> Load(std::string path, Types... args)
     {
         std::string fullPath = rootPath + path;
 
@@ -77,25 +71,27 @@ namespace une::resources
             if (resources[fullPath]->status == Resource::Status::Ready)
             {
                 //If right type, cast and return
-                T* ret = dynamic_cast<T*>(resources[fullPath]);
+                std::shared_ptr<T> ret = dynamic_pointer_cast<T>(resources[fullPath]);
                 if (!ret)
                 {
                     debug::LogError(fullPath + " is not of type " + std::string(typeid(T).name()));
                     return nullptr;
                 }
-                if (addUser)
-                    resources[fullPath]->users++;
                 return ret;
             }
         }
 
-        T* resource = BasicLoad<T>(path, addUser, args...);
+        std::shared_ptr<T> resource = BasicLoad<T>(path, args...);
+        if (!resource)
+        {
+            return nullptr;
+        }
 
         //Make the OpenGL resources
         resource->SetupGLResources();
         if (!resource->Valid())
         {
-            delete resource;
+            EraseResources(fullPath);
             return nullptr;
         }
 
@@ -104,9 +100,8 @@ namespace une::resources
     }
 
     //Asynchronously Load or fetch a resource, OpenGl resources will only be setup the frame after the resource has loaded
-    //addUser can be set to prevent premature unloading in the case of shared resources
     template<typename T, typename... Types>
-    [[nodiscard]] std::future<T*> LoadAsync(const std::string& path, bool addUser = false, Types... args)
+    [[nodiscard]] std::future<std::shared_ptr<T>> LoadAsync(const std::string& path, Types... args)
     {
         std::string fullPath = rootPath + path;
         if (resources.contains(fullPath))
@@ -114,33 +109,31 @@ namespace une::resources
             //Immediately return if already loaded
             if (resources[fullPath]->status == Resource::Status::Ready)
             {
-                return std::async(std::launch::async, [path, addUser, args...]()
+                return std::async(std::launch::async, [path, args...]()
                 {
-                    return BasicLoad<T>(path, addUser, args...);
+                    return BasicLoad<T>(path, args...);
                 });
             }
 
             //Currently being loaded, return pointer when ready
             if (resources[fullPath]->status == Resource::Status::Loading)
             {
-                return std::async(std::launch::async, [fullPath, path, addUser, args...]()
+                return std::async(std::launch::async, [fullPath, path, args...]()
                 {
                     while (resources[fullPath]->status == Resource::Status::Loading)
                     {
                         std::this_thread::sleep_for(std::chrono::milliseconds(16));
                     }
-                    return BasicLoad<T>(path, addUser, args...);
+                    return BasicLoad<T>(path, args...);
                 });
             }
         }
 
         //Start a thread to load this
-        return std::async(std::launch::async, [fullPath, addUser, args...]() -> T*
+        return std::async(std::launch::async, [fullPath, args...]() -> std::shared_ptr<T>
         {
-            T* resource = new T();
+            std::shared_ptr<T> resource = std::make_shared<T>();
             resource->status = Resource::Status::Loading;
-            if (addUser)
-                resource->users++;
             AppendResources(fullPath, resource);
 
             resource->Load(fullPath, args...);
@@ -148,7 +141,7 @@ namespace une::resources
             //If this has been unloaded during loading, delete it
             if (!resources.contains(fullPath))
             {
-                delete resource;
+                EraseResources(fullPath);
                 return nullptr;
             }
             resource->status = Resource::Status::Loaded;
@@ -156,7 +149,7 @@ namespace une::resources
         });
     }
 
-    inline const std::unordered_map<std::string, std::function<bool(std::string, bool)>> resourceLoadFuncs{
+    inline const std::unordered_map<std::string, std::function<std::shared_ptr<Resource>(std::string)>> resourceLoadFuncs{
             {"png", BasicLoad<Texture>},
             {"obj", BasicLoad<Model>},
             {"ttf", BasicLoad<Font>}, {"otf", BasicLoad<Font>},
@@ -166,7 +159,7 @@ namespace une::resources
     //Setup opengl stuff of asunchronously loaded resources
     void Update();
     //Unloads a texture if it is loaded
-    void Unload(std::string path);
+    void Unload(std::string path, bool unsafe = false);
     //Preload a list of resources relative to rootPath, these can then be fetched with the appropriate Load function
     //Returns true if all resources were successfully loadedon
     bool PreloadResources(const std::vector<std::string>& paths);

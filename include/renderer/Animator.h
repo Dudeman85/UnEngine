@@ -13,9 +13,9 @@ namespace une
     struct Animation
     {
         Animation() {};
-        Animation(const std::vector<Texture*>& animationTextures, const std::vector<int>& animationDelays);
+        Animation(const std::vector<std::shared_ptr<Texture>>& animationTextures, const std::vector<int>& animationDelays);
 
-        std::vector<Texture*> textures;
+        std::vector<std::shared_ptr<Texture>> textures;
         std::vector<int> delays;
         unsigned int length = 0;
     };
@@ -64,7 +64,7 @@ namespace une
 
     //Slice spritesheet image to multiple textures.
     //spritesWide is how many sprites wide the spritesheet is and spritesHigh is how many sprites tall the spritesheet is
-    std::vector<Texture*> SliceSpritesheet(const char* path, int spritesWide, int spritesHigh);
+    std::vector<std::shared_ptr<Texture>> SliceSpritesheet(const char* path, int spritesWide, int spritesHigh);
 
     //Creates animations from a spritesheet.
     //Each row of sprites on the spritesheet becomes one animation.

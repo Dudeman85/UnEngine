@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -29,10 +30,10 @@ namespace une
 	private:
 		void ProcessNode(aiNode* node);
 		Mesh ProcessMesh(aiMesh* mesh);
-		std::vector<Texture*> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
+		std::vector<std::weak_ptr<Texture>> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
 		//Store all the already loaded textures for efficiency
-		std::vector<Texture*> loadedTextures;
+		std::vector<std::shared_ptr<Texture>> loadedTextures;
 
 		bool valid = false;
 		std::string directory;

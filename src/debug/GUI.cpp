@@ -230,10 +230,10 @@ namespace debug::gui
 		{
 			for (const auto& resource : une::resources::resources)
 			{
-				if (resource.second->status == une::resources::Resource::Status::Ready)
-				{
-					ImGui::Text("%s", resource.second->Path().c_str());
-				}
+				ImGui::Text("%s", resource.second->Path().c_str());
+				ImGui::SameLine();
+				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 64);
+				ImGui::Text("Users: %ld", resource.second.use_count());
 			}
 		}
 
@@ -485,7 +485,7 @@ namespace debug::gui
 	{
 		une::TextRenderer& tr = ecs::GetComponent<une::TextRenderer>(selectedEntity);
 
-		ImGui::Text("Font: %s", tr.font->Path().c_str());
+		ImGui::Text("Font: %s", tr.font.lock()->Path().c_str());
 		ImGui::Separator();
 		ImGui::InputTextMultiline("Text", &tr.text, ImVec2(0, ImGui::GetTextLineHeight() * 4.5));
 		ImGui::DragInt("Size", &tr.size, 1, 1, 999999);
@@ -606,15 +606,15 @@ namespace debug::gui
 	{
 		une::SpriteRenderer& sr = ecs::GetComponent<une::SpriteRenderer>(selectedEntity);
 
-		if (ImGui::BeginCombo("Texture", sr.texture->Path().c_str()))
+		if (ImGui::BeginCombo("Texture", sr.texture.lock()->Path().c_str()))
 		{
 			for (const auto& resource : une::resources::resources)
 			{
 				if (resource.first.ends_with(".png"))
 				{
-					const bool selected = sr.texture == resource.second;
+					const bool selected = sr.texture.lock() == resource.second;
 					if (ImGui::Selectable(resource.second->Path().c_str(), selected))
-						sr.texture = dynamic_cast<une::Texture*>(resource.second);
+						sr.texture = dynamic_pointer_cast<une::Texture>(resource.second);
 
 					if (selected)
 						ImGui::SetItemDefaultFocus();

@@ -10,7 +10,7 @@
 int main()
 {
 	//Set logging level and outputs
-	debug::logOutputs.push_back({new std::ofstream{"log.txt"}, false});
+	debug::logOutputs.push_back({ new std::ofstream{"log.txt"}, false });
 	debug::logOutputs[0].second = true;
 	debug::verbosity = debug::Verbosity::Info;
 
@@ -26,76 +26,76 @@ int main()
 	};
 	une::resources::PreloadResources(resources);
 
-	une::Texture* texture = une::resources::Load<une::Texture>("strawberry.png");
-	une::Model* model = une::resources::Load<une::Model>("Achelous.obj");
-	une::Font* coolvetica = une::resources::Load<une::Font>("Coolvetica Rg Cond.otf");
+	std::weak_ptr<une::Texture> texture = une::resources::Load<une::Texture>("strawberry.png");
+	std::weak_ptr<une::Model> model = une::resources::Load<une::Model>("Achelous.obj");
+	std::weak_ptr<une::Font> coolvetica = une::resources::Load<une::Font>("Coolvetica Rg Cond.otf");
+	std::weak_ptr<une::Tilemap> tilemap = une::resources::Load<une::Tilemap>("testMap.tmx");
 	une::Primitive square = une::Primitive::Rectangle();
 
 	//Make the camera and UI canvas
 	ecs::Entity camera = ecs::NewEntity();
 	ecs::AddComponent(camera, une::Camera{});
 	une::CameraSystem::MakeOrtho(camera, 1600, 1000);
-	ecs::AddComponent(camera, une::Transform{.position = {0, 0, 100}});
+	ecs::AddComponent(camera, une::Transform{ .position = {0, 0, 100} });
 	ecs::AddTag(camera, "#Camera");
 	une::UICanvas canvas;
 	//Make the camera and UI canvas
 	ecs::Entity camera2 = ecs::NewEntity();
 	ecs::AddComponent(camera2, une::Camera{ .viewport = {0, 0, 1, 1} });
 	une::CameraSystem::MakeOrtho(camera2, 800, 600);
-	ecs::AddComponent(camera2, une::Transform{.position = {0, 0, 100}});
-	auto t = ecs::GetComponent<une::Transform>(camera2);
-	
+	ecs::AddComponent(camera2, une::Transform{ .position = {0, 0, 100} });
+
 	ecs::Entity test = ecs::NewEntity();
-	ecs::AddComponent(test, une::SpriteRenderer{.texture = texture});
+	ecs::AddComponent(test, une::SpriteRenderer{ .texture = texture });
 	ecs::AddTag(test, "non world entity");
 	ecs::AddTag(test, "tag2");
-	
+
 	ecs::Entity player = ecs::NewEntity();
-	ecs::AddComponent(player, une::SpriteRenderer{.texture = texture});
-	ecs::AddComponent(player, une::ModelRenderer{.model = model});
-	ecs::AddComponent(player, une::Transform{{0, 0.000, -10.000}, {0.000, 0.000, 0.000}, {20.000, 20.000, 20.000}, {-5.000, -6.500, 0.000}, une::XYZ});
+	ecs::AddComponent(player, une::SpriteRenderer{ .texture = texture });
+	ecs::AddComponent(player, une::ModelRenderer{ .model = model });
+	ecs::AddComponent(player, une::Transform{ {0, 0.000, -10.000}, {0.000, 0.000, 0.000}, {20.000, 20.000, 20.000}, {-5.000, -6.500, 0.000}, une::XYZ });
 	ecs::AddComponent(player, une::PolygonCollider{ .vertices = {{1.000, 1.000}, {1.000, -1.000}, {-1.000, -1.000}, {-1.000, 1.000}, }, .trigger = 0, .layer = 0, .rotationOverride = -1.0, .visualise = 0 });
 	ecs::AddComponent(player, une::Rigidbody{ .velocity = {0.000, 0.000, 0.000}, .mass = 1.0, .gravityScale = 1.0, .drag = 0.000, .restitution = 1.000, .kinematic = 0 });
 	ecs::AddTag(player, "#Player");
-	
+
 	ecs::Entity child = ecs::NewEntity();
 	ecs::AddComponent(child, une::TextRenderer{ .font = coolvetica, .text = "Player", .size = 24, .color = une::Color(12, 150, 60, 255), .enabled = 1 });
-	ecs::AddComponent(child, une::Transform{.position = {-4.5, 8, 0}, .scale = 0.2});
+	ecs::AddComponent(child, une::Transform{ .position = {-4.5, 8, 0}, .scale = 0.2 });
 	une::TransformSystem::AddParent(child, player);
 	ecs::Entity nestedChild = ecs::NewEntity();
-	ecs::AddComponent(nestedChild, une::TextRenderer{.font = coolvetica, .text = "Name:", .color = une::Color(200, 20, 60)});
-	ecs::AddComponent(nestedChild, une::Transform{.position = {0, 17, 0}, .scale = 0.5});
+	ecs::AddComponent(nestedChild, une::TextRenderer{ .font = coolvetica, .text = "Name:", .color = une::Color(200, 20, 60) });
+	ecs::AddComponent(nestedChild, une::Transform{ .position = {0, 17, 0}, .scale = 0.5 });
 	une::TransformSystem::AddParent(nestedChild, child);
 	ecs::Entity child2 = ecs::NewEntity();
-	ecs::AddComponent(child2, une::Transform{.position = {0, -8, 0}});
+	ecs::AddComponent(child2, une::Transform{ .position = {0, -8, 0} });
 	une::Primitive primitive = une::Primitive::Rectangle();
 	//ecs::AddComponent(child2, une::PrimitiveRenderer{.primitive = &primitive, .color = une::Color(12, 150, 60)});
 	une::TransformSystem::AddParent(child2, player);
 
 	ecs::Entity uiSprite = ecs::NewEntity();
-	ecs::AddComponent(uiSprite, une::TextRenderer{.font = coolvetica, .text = "Health: 9000"});
-	ecs::AddComponent(uiSprite, une::Transform{.position = {20, -50, 0}, .scale = 2});
-	ecs::AddComponent(uiSprite, une::UIElement{.canvas = &canvas, .anchor = {-1, 1}});
+	ecs::AddComponent(uiSprite, une::TextRenderer{ .font = coolvetica, .text = "Health: 9000" });
+	ecs::AddComponent(uiSprite, une::Transform{ .position = {20, -50, 0}, .scale = 2 });
+	ecs::AddComponent(uiSprite, une::UIElement{ .canvas = &canvas, .anchor = {-1, 1} });
 	ecs::Entity uiSprite2 = ecs::NewEntity();
-	ecs::AddComponent(uiSprite2, une::SpriteRenderer{.texture = texture});
-	ecs::AddComponent(uiSprite2, une::Transform{.position = {-50, 0, 0}, .scale = 10});
-	ecs::AddComponent(uiSprite2, une::UIElement{.canvas = &canvas, .anchor = {1, 0}});
-	
-	std::future<une::Model*> future;
+	ecs::AddComponent(uiSprite2, une::SpriteRenderer{ .texture = texture });
+	ecs::AddComponent(uiSprite2, une::Transform{ .position = {-50, 0, 0}, .scale = 10 });
+	ecs::AddComponent(uiSprite2, une::UIElement{ .canvas = &canvas, .anchor = {1, 0} });
+
+	std::future<std::shared_ptr<une::Model>> future;
 
 	FreeCam fc(5, 0.12);
 	auto applyCamera = [&](const glm::vec3& pos, const glm::vec3& forward, const glm::vec3& up)
-	{
-		glm::mat4 view = glm::lookAt(pos, pos + forward, up);
-		ecs::GetComponent<une::Camera>(camera).view = view;
-	};;
+		{
+			glm::mat4 view = glm::lookAt(pos, pos + forward, up);
+			ecs::GetComponent<une::Camera>(camera).view = view;
+		};;
 
 	//Game loop
 	while (!window->ShouldClose())
 	{
 		//Poll events
 		une::BeginFrame();
-		
+
 		if (glfwGetKey(window->glWindow, GLFW_KEY_RIGHT))
 		{
 			une::TransformSystem::Translate(player, 2, 0, 0);
@@ -172,8 +172,8 @@ int main()
 			}
 		}
 
-		debug::DrawLine({ 0, 0, 0 }, {0, 1000, 0}, une::Color::Red());
-		debug::DrawLine({ 0, 0, 0 }, {1000, 0, 0}, une::Color::Green());
+		debug::DrawLine({ 0, 0, 0 }, { 0, 1000, 0 }, une::Color::Red());
+		debug::DrawLine({ 0, 0, 0 }, { 1000, 0, 0 }, une::Color::Green());
 
 		//TODO: fix
 		//une::CameraSystem::MakeOrtho(camera, window->GetSize().x, window->GetSize().y);

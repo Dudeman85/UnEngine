@@ -13,8 +13,8 @@ namespace une
 	ECS_REGISTER_COMPONENT(ModelRenderer)
 	struct ModelRenderer
 	{
-		Model* model = nullptr;
-		Shader* shader = nullptr;
+		std::weak_ptr<Model> model;
+		std::weak_ptr<Shader> shader;
 
 		//Alternate textures, will override default ones from model
 		std::vector<Texture*> textures;
@@ -46,7 +46,7 @@ namespace une
 			const std::vector<Renderable>& GetTransparentUIEntities();
 
 		private:
-			Shader* defaultShader = nullptr;
+			std::shared_ptr<Shader> defaultShader = nullptr;
 
 			std::vector<ecs::Entity> opaqueWorldEntities;
 			std::vector<ecs::Entity> opaqueUIEntities;
